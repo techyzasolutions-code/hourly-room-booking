@@ -1,0 +1,765 @@
+/**
+ * Admin Styles for Hourly Room Booking Plugin
+ *
+ * @package HourlyRoomBooking
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   Dashboard Styles
+   ========================================================================== */
+.notice.notice-warning {
+    margin-bottom: 25px;
+}
+
+.notice.notice-success {
+    margin-bottom: 25px;
+}
+.widefat thead tr th {
+    /* color: #fff; */
+    background: #fff;
+}
+.hrb-admin-dashboard {
+    margin: 0;
+}
+
+.hrb-admin-dashboard .wp-heading-inline {
+    margin-bottom: 20px;
+}
+
+/* Dashboard Statistics */
+.hrb-dashboard-stats {
+    margin: 20px 0 30px 0;
+}
+
+.hrb-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.hrb-stat-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease;
+}
+
+.hrb-stat-card:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.hrb-stat-icon {
+    margin-right: 15px;
+    font-size: 32px;
+    opacity: 0.7;
+}
+
+.hrb-stat-today .hrb-stat-icon { color: #007cba; }
+.hrb-stat-revenue .hrb-stat-icon { color: #00a32a; }
+.hrb-stat-rooms .hrb-stat-icon { color: #d63638; }
+.hrb-stat-pending .hrb-stat-icon { color: #dba617; }
+
+.hrb-stat-content {
+    flex: 1;
+}
+
+.hrb-stat-number {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 5px;
+    color: #1d2327;
+}
+
+.hrb-stat-label {
+    font-size: 13px;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dashboard Content Grid */
+.hrb-dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+}
+
+.hrb-dashboard-main {
+    min-width: 0;
+}
+
+.hrb-dashboard-sidebar {
+    min-width: 0;
+}
+
+/* Dashboard Sections */
+.hrb-dashboard-section {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.hrb-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #c3c4c7;
+    background: #f6f7f7;
+}
+
+.hrb-section-header h2,
+.hrb-section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.hrb-dashboard-sidebar .hrb-dashboard-section h3 {
+    font-size: 16px;
+    margin: 0 0 15px 0;
+    padding: 15px 20px 0 20px;
+    color: #1d2327;
+}
+
+/* Table Container */
+.hrb-table-container {
+    overflow-x: auto;
+}
+
+.hrb-table-container table {
+    margin: 0;
+}
+
+.hrb-table-container th,
+.hrb-table-container td {
+    padding: 12px 8px;
+}
+
+.hrb-customer-info {
+    line-height: 1.4;
+}
+
+.hrb-customer-info small {
+    color: #646970;
+}
+
+.hrb-datetime {
+    line-height: 1.4;
+}
+
+.hrb-datetime small {
+    color: #646970;
+}
+
+.hrb-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.hrb-actions .button {
+    padding: 4px 8px;
+    min-height: auto;
+    line-height: 1;
+}
+
+.hrb-actions .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.hrb-no-data {
+    text-align: center;
+    color: #646970;
+    font-style: italic;
+    padding: 20px !important;
+}
+
+/* Status Badges */
+.hrb-status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.hrb-status-pending {
+    background: #fcf3cd;
+    color: #8c7800;
+}
+
+.hrb-status-confirmed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.hrb-status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.hrb-status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.hrb-status-no_show {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Chart Container */
+.hrb-chart-container {
+    padding: 20px;
+    min-height: 250px;
+}
+
+/* Quick Actions */
+.hrb-quick-actions {
+    padding-bottom: 20px;
+}
+
+.hrb-action-buttons {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hrb-action-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+    text-decoration: none !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hrb-action-btn .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Room Status */
+.hrb-room-status {
+    padding-bottom: 20px;
+}
+
+.hrb-room-list {
+    padding: 0 20px;
+}
+
+.hrb-room-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.hrb-room-item:last-child {
+    border-bottom: none;
+}
+
+.hrb-room-info strong {
+    display: block;
+    color: #1d2327;
+}
+
+.hrb-room-stats {
+    font-size: 12px;
+    color: #646970;
+    margin-top: 3px;
+}
+
+.hrb-status-available {
+    color: #00a32a;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.hrb-status-occupied {
+    color: #d63638;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* System Status */
+.hrb-system-status {
+    padding-bottom: 20px;
+}
+
+.hrb-status-list {
+    padding: 0 20px;
+}
+
+.hrb-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.hrb-status-item:last-child {
+    border-bottom: none;
+}
+
+.hrb-status-label {
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.hrb-status-value {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hrb-status-ok {
+    color: #00a32a;
+}
+
+.hrb-status-warning {
+    color: #dba617;
+}
+
+.hrb-status-disabled {
+    color: #646970;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .hrb-dashboard-content {
+        grid-template-columns: 1fr;
+    }
+
+    .hrb-dashboard-sidebar {
+        order: -1;
+    }
+
+    .hrb-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .hrb-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hrb-section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .hrb-section-header .button {
+        align-self: flex-start;
+    }
+
+    .hrb-table-container {
+        font-size: 14px;
+    }
+
+    .hrb-actions {
+        flex-direction: column;
+    }
+}
+
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
+
+.hrb-form-row {
+    margin-bottom: 15px;
+}
+
+.hrb-form-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #1d2327;
+}
+
+.hrb-form-row input,
+.hrb-form-row select,
+.hrb-form-row textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+.hrb-form-row textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.hrb-form-row.hrb-form-row-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hrb-form-row.hrb-form-row-checkbox label {
+    margin: 0;
+    font-weight: normal;
+}
+
+.hrb-form-row.hrb-form-row-checkbox input {
+    width: auto;
+    margin: 0;
+}
+
+.hrb-form-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #c3c4c7;
+}
+
+/* ==========================================================================
+   Modal Styles
+   ========================================================================== */
+
+.hrb-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hrb-modal-content {
+    background: #fff;
+    border-radius: 4px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.hrb-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #c3c4c7;
+    background: #f6f7f7;
+}
+
+.hrb-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #1d2327;
+}
+
+.hrb-modal-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #646970;
+    line-height: 1;
+    padding: 5px;
+}
+
+.hrb-modal-close:hover {
+    color: #d63638;
+}
+
+.hrb-modal-body {
+    padding: 20px;
+}
+
+.hrb-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #c3c4c7;
+    background: #f6f7f7;
+    text-align: right;
+}
+
+/* Booking Info in Modal */
+.hrb-booking-info {
+    line-height: 1.6;
+}
+
+.hrb-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.hrb-info-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.hrb-info-row strong {
+    color: #1d2327;
+    min-width: 100px;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.hrb-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.hrb-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007cba;
+    border-radius: 50%;
+    animation: hrb-spin 1s linear infinite;
+}
+
+@keyframes hrb-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.hrb-text-center {
+    text-align: center;
+}
+
+.hrb-text-right {
+    text-align: right;
+}
+
+.hrb-mb-0 {
+    margin-bottom: 0 !important;
+}
+
+.hrb-mt-0 {
+    margin-top: 0 !important;
+}
+
+.hrb-hidden {
+    display: none !important;
+}
+
+.hrb-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+table.widefat {
+    border: none;
+}
+
+/* ==========================================================================
+   Customer Details Modal Styles
+   ========================================================================== */
+.hrb-customer-details {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hrb-detail-section {
+    margin-bottom: 25px;
+}
+
+.hrb-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.hrb-detail-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2327;
+    border-bottom: 1px solid #dcdcde;
+    padding-bottom: 8px;
+}
+
+.hrb-detail-row {
+    margin: 12px 0;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.5;
+}
+
+.hrb-detail-row strong {
+    min-width: 120px;
+    color: #50575e;
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+.hrb-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    /* margin: 15px 0; */
+    font-size: 13px;
+}
+
+.hrb-table-container table thead th {
+    /* background: #f6f7f7; */
+    /* border: 1px solid #c3c4c7; */
+    /* padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #1d2327; */
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 20px 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+.hrb-table-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.hrb-table-container table tbody td {
+    /*   */
+    padding: 10px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.hrb-table-container table tbody tr:nth-child(even) {
+    background: #ffffff;
+}
+
+.hrb-table-container table tbody tr:hover {
+    background: #f0f6fc;
+}
+
+/* Status badges for all tables */
+.hrb-table-container .status-confirmed {
+    background: #d4edda;
+    color: #155724;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.hrb-table-container .status-pending {
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.hrb-table-container .status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.hrb-table-container .status-completed {
+    background: #cce5ff;
+    color: #004085;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Customer edit form styles */
+.hrb-form-row {
+    margin: 15px 0;
+}
+
+.hrb-form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #1d2327;
+}
+
+.hrb-form-row input[type="text"],
+.hrb-form-row input[type="email"],
+.hrb-form-row input[type="tel"],
+.hrb-form-row textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+    background: #fff;
+}
+
+.hrb-form-row input:focus,
+.hrb-form-row textarea:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.hrb-form-row textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.hrb-form-actions {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #dcdcde;
+    text-align: right;
+}
+
+.hrb-form-actions .button {
+    margin-left: 10px;
+}
+
+.hrb-form-actions .button:first-child {
+    margin-left: 0;
+}

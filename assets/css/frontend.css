@@ -1,0 +1,695 @@
+/* 
+ * Hourly Room Booking Plugin - Frontend Styles
+ * Version: 1.0.0
+ */
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+.hrb-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.hrb-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -15px;
+}
+
+.hrb-col {
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.hrb-col-12 { flex: 0 0 100%; max-width: 100%; }
+.hrb-col-6 { flex: 0 0 50%; max-width: 50%; }
+.hrb-col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+.hrb-col-3 { flex: 0 0 25%; max-width: 25%; }
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+
+.hrb-heading {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.hrb-heading-lg { font-size: 2.5rem; }
+.hrb-heading-md { font-size: 2rem; }
+.hrb-heading-sm { font-size: 1.5rem; }
+
+.hrb-text-center { text-align: center; }
+.hrb-text-muted { color: #6c757d; }
+.hrb-text-success { color: #28a745; }
+.hrb-text-danger { color: #dc3545; }
+.hrb-text-warning { color: #ffc107; }
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.hrb-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    line-height: 1.4;
+}
+
+.hrb-btn:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hrb-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Button Colors */
+.hrb-btn-primary {
+    background-color: #007cba;
+    color: white;
+}
+
+.hrb-btn-primary:hover {
+    background-color: #005a87;
+    color: white;
+}
+
+.hrb-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.hrb-btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.hrb-btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.hrb-btn-outline {
+    background-color: transparent;
+    border: 2px solid #007cba;
+    color: #007cba;
+}
+
+.hrb-btn-outline:hover {
+    background-color: #007cba;
+    color: white;
+}
+
+/* Button Sizes */
+.hrb-btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.hrb-btn-lg {
+    padding: 16px 32px;
+    font-size: 18px;
+}
+
+.hrb-btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+.hrb-form-group {
+    margin-bottom: 20px;
+}
+
+.hrb-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.hrb-form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.hrb-form-control {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hrb-form-control:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+}
+
+.hrb-form-control.error {
+    border-color: #dc3545;
+}
+
+.hrb-form-control.success {
+    border-color: #28a745;
+}
+
+.hrb-form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px 12px;
+    padding-right: 40px;
+    appearance: none;
+}
+
+.hrb-form-checkbox,
+.hrb-form-radio {
+    margin-right: 8px;
+    transform: scale(1.2);
+}
+
+.hrb-form-help {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.hrb-form-error {
+    font-size: 14px;
+    color: #dc3545;
+    margin-top: 5px;
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+
+.hrb-card {
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.hrb-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.hrb-card-header {
+    padding: 20px 24px 0;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.hrb-card-body {
+    padding: 24px;
+}
+
+.hrb-card-footer {
+    padding: 16px 24px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e1e5e9;
+}
+
+.hrb-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #2c3e50;
+}
+
+/* ==========================================================================
+   Room Cards
+   ========================================================================== */
+
+.hrb-room-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.hrb-room-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.hrb-room-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background-color: #f8f9fa;
+}
+
+.hrb-room-content {
+    padding: 24px;
+}
+
+.hrb-room-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #2c3e50;
+}
+
+.hrb-room-description {
+    color: #6c757d;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.hrb-room-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.hrb-room-feature {
+    background-color: #e8f4f8;
+    color: #007cba;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+}
+
+.hrb-room-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #007cba;
+    margin-bottom: 16px;
+}
+
+.hrb-room-price-unit {
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: #6c757d;
+}
+
+/* ==========================================================================
+   Booking Form
+   ========================================================================== */
+
+.hrb-booking-form {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    /* margin-bottom: 32px; */
+}
+
+.hrb-form-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.hrb-form-steps::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background-color: #e1e5e9;
+    z-index: 1;
+}
+
+.hrb-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    max-width: 120px;
+}
+
+.hrb-step-number {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #e1e5e9;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.hrb-step.active .hrb-step-number {
+    background-color: #007cba;
+    color: white;
+}
+
+.hrb-step.completed .hrb-step-number {
+    background-color: #28a745;
+    color: white;
+}
+
+.hrb-step-label {
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    color: #6c757d;
+}
+
+.hrb-step.active .hrb-step-label {
+    color: #007cba;
+}
+
+.hrb-form-step-content {
+    display: none;
+}
+
+.hrb-form-step-content.active {
+    display: block;
+}
+
+/* ==========================================================================
+   Time Slot Picker
+   ========================================================================== */
+
+.hrb-time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.hrb-time-slot {
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.hrb-time-slot:hover {
+    border-color: #007cba;
+    background-color: #f0f8ff;
+}
+
+.hrb-time-slot.selected {
+    border-color: #007cba;
+    background-color: #007cba;
+    color: white;
+}
+
+.hrb-time-slot.unavailable {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.hrb-time-slot-time {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.hrb-time-slot-price {
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   Booking Summary
+   ========================================================================== */
+
+.hrb-booking-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.hrb-summary-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.hrb-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.hrb-summary-item:last-child {
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 2px solid #007cba;
+}
+
+.hrb-summary-label {
+    color: #6c757d;
+}
+
+.hrb-summary-value {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Calendar
+   ========================================================================== */
+
+.hrb-calendar {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hrb-calendar-header {
+    background-color: #007cba;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.hrb-calendar-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.hrb-calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hrb-calendar-nav-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.hrb-calendar-nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Alerts & Messages
+   ========================================================================== */
+
+.hrb-alert {
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.hrb-alert-success {
+    background-color: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.hrb-alert-error {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.hrb-alert-warning {
+    background-color: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+.hrb-alert-info {
+    background-color: #cce7ff;
+    border-left-color: #007cba;
+    color: #004085;
+}
+
+/* ==========================================================================
+   Loading & Spinners
+   ========================================================================== */
+
+.hrb-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007cba;
+    border-radius: 50%;
+    animation: hrb-spin 1s linear infinite;
+}
+
+.hrb-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+@keyframes hrb-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .hrb-container {
+        padding: 15px;
+    }
+    
+    .hrb-col {
+        padding: 10px;
+    }
+    
+    .hrb-col-6,
+    .hrb-col-4,
+    .hrb-col-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .hrb-booking-form {
+        padding: 20px;
+    }
+    
+    .hrb-form-steps {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .hrb-form-steps::before {
+        display: none;
+    }
+    
+    .hrb-time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+    }
+    
+    .hrb-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .hrb-btn-block {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hrb-heading-lg { font-size: 2rem; }
+    .hrb-heading-md { font-size: 1.75rem; }
+    
+    .hrb-room-content {
+        padding: 16px;
+    }
+    
+    .hrb-booking-summary {
+        padding: 16px;
+    }
+    
+    .hrb-time-slots {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.hrb-hidden { display: none !important; }
+.hrb-visible { display: block !important; }
+
+.hrb-mt-0 { margin-top: 0 !important; }
+.hrb-mt-1 { margin-top: 8px !important; }
+.hrb-mt-2 { margin-top: 16px !important; }
+.hrb-mt-3 { margin-top: 24px !important; }
+.hrb-mt-4 { margin-top: 32px !important; }
+
+.hrb-mb-0 { margin-bottom: 0 !important; }
+.hrb-mb-1 { margin-bottom: 8px !important; }
+.hrb-mb-2 { margin-bottom: 16px !important; }
+.hrb-mb-3 { margin-bottom: 24px !important; }
+.hrb-mb-4 { margin-bottom: 32px !important; }
+
+.hrb-p-0 { padding: 0 !important; }
+.hrb-p-1 { padding: 8px !important; }
+.hrb-p-2 { padding: 16px !important; }
+.hrb-p-3 { padding: 24px !important; }
+.hrb-p-4 { padding: 32px !important; }

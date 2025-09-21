@@ -1,0 +1,605 @@
+/*
+ * Hourly Room Booking Plugin - Futuristic Theme
+ * Modern, responsive design with glassmorphism and neon effects
+ */
+
+/* CSS Variables for Consistent Theming */
+:root {
+    --hrb-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --hrb-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --hrb-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --hrb-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --hrb-warning: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+    --hrb-error: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --hrb-dark: #0a0a0a;
+    --hrb-darker: #060606;
+    --hrb-glass: rgba(255, 255, 255, 0.1);
+    --hrb-glass-hover: rgba(255, 255, 255, 0.15);
+    --hrb-glass-border: rgba(255, 255, 255, 0.2);
+    --hrb-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    --hrb-shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.5);
+    --hrb-shadow-large: 0 25px 50px rgba(0, 0, 0, 0.5);
+    --hrb-neon-blue: #00f2fe;
+    --hrb-neon-purple: #764ba2;
+    --hrb-neon-pink: #f5576c;
+    --hrb-neon-green: #43e97b;
+    --hrb-border-radius: 20px;
+    --hrb-border-radius-small: 12px;
+    --hrb-border-radius-large: 25px;
+    --hrb-transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    --hrb-transition-fast: all 0.2s ease;
+    --hrb-transition-slow: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+/* Global Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 242, 254, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(0, 242, 254, 0.6); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Container Base Styles */
+.hrb-container,
+.hrb-room-list,
+.hrb-booking-form-container {
+    background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+    border-radius: var(--hrb-border-radius);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.hrb-container::before,
+.hrb-room-list::before,
+.hrb-booking-form-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 242, 254, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hrb-container > *,
+.hrb-room-list > *,
+.hrb-booking-form-container > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Card Styles */
+.hrb-card,
+.hrb-room-card,
+.hrb-booking-card {
+    background: var(--hrb-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--hrb-glass-border);
+    border-radius: var(--hrb-border-radius);
+    overflow: hidden;
+    transition: var(--hrb-transition);
+    position: relative;
+    box-shadow: var(--hrb-shadow);
+}
+
+.hrb-card::before,
+.hrb-room-card::before,
+.hrb-booking-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.hrb-card:hover,
+.hrb-room-card:hover,
+.hrb-booking-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: var(--hrb-shadow-hover);
+    border-color: var(--hrb-neon-blue);
+}
+
+.hrb-card:hover::before,
+.hrb-room-card:hover::before,
+.hrb-booking-card:hover::before {
+    transform: translateX(100%);
+}
+
+/* Typography */
+.hrb-heading,
+.hrb-title {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.hrb-heading-large { font-size: 32px; }
+.hrb-heading-medium { font-size: 24px; }
+.hrb-heading-small { font-size: 18px; }
+
+.hrb-text {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+.hrb-text-muted {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.hrb-text-bright {
+    color: white;
+    font-weight: 600;
+}
+
+.hrb-label {
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--hrb-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Form Elements */
+.hrb-form-group {
+    margin-bottom: 25px;
+}
+
+.hrb-form-label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: white;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--hrb-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hrb-form-input,
+.hrb-form-select,
+.hrb-form-textarea {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--hrb-border-radius-small);
+    font-size: 14px;
+    transition: var(--hrb-transition);
+    background: var(--hrb-glass);
+    backdrop-filter: blur(10px);
+    color: white;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hrb-form-input::placeholder,
+.hrb-form-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.hrb-form-input:focus,
+.hrb-form-select:focus,
+.hrb-form-textarea:focus {
+    outline: none;
+    border-color: var(--hrb-neon-blue);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.3), inset 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: var(--hrb-glass-hover);
+    transform: translateY(-2px);
+}
+
+.hrb-form-input.error,
+.hrb-form-select.error,
+.hrb-form-textarea.error {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+}
+
+.hrb-form-select {
+    cursor: pointer;
+}
+
+.hrb-form-select option {
+    background: #1a1a2e;
+    color: white;
+}
+
+/* Buttons */
+.hrb-btn {
+    padding: 16px 30px;
+    border: none;
+    border-radius: var(--hrb-border-radius-small);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 120px;
+}
+
+.hrb-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.hrb-btn:hover::before {
+    left: 100%;
+}
+
+.hrb-btn-primary {
+    background: var(--hrb-primary);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+}
+
+.hrb-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(102, 126, 234, 0.6);
+}
+
+.hrb-btn-secondary {
+    background: var(--hrb-glass);
+    color: white;
+    border: 1px solid var(--hrb-neon-blue);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+}
+
+.hrb-btn-secondary:hover {
+    background: rgba(0, 242, 254, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(0, 242, 254, 0.5);
+}
+
+.hrb-btn-success {
+    background: var(--hrb-success);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(67, 233, 123, 0.4);
+}
+
+.hrb-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(67, 233, 123, 0.6);
+}
+
+.hrb-btn-warning {
+    background: var(--hrb-warning);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 167, 38, 0.4);
+}
+
+.hrb-btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(255, 167, 38, 0.6);
+}
+
+.hrb-btn-error {
+    background: var(--hrb-error);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+}
+
+.hrb-btn-error:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(255, 107, 107, 0.6);
+}
+
+.hrb-btn-large {
+    padding: 20px 40px;
+    font-size: 16px;
+}
+
+.hrb-btn-small {
+    padding: 12px 20px;
+    font-size: 12px;
+}
+
+.hrb-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Alerts */
+.hrb-alert {
+    padding: 20px;
+    border-radius: var(--hrb-border-radius-small);
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid;
+    font-weight: 500;
+    animation: fadeInUp 0.4s ease;
+}
+
+.hrb-alert-success {
+    background: rgba(67, 233, 123, 0.1);
+    color: var(--hrb-neon-green);
+    border-color: rgba(67, 233, 123, 0.3);
+}
+
+.hrb-alert-warning {
+    background: rgba(255, 167, 38, 0.1);
+    color: #ffa726;
+    border-color: rgba(255, 167, 38, 0.3);
+}
+
+.hrb-alert-error {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+.hrb-alert-info {
+    background: rgba(0, 242, 254, 0.1);
+    color: var(--hrb-neon-blue);
+    border-color: rgba(0, 242, 254, 0.3);
+}
+
+/* Loading Spinner */
+.hrb-loading {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    position: relative;
+}
+
+.hrb-loading::before {
+    content: '';
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--hrb-neon-blue);
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+/* Progress Bar */
+.hrb-progress {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.hrb-progress-bar {
+    height: 100%;
+    background: var(--hrb-accent);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.hrb-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* Grid System */
+.hrb-grid {
+    display: grid;
+    gap: 30px;
+}
+
+.hrb-grid-1 { grid-template-columns: 1fr; }
+.hrb-grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.hrb-grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.hrb-grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+/* Flex Utilities */
+.hrb-flex { display: flex; }
+.hrb-flex-column { flex-direction: column; }
+.hrb-flex-center { align-items: center; justify-content: center; }
+.hrb-flex-between { justify-content: space-between; }
+.hrb-flex-end { justify-content: flex-end; }
+.hrb-flex-wrap { flex-wrap: wrap; }
+
+/* Spacing Utilities */
+.hrb-m-0 { margin: 0; }
+.hrb-m-1 { margin: 10px; }
+.hrb-m-2 { margin: 20px; }
+.hrb-m-3 { margin: 30px; }
+.hrb-mt-1 { margin-top: 10px; }
+.hrb-mt-2 { margin-top: 20px; }
+.hrb-mt-3 { margin-top: 30px; }
+.hrb-mb-1 { margin-bottom: 10px; }
+.hrb-mb-2 { margin-bottom: 20px; }
+.hrb-mb-3 { margin-bottom: 30px; }
+
+.hrb-p-0 { padding: 0; }
+.hrb-p-1 { padding: 10px; }
+.hrb-p-2 { padding: 20px; }
+.hrb-p-3 { padding: 30px; }
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hrb-grid-4 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .hrb-grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .hrb-container,
+    .hrb-room-list,
+    .hrb-booking-form-container {
+        padding: 20px;
+        margin: 10px;
+        border-radius: 15px;
+    }
+
+    .hrb-grid,
+    .hrb-grid-2,
+    .hrb-grid-3,
+    .hrb-grid-4 {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .hrb-btn {
+        padding: 14px 25px;
+        font-size: 13px;
+    }
+
+    .hrb-btn-large {
+        padding: 16px 30px;
+        font-size: 14px;
+    }
+
+    .hrb-heading-large { font-size: 24px; }
+    .hrb-heading-medium { font-size: 20px; }
+    .hrb-heading-small { font-size: 16px; }
+
+    .hrb-form-input,
+    .hrb-form-select,
+    .hrb-form-textarea {
+        padding: 14px 18px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hrb-container,
+    .hrb-room-list,
+    .hrb-booking-form-container {
+        padding: 15px;
+        margin: 5px;
+    }
+
+    .hrb-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .hrb-flex {
+        flex-direction: column;
+    }
+
+    .hrb-flex > * {
+        margin-bottom: 10px;
+    }
+
+    .hrb-flex > *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --hrb-glass: rgba(255, 255, 255, 0.2);
+        --hrb-glass-border: rgba(255, 255, 255, 0.4);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .hrb-container,
+    .hrb-room-list,
+    .hrb-booking-form-container {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+
+    .hrb-btn {
+        background: #333 !important;
+        color: white !important;
+        box-shadow: none !important;
+    }
+}
