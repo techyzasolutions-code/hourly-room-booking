@@ -229,15 +229,8 @@ class HRB_Input_Validator {
             }
         }
         
-        // Price validation
-        if (empty($data['hourly_price'])) {
-            $errors->add('hourly_price_required', __('Hourly price is required', 'hourly-room-booking'));
-        } else {
-            $sanitized['hourly_price'] = floatval($data['hourly_price']);
-            if ($sanitized['hourly_price'] < 0 || $sanitized['hourly_price'] > 1000) {
-                $errors->add('hourly_price_invalid', __('Hourly price must be between 0 and 1000', 'hourly-room-booking'));
-            }
-        }
+        // Price validation (removed - using duration-based pricing)
+        // hourly_price field is no longer used in room forms
         
         
         // 2 Hours price validation

@@ -205,6 +205,7 @@ $currency_symbol = hrb_get_currency_symbol();
                                         'completed' => __('Completed', 'hourly-room-booking'),
                                         'pending' => __('Pending', 'hourly-room-booking'),
                                         'failed' => __('Failed', 'hourly-room-booking'),
+                                        'cancelled' => __('Cancelled', 'hourly-room-booking'),
                                         'refunded' => __('Refunded', 'hourly-room-booking'),
                                         'partially_refunded' => __('Partially Refunded', 'hourly-room-booking'),
                                     ];
@@ -228,7 +229,7 @@ $currency_symbol = hrb_get_currency_symbol();
                                     <?php endif; ?>
 
                                     <?php if ($payment->status === 'pending'): ?>
-                                        <button type="button" class="button button-small hrb-complete-btn" onclick="markPaymentCompleted(<?php echo $payment->id; ?>)" title="<?php _e('Mark as Paid', 'hourly-room-booking'); ?>">
+                                        <button type="button" class="button button-small hrb-complete-btn" onclick="markPaymentCompleted(<?php echo $payment->id; ?>)" title="<?php _e('Mark as Completed', 'hourly-room-booking'); ?>">
                                             <span class="dashicons dashicons-yes"></span>
                                         </button>
                                         <button type="button" class="button button-small hrb-cancel-btn" onclick="cancelPayment(<?php echo $payment->id; ?>)" title="<?php _e('Cancel Payment', 'hourly-room-booking'); ?>">

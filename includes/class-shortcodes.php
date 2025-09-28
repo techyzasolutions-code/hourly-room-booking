@@ -21,7 +21,9 @@ class HRB_Shortcodes {
     
     private function __construct() {
         add_shortcode('room_booking_form', array($this, 'room_booking_form_shortcode'));
+        add_shortcode('room_booking_page_form', array($this, 'room_booking_page_form_shortcode'));
         add_shortcode('room_booking_search', array($this, 'room_booking_search_shortcode'));
+        add_shortcode('room_booking_filter', array($this, 'room_booking_filter_shortcode'));
         add_shortcode('room_calendar', array($this, 'room_calendar_shortcode'));
         add_shortcode('room_list', array($this, 'room_list_shortcode'));
     }
@@ -52,6 +54,52 @@ class HRB_Shortcodes {
         
         ob_start();
         include HRB_PLUGIN_DIR . 'templates/booking-form.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Room booking page form shortcode (exact duplicate of room_booking_form)
+     * [room_booking_page_form room_id="1"]
+     */
+    public function room_booking_page_form_shortcode($atts) {
+        $atts = shortcode_atts(array(
+            'room_id' => '',
+            'show_room_info' => 'true',
+            'redirect_url' => ''
+        ), $atts, 'room_booking_page_form');
+        
+        $room_id = intval($atts['room_id']);
+        
+        if (empty($room_id)) {
+            return '<p>' . __('Error: Room ID is required', 'hourly-room-booking') . '</p>';
+        }
+        
+        $room_manager = HRB_Room_Manager::getInstance();
+        $room = $room_manager->get_room($room_id);
+        
+        if (!$room || !$room->is_active) {
+            return '<p>' . __('Error: Room not available', 'hourly-room-booking') . '</p>';
+        }
+        
+        ob_start();
+        include HRB_PLUGIN_DIR . 'templates/booking-form-page.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Room booking filter only shortcode (for homepage)
+     * [room_booking_filter redirect_url="/search-results/"]
+     */
+    public function room_booking_filter_shortcode($atts) {
+        $atts = shortcode_atts(array(
+            'redirect_url' => '/search-results/',
+            'show_title' => 'true',
+            'title' => __('Find Your Perfect Room', 'hourly-room-booking'),
+            'subtitle' => __('Search and book rooms by date, time, and duration', 'hourly-room-booking')
+        ), $atts, 'room_booking_filter');
+        
+        ob_start();
+        include HRB_PLUGIN_DIR . 'templates/booking-filter.php';
         return ob_get_clean();
     }
     
@@ -87,8 +135,13 @@ class HRB_Shortcodes {
             return '<p>' . __('Error: Room ID is required', 'hourly-room-booking') . '</p>';
         }
         
-        wp_enqueue_script('fullcalendar', 'https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js', array('jquery'), '3.10.2', true);
-        wp_enqueue_style('fullcalendar', 'https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css', array(), '3.10.2');
+        // Load FullCalendar with all plugins bundled
+        wp_enqueue_script('fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js', array('jquery'), '6.1.10', true);
+        wp_enqueue_style('fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css', array(), '6.1.10');
+        
+        // Load additional plugins for dayGridMonth, timeGridWeek, timeGridDay
+        wp_enqueue_script('fullcalendar-daygrid', 'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js', array('fullcalendar'), '6.1.10', true);
+        wp_enqueue_script('fullcalendar-timegrid', 'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.10/index.global.min.js', array('fullcalendar'), '6.1.10', true);
         
         ob_start();
         include HRB_PLUGIN_DIR . 'templates/room-calendar.php';

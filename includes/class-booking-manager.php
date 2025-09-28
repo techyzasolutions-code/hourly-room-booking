@@ -101,6 +101,7 @@ class HRB_Booking_Manager {
                 $booking_data,
                 array('%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d')
             );
+           
             if ($result === false) {
                 $wpdb_error = $wpdb->last_error;
                 throw new Exception(__('Failed to create booking', 'hourly-room-booking') . ': ' . $wpdb_error);
@@ -147,7 +148,7 @@ class HRB_Booking_Manager {
     /**
      * Validate booking data
      */
-    private function validate_booking_data($data) {
+    public function validate_booking_data($data, $allow_past_dates = false) {
         // Validate room exists and is active
         $room = HRB_Room_Manager::getInstance()->get_room($data['room_id']);
         if (!$room || !$room->is_active) {
@@ -158,7 +159,7 @@ class HRB_Booking_Manager {
         $booking_date = strtotime($data['booking_date']);
         $today = strtotime('today');
         
-        if ($booking_date < $today) {
+        if (!$allow_past_dates && $booking_date < $today) {
             return new WP_Error('past_date', __('Cannot book for past dates', 'hourly-room-booking'));
         }
         
@@ -195,8 +196,8 @@ class HRB_Booking_Manager {
         }
         
         // Validate business hours
-        $business_start = HRB_Database::get_setting('business_hours_start', '08:00');
-        $business_end = HRB_Database::get_setting('business_hours_end', '20:00');
+        $business_start = get_option('hrb_booking_start_time', '08:00');
+        $business_end = get_option('hrb_booking_end_time', '20:00');
         
         if ($data['start_time'] < $business_start || $data['end_time'] > $business_end) {
             return new WP_Error('outside_business_hours', 
@@ -363,7 +364,7 @@ class HRB_Booking_Manager {
     /**
      * Calculate base price using room-specific or global pricing
      */
-    private function calculate_base_price($room, $duration) {
+    public function calculate_base_price($room, $duration) {
         // Check if room has specific pricing for this duration
         $room_price = 0;
         $use_room_price = false;
@@ -391,9 +392,6 @@ class HRB_Booking_Manager {
                 
                 if ($extra_hour_price > 0) {
                     $room_price += $extra_hours * $extra_hour_price;
-                } else {
-                    // Fallback to hourly rate for extra hours
-                    $room_price += $extra_hours * floatval($room->hourly_price);
                 }
             }
         }
@@ -417,9 +415,6 @@ class HRB_Booking_Manager {
             $extra_hour_price = floatval(get_option('hrb_price_extra_hour', 0));
             if ($extra_hour_price > 0) {
                 $global_price += $extra_hours * $extra_hour_price;
-            } else {
-                // Fallback to hourly rate for extra hours
-                $global_price += $extra_hours * floatval($room->hourly_price);
             }
         }
         
@@ -428,14 +423,8 @@ class HRB_Booking_Manager {
             return $global_price;
         }
         
-        // Final fallback to hourly rate
-        $hourly_rate = floatval($room->hourly_price);
-        if ($hourly_rate > 0) {
-            return $hourly_rate * $duration;
-        }
-        
-        // Last resort fallback
-        return $duration * 25.00; // Default €25 per hour
+        // No pricing found - return 0
+        return 0;
     }
     
     /**
@@ -533,6 +522,17 @@ class HRB_Booking_Manager {
             return new WP_Error('update_failed', __('Failed to update booking', 'hourly-room-booking'));
         }
         
+        // Auto-cancel payment status for all payment methods when booking is cancelled
+        if (isset($data['status']) && $data['status'] === 'cancelled' && $booking->payment_status === 'pending') {
+            $wpdb->update(
+                $wpdb->prefix . 'hrb_payments',
+                array('status' => 'cancelled'),
+                array('booking_id' => $booking_id),
+                array('%s'),
+                array('%d')
+            );
+        }
+        
         // Send notification if status changed and notifications are enabled
         if ($send_notification && isset($data['status']) && $data['status'] !== $booking->status) {
             $this->send_booking_notification($booking_id, 'booking_modified');
@@ -590,15 +590,81 @@ class HRB_Booking_Manager {
         );
         
         // Handle refunds if payment was made
-        if ($booking->payment_status === 'paid') {
+        if ($booking->payment_status === 'completed') {
             // Process refund logic here
             $this->process_refund($booking_id);
+        }
+        
+        // Auto-cancel payment status for all payment methods when booking is cancelled
+        if ($booking->payment_status === 'pending') {
+            $update_result = $wpdb->update(
+                $wpdb->prefix . 'hrb_payments',
+                array('status' => 'cancelled'),
+                array('booking_id' => $booking_id),
+                array('%s'),
+                array('%d')
+            );
+            
+            // Debug: Log the update result
+            error_log("HRB Debug: Cancelling payment for booking {$booking_id}, payment_method: {$booking->payment_method}, payment_status: {$booking->payment_status}, update_result: {$update_result}");
         }
         
         // Send notification
         $this->send_booking_notification($booking_id, 'booking_cancelled');
         
         return true;
+    }
+    
+    /**
+     * Delete booking
+     */
+    public function delete_booking($booking_id) {
+        global $wpdb;
+        
+        $booking = $this->get_booking($booking_id);
+        if (!$booking) {
+            return new WP_Error('booking_not_found', __('Booking not found', 'hourly-room-booking'));
+        }
+        
+        // Start transaction
+        $wpdb->query('START TRANSACTION');
+        
+        try {
+            // Delete booking extras
+            $wpdb->delete(
+                $wpdb->prefix . 'hrb_booking_extras',
+                ['booking_id' => $booking_id],
+                ['%d']
+            );
+            
+            // Delete payments
+            $wpdb->delete(
+                $wpdb->prefix . 'hrb_payments',
+                ['booking_id' => $booking_id],
+                ['%d']
+            );
+            
+            // Delete booking
+            $result = $wpdb->delete(
+                $wpdb->prefix . 'hrb_bookings',
+                ['id' => $booking_id],
+                ['%d']
+            );
+            
+            if ($result === false) {
+                throw new Exception('Failed to delete booking');
+            }
+            
+            // Commit transaction
+            $wpdb->query('COMMIT');
+            
+            return true;
+            
+        } catch (Exception $e) {
+            // Rollback transaction
+            $wpdb->query('ROLLBACK');
+            return new WP_Error('delete_failed', __('Failed to delete booking', 'hourly-room-booking'));
+        }
     }
     
     /**
@@ -736,6 +802,14 @@ class HRB_Booking_Manager {
     public function cleanup_expired_bookings() {
         global $wpdb;
         
+        // Get expired pending bookings before cancelling them
+        $expired_bookings = $wpdb->get_results(
+            "SELECT id, payment_method, payment_status 
+             FROM {$wpdb->prefix}hrb_bookings 
+             WHERE status = 'pending' 
+             AND CONCAT(booking_date, ' ', start_time) < NOW() - INTERVAL 1 HOUR"
+        );
+        
         // Mark expired pending bookings as cancelled
         $wpdb->query(
             "UPDATE {$wpdb->prefix}hrb_bookings 
@@ -744,6 +818,19 @@ class HRB_Booking_Manager {
              WHERE status = 'pending' 
              AND CONCAT(booking_date, ' ', start_time) < NOW() - INTERVAL 1 HOUR"
         );
+        
+        // Auto-cancel payment status for onsite payments when bookings are auto-cancelled
+        foreach ($expired_bookings as $booking) {
+            if ($booking->payment_method === 'onsite' && $booking->payment_status === 'pending') {
+                $wpdb->update(
+                    $wpdb->prefix . 'hrb_payments',
+                    array('status' => 'cancelled'),
+                    array('booking_id' => $booking->id),
+                    array('%s'),
+                    array('%d')
+                );
+            }
+        }
         
         // Mark no-show bookings
         $wpdb->query(
@@ -847,6 +934,20 @@ class HRB_Booking_Manager {
             $where_values[] = $filters['date_to'];
         }
 
+        // Recent only filter (last 2 days)
+        if (!empty($filters['recent_only'])) {
+            $two_days_ago = date('Y-m-d', strtotime('-2 days'));
+            $where_conditions[] = 'b.booking_date >= %s';
+            $where_values[] = $two_days_ago;
+        }
+
+        // Old only filter (older than 2 days)
+        if (!empty($filters['old_only'])) {
+            $two_days_ago = date('Y-m-d', strtotime('-2 days'));
+            $where_conditions[] = 'b.booking_date < %s';
+            $where_values[] = $two_days_ago;
+        }
+
         // Search filter
         if (!empty($filters['search'])) {
             $where_conditions[] = '(CONCAT(c.first_name, " ", c.last_name) LIKE %s OR c.email LIKE %s OR b.booking_reference LIKE %s OR r.name LIKE %s)';
@@ -858,6 +959,34 @@ class HRB_Booking_Manager {
         }
 
         $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+
+        // Sorting
+        $order_by = 'b.created_at DESC'; // Default sorting
+        if (!empty($filters['orderby'])) {
+            $order = !empty($filters['order']) && strtoupper($filters['order']) === 'ASC' ? 'ASC' : 'DESC';
+            
+            switch ($filters['orderby']) {
+                case 'datetime':
+                    $order_by = "b.booking_date {$order}, b.start_time {$order}";
+                    break;
+                case 'amount':
+                    $order_by = "b.total_amount {$order}";
+                    break;
+                case 'status':
+                    $order_by = "b.status {$order}";
+                    break;
+                case 'customer':
+                    $order_by = "customer_name {$order}";
+                    break;
+                case 'room':
+                    $order_by = "r.name {$order}";
+                    break;
+                case 'created':
+                default:
+                    $order_by = "b.created_at {$order}";
+                    break;
+            }
+        }
 
         // Add limit and offset values
         $where_values[] = $limit;
@@ -890,7 +1019,7 @@ class HRB_Booking_Manager {
             LEFT JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
             LEFT JOIN {$wpdb->prefix}hrb_payments p ON b.id = p.booking_id
             {$where_clause}
-            ORDER BY b.created_at DESC
+            ORDER BY {$order_by}
             LIMIT %d OFFSET %d
         ";
 
@@ -931,6 +1060,20 @@ class HRB_Booking_Manager {
         if (!empty($filters['date_to'])) {
             $where_conditions[] = 'b.booking_date <= %s';
             $where_values[] = $filters['date_to'];
+        }
+
+        // Recent only filter (last 2 days)
+        if (!empty($filters['recent_only'])) {
+            $two_days_ago = date('Y-m-d', strtotime('-2 days'));
+            $where_conditions[] = 'b.booking_date >= %s';
+            $where_values[] = $two_days_ago;
+        }
+
+        // Old only filter (older than 2 days)
+        if (!empty($filters['old_only'])) {
+            $two_days_ago = date('Y-m-d', strtotime('-2 days'));
+            $where_conditions[] = 'b.booking_date < %s';
+            $where_values[] = $two_days_ago;
         }
 
         // Search filter
@@ -987,6 +1130,20 @@ class HRB_Booking_Manager {
         );
 
         if ($result !== false) {
+            // Auto-cancel payment status for all payment methods when booking is cancelled
+            if ($status === 'cancelled') {
+                $booking = $this->get_booking($booking_id);
+                if ($booking && $booking->payment_status === 'pending') {
+                    $wpdb->update(
+                        $wpdb->prefix . 'hrb_payments',
+                        array('status' => 'cancelled'),
+                        array('booking_id' => $booking_id),
+                        array('%s'),
+                        array('%d')
+                    );
+                }
+            }
+            
             // Send notification based on status change
             $notification_types = [
                 'confirmed' => 'booking_confirmation',

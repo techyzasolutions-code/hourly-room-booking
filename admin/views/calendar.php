@@ -494,16 +494,152 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .fc-event {
     cursor: pointer;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     border: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    padding: 4px 6px;
+    margin: 2px 0;
+    min-height: 24px;
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.3;
+    color: white !important;
 }
 
 .fc-event:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    background: inherit !important;
+    color: white !important;
+}
+
+.fc-event:hover .fc-event-title,
+.fc-event:hover .fc-event-time {
+    color: white !important;
+}
+
+.fc-event-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    overflow: visible;
+}
+
+.fc-event-title {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.3;
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 100%;
+    color: white !important;
+}
+
+.fc-event-time {
+    font-size: 11px;
+    opacity: 0.9;
+    line-height: 1.2;
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    color: white !important;
+}
+
+/* Month view specific styling */
+.fc-daygrid-event {
+    margin: 2px 0;
+    border-radius: 4px;
+    padding: 3px 5px;
+    min-height: 22px;
+}
+
+.fc-daygrid-event .fc-event-title {
+    font-size: 11px;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    color: white !important;
+}
+
+.fc-daygrid-event .fc-event-time {
+    font-size: 10px;
+    line-height: 1.1;
+    opacity: 0.8;
+    white-space: normal;
+    word-wrap: break-word;
+    color: white !important;
+}
+
+/* Week and Day view styling */
+.fc-timegrid-event {
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 12px;
+    min-height: 20px;
+}
+
+.fc-timegrid-event .fc-event-title {
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: normal;
+    word-wrap: break-word;
+    color: white !important;
+}
+
+.fc-timegrid-event .fc-event-time {
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: normal;
+    word-wrap: break-word;
+    color: white !important;
+}
+
+/* Calendar grid improvements */
+.fc-daygrid-day-frame {
+    min-height: 120px;
+}
+
+.fc-daygrid-day-events {
+    margin: 0;
+    padding: 0;
+}
+
+.fc-daygrid-event-harness {
+    margin: 2px 0;
+}
+
+/* Better spacing for multiple events */
+.fc-daygrid-day-events .fc-event {
+    margin: 2px 0;
+    max-width: 100%;
+    min-height: 20px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .fc-event-title {
+        font-size: 10px;
+    }
+    
+    .fc-event-time {
+        font-size: 9px;
+    }
+    
+    .fc-daygrid-event .fc-event-title {
+        font-size: 10px;
+    }
+    
+    .fc-daygrid-event .fc-event-time {
+        font-size: 9px;
+    }
 }
 
 .fc-event-confirmed {
@@ -573,6 +709,9 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
         font-size: 1.8em;
     }
 }
+.fc-daygrid-dot-event.fc-event-mirror, .fc-daygrid-dot-event:hover {
+    background: #000 !important;
+}
 </style>
 
 <!-- FullCalendar CSS & JS -->
@@ -609,10 +748,23 @@ function initializeCalendar() {
             return ['fc-event-' + arg.event.extendedProps.status];
         },
         eventContent: function(arg) {
+            // Show full text without truncation
+            let title = arg.event.title;
+            
+            // Format time text to show proper AM/PM format
+            let timeText = arg.timeText;
+            if (timeText.includes(' - ')) {
+                timeText = timeText.replace(' - ', '-');
+            }
+            
+            // Convert time format from "8a" to "8 AM"
+            timeText = timeText.replace(/(\d+)a/g, '$1 AM');
+            timeText = timeText.replace(/(\d+)p/g, '$1 PM');
+            
             return {
                 html: '<div class="fc-event-content">' +
-                      '<div class="fc-event-title">' + arg.event.title + '</div>' +
-                      '<div class="fc-event-time">' + arg.timeText + '</div>' +
+                      '<div class="fc-event-title">' + title + '</div>' +
+                      '<div class="fc-event-time">' + timeText + '</div>' +
                       '</div>'
             };
         }

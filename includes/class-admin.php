@@ -62,6 +62,16 @@ class HRB_Admin {
             'hrb-bookings',
             array($this, 'bookings_page')
         );
+
+        // Old Bookings submenu
+        add_submenu_page(
+            'hrb-dashboard',
+            __('Old Bookings', 'hourly-room-booking'),
+            __('Old Bookings', 'hourly-room-booking'),
+            'manage_options',
+            'hrb-old-bookings',
+            array($this, 'old_bookings_page')
+        );
         
         // Rooms submenu
         add_submenu_page(
@@ -164,6 +174,10 @@ class HRB_Admin {
         register_setting('hrb_settings', 'hrb_company_email');
         register_setting('hrb_settings', 'hrb_company_phone');
         register_setting('hrb_settings', 'hrb_company_address');
+        register_setting('hrb_settings', 'hrb_staff_email');
+        register_setting('hrb_settings', 'hrb_pricing_label');
+        register_setting('hrb_settings', 'hrb_admin_email_notifications');
+        register_setting('hrb_settings', 'hrb_staff_email_notifications');
         register_setting('hrb_settings', 'hrb_email_notifications');
         register_setting('hrb_settings', 'hrb_sms_notifications');
         register_setting('hrb_settings', 'hrb_whatsapp_notifications');
@@ -265,6 +279,14 @@ class HRB_Admin {
         //$this->render_admin_header(__('All Bookings', 'hourly-room-booking'));
         include HRB_PLUGIN_DIR . 'admin/views/bookings.php';
         //$this->render_admin_footer();
+    }
+
+    /**
+     * Old Bookings Page
+     */
+    public function old_bookings_page() {
+        $this->check_permissions();
+        include HRB_PLUGIN_DIR . 'admin/views/old-bookings.php';
     }
     
     /**
@@ -409,6 +431,7 @@ class HRB_Admin {
                 $template_id = intval($_POST['template_id']);
                 $template_data = array(
                     'template_name' => sanitize_text_field($_POST['template_name']),
+                    'template_type' => sanitize_text_field($_POST['template_type']),
                     'subject' => sanitize_text_field($_POST['subject']),
                     'heading' => sanitize_text_field($_POST['heading']),
                     'message' => sanitize_textarea_field($_POST['message']),
@@ -420,7 +443,7 @@ class HRB_Admin {
                     $wpdb->prefix . 'hrb_email_templates',
                     $template_data,
                     array('id' => $template_id),
-                    array('%s', '%s', '%s', '%s', '%s', '%d'),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%d'),
                     array('%d')
                 );
                 
@@ -549,7 +572,6 @@ class HRB_Admin {
                     'name' => $_POST['room_name'] ?? '',
                     'description' => $_POST['room_description'] ?? '',
                     'capacity' => $_POST['room_capacity'] ?? '',
-                    'hourly_price' => $_POST['room_hourly_price'] ?? 0,
                     'price_2_hours' => $_POST['room_price_2_hours'] ?? 0,
                     'price_3_hours' => $_POST['room_price_3_hours'] ?? 0,
                     'price_4_hours' => $_POST['room_price_4_hours'] ?? 0,
@@ -557,7 +579,8 @@ class HRB_Admin {
                     'amenities' => isset($_POST['room_amenities']) ? 
                         array_filter(array_map('trim', explode(',', $_POST['room_amenities']))) : [],
                     'images' => isset($_POST['room_images']) ? 
-                        array_filter(array_map('trim', explode(',', $_POST['room_images']))) : []
+                        array_filter(array_map('trim', explode(',', $_POST['room_images']))) : [],
+                    'external_link' => $_POST['room_external_link'] ?? ''
                 );
                 
                 $room_data = $validator->validate_room_data($room_input);
@@ -598,13 +621,13 @@ class HRB_Admin {
                     'name' => sanitize_text_field($_POST['room_name']),
                     'description' => sanitize_textarea_field($_POST['room_description']),
                     'capacity' => intval($_POST['room_capacity']),
-                    'hourly_price' => floatval($_POST['room_hourly_price'] ?? 0),
                     'price_2_hours' => floatval($_POST['room_price_2_hours'] ?? 0),
                     'price_3_hours' => floatval($_POST['room_price_3_hours'] ?? 0),
                     'price_4_hours' => floatval($_POST['room_price_4_hours'] ?? 0),
                     'price_extra_hour' => floatval($_POST['room_price_extra_hour'] ?? 0),
                     'amenities' => $amenities_json,
                     'images' => $images_json,
+                    'external_link' => sanitize_url($_POST['room_external_link'] ?? ''),
                     'is_active' => isset($_POST['room_is_active']) ? 1 : 0
                 );
                 
@@ -834,6 +857,7 @@ class HRB_Admin {
             'hrb_company_email',
             'hrb_company_phone',
             'hrb_company_address',
+            'hrb_company_logo',
             'hrb_email_notifications',
             'hrb_sms_notifications',
             'hrb_whatsapp_notifications',
@@ -1517,6 +1541,7 @@ class HRB_Admin {
             'price_extra_hour' => $room->price_extra_hour ?? 0,
             'amenities' => $amenities_display,
             'images' => $room->images, // Add images field
+            'external_link' => $room->external_link ?? '',
             'is_active' => $room->is_active,
             'created_at' => $room->created_at,
             'updated_at' => $room->updated_at

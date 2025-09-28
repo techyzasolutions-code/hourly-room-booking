@@ -1,0 +1,151 @@
+# English (US) translation for Hourly Room Booking Plugin
+# Copyright (C) 2024
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Hourly Room Booking 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-09-18 10:00+0000\n"
+"PO-Revision-Date: 2024-09-18 10:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# General
+msgid "Loading..."
+msgstr "Loading..."
+
+msgid "An error occurred"
+msgstr "An error occurred"
+
+msgid "Success!"
+msgstr "Success!"
+
+msgid "Error: Room ID is required"
+msgstr "Error: Room ID is required"
+
+msgid "Error: Room not available"
+msgstr "Error: Room not available"
+
+# Booking Form
+msgid "Booking Date"
+msgstr "Booking Date"
+
+msgid "Duration"
+msgstr "Duration"
+
+msgid "Start Time"
+msgstr "Start Time"
+
+msgid "Extra People"
+msgstr "Extra People"
+
+msgid "Special Requests"
+msgstr "Special Requests"
+
+msgid "Book Now"
+msgstr "Book Now"
+
+msgid "Next"
+msgstr "Next"
+
+msgid "Previous"
+msgstr "Previous"
+
+# New Customizable Labels
+msgid "Your Details"
+msgstr "Your Details"
+
+msgid "Welcome back! Your details have been pre-filled from your account. You can modify them if needed."
+msgstr "Welcome back! Your details have been pre-filled from your account. You can modify them if needed."
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Email Address"
+msgstr "Email Address"
+
+msgid "Phone Number"
+msgstr "Phone Number"
+
+msgid "Company (Optional)"
+msgstr "Company (Optional)"
+
+msgid "Contact Verification"
+msgstr "Contact Verification"
+
+msgid "Verification Required Please verify your email address before proceeding. We will send you a verification code."
+msgstr "Verification Required Please verify your email address before proceeding. We will send you a verification code."
+
+msgid "Email to verify:"
+msgstr "Email to verify:"
+
+msgid "Booking Confirmation"
+msgstr "Booking Confirmation"
+
+msgid "Booking Details"
+msgstr "Booking Details"
+
+msgid "Room"
+msgstr "Room"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Time"
+msgstr "Time"
+
+msgid "Additional People"
+msgstr "Additional People"
+
+msgid "Extras"
+msgstr "Extras"
+
+msgid "Customer Details"
+msgstr "Customer Details"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone"
+msgstr "Phone"
+
+msgid "Payment"
+msgstr "Payment"
+
+msgid "I accept the Terms & Conditions and Privacy Policy."
+msgstr "I accept the Terms & Conditions and Privacy Policy."
+
+msgid "Complete Booking"
+msgstr "Complete Booking"
+
+msgid "What happens next?"
+msgstr "What happens next?"
+
+msgid "You will receive a confirmation email shortly with all the booking details."
+msgstr "You will receive a confirmation email shortly with all the booking details."
+
+msgid "Please bring payment (cash or card) when you arrive for your booking."
+msgstr "Please bring payment (cash or card) when you arrive for your booking."
+
+msgid "Please arrive a few minutes before your booking time."
+msgstr "Please arrive a few minutes before your booking time."
+
+msgid "If you need to cancel or modify your booking, please contact us as soon as possible."
+msgstr "If you need to cancel or modify your booking, please contact us as soon as possible."
+
+msgid "Total Amount"
+msgstr "Total Amount"
+
+msgid "Payment Method"
+msgstr "Payment Method"

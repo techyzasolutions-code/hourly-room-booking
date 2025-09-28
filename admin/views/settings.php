@@ -45,6 +45,8 @@ class HRB_Settings_Helper {
             'hrb_timezone' => __('Timezone', 'hourly-room-booking'),
             'hrb_booking_advance_days' => __('Booking Advance Days', 'hourly-room-booking'),
             'hrb_cancellation_hours' => __('Cancellation Hours', 'hourly-room-booking'),
+            'hrb_booking_start_time' => __('Booking Start Time', 'hourly-room-booking'),
+            'hrb_booking_end_time' => __('Booking End Time', 'hourly-room-booking'),
             'hrb_default_booking_duration' => __('Default Booking Duration', 'hourly-room-booking'),
             'hrb_cooldown_minutes' => __('Cooldown Minutes', 'hourly-room-booking'),
             'hrb_enable_guest_booking' => __('Enable Guest Booking', 'hourly-room-booking'),
@@ -72,11 +74,68 @@ class HRB_Settings_Helper {
             'hrb_company_address' => __('Company Address', 'hourly-room-booking'),
             'hrb_company_phone' => __('Company Phone', 'hourly-room-booking'),
             'hrb_company_email' => __('Company Email', 'hourly-room-booking'),
+            'hrb_company_logo' => __('Company Logo', 'hourly-room-booking'),
             'hrb_admin_email' => __('Admin Email', 'hourly-room-booking'),
+            'hrb_admin_email_notifications' => __('Admin Email Notifications', 'hourly-room-booking'),
+            'hrb_staff_email' => __('Staff Email', 'hourly-room-booking'),
+            'hrb_staff_email_notifications' => __('Staff Email Notifications', 'hourly-room-booking'),
+            'hrb_pricing_label' => __('Pricing Label', 'hourly-room-booking'),
             'hrb_terms_page' => __('Terms & Conditions Page', 'hourly-room-booking'),
             'hrb_privacy_page' => __('Privacy Policy Page', 'hourly-room-booking'),
             'hrb_invoice_counter' => __('Invoice Counter', 'hourly-room-booking'),
             'hrb_tax_rate' => __('Tax Rate (%)', 'hourly-room-booking'),
+            'hrb_plugin_language' => __('Plugin Language', 'hourly-room-booking'),
+        // Customizable Labels
+        'hrb_use_custom_labels' => __('Use Custom Labels', 'hourly-room-booking'),
+        'hrb_label_booking_date' => __('Booking Date Label', 'hourly-room-booking'),
+        'hrb_label_duration' => __('Duration Label', 'hourly-room-booking'),
+        'hrb_label_start_time' => __('Start Time Label', 'hourly-room-booking'),
+        'hrb_label_extra_people' => __('Extra People Label', 'hourly-room-booking'),
+        'hrb_label_special_requests' => __('Special Requests Label', 'hourly-room-booking'),
+        'hrb_label_next_button' => __('Next Button Text', 'hourly-room-booking'),
+        'hrb_label_previous_button' => __('Previous Button Text', 'hourly-room-booking'),
+        'hrb_label_book_now_button' => __('Book Now Button Text', 'hourly-room-booking'),
+        'hrb_label_search_button' => __('Search Button Text', 'hourly-room-booking'),
+        'hrb_label_clear_all_button' => __('Clear All Button Text', 'hourly-room-booking'),
+        'hrb_label_select_duration' => __('Select Duration Text', 'hourly-room-booking'),
+        'hrb_label_select_date' => __('Select Date Text', 'hourly-room-booking'),
+        'hrb_label_loading_message' => __('Loading Message', 'hourly-room-booking'),
+        'hrb_label_no_slots_message' => __('No Time Slots Message', 'hourly-room-booking'),
+        // Additional booking form labels
+        'hrb_label_your_details' => __('Your Details Label', 'hourly-room-booking'),
+        'hrb_label_welcome_back' => __('Welcome Back Message', 'hourly-room-booking'),
+        'hrb_label_first_name' => __('First Name Label', 'hourly-room-booking'),
+        'hrb_label_last_name' => __('Last Name Label', 'hourly-room-booking'),
+        'hrb_label_email_address' => __('Email Address Label', 'hourly-room-booking'),
+        'hrb_label_phone_number' => __('Phone Number Label', 'hourly-room-booking'),
+        'hrb_label_company' => __('Company Label', 'hourly-room-booking'),
+        'hrb_label_company_optional' => __('Company Optional Label', 'hourly-room-booking'),
+        'hrb_label_contact_verification' => __('Contact Verification Label', 'hourly-room-booking'),
+        'hrb_label_verification_required' => __('Verification Required Message', 'hourly-room-booking'),
+        'hrb_label_email_to_verify' => __('Email to Verify Label', 'hourly-room-booking'),
+        // Booking confirmation labels
+        'hrb_label_booking_confirmation' => __('Booking Confirmation Label', 'hourly-room-booking'),
+        'hrb_label_booking_details' => __('Booking Details Label', 'hourly-room-booking'),
+        'hrb_label_room' => __('Room Label', 'hourly-room-booking'),
+        'hrb_label_date' => __('Date Label', 'hourly-room-booking'),
+        'hrb_label_time' => __('Time Label', 'hourly-room-booking'),
+        'hrb_label_duration_hours' => __('Duration Hours Label', 'hourly-room-booking'),
+        'hrb_label_additional_people' => __('Additional People Label', 'hourly-room-booking'),
+        'hrb_label_extras' => __('Extras Label', 'hourly-room-booking'),
+        'hrb_label_customer_details' => __('Customer Details Label', 'hourly-room-booking'),
+        'hrb_label_name' => __('Name Label', 'hourly-room-booking'),
+        'hrb_label_email' => __('Email Label', 'hourly-room-booking'),
+        'hrb_label_phone' => __('Phone Label', 'hourly-room-booking'),
+        'hrb_label_payment' => __('Payment Label', 'hourly-room-booking'),
+        'hrb_label_terms_conditions' => __('Terms & Conditions Text', 'hourly-room-booking'),
+        'hrb_label_complete_booking' => __('Complete Booking Button', 'hourly-room-booking'),
+        'hrb_label_what_happens_next' => __('What Happens Next Label', 'hourly-room-booking'),
+        'hrb_label_confirmation_email' => __('Confirmation Email Message', 'hourly-room-booking'),
+        'hrb_label_payment_onsite' => __('Payment Onsite Message', 'hourly-room-booking'),
+        'hrb_label_arrive_early' => __('Arrive Early Message', 'hourly-room-booking'),
+        'hrb_label_contact_modify' => __('Contact Modify Message', 'hourly-room-booking'),
+        'hrb_label_total_amount' => __('Total Amount Label', 'hourly-room-booking'),
+        'hrb_label_payment_method' => __('Payment Method Label', 'hourly-room-booking'),
         ];
 
         return $labels[$key] ?? $key;
@@ -90,6 +149,8 @@ class HRB_Settings_Helper {
             'hrb_timezone' => __('Timezone for booking calculations', 'hourly-room-booking'),
             'hrb_booking_advance_days' => __('How many days in advance can bookings be made', 'hourly-room-booking'),
             'hrb_cancellation_hours' => __('Hours before booking when cancellation is allowed', 'hourly-room-booking'),
+            'hrb_booking_start_time' => __('Earliest time when bookings can start (24-hour format, e.g., 08:00)', 'hourly-room-booking'),
+            'hrb_booking_end_time' => __('Latest time when bookings can end (24-hour format, e.g., 20:00)', 'hourly-room-booking'),
             'hrb_default_booking_duration' => __('Default booking duration in hours', 'hourly-room-booking'),
             'hrb_cooldown_minutes' => __('Minutes between bookings for room preparation', 'hourly-room-booking'),
             'hrb_enable_guest_booking' => __('Allow non-registered users to make bookings', 'hourly-room-booking'),
@@ -102,6 +163,63 @@ class HRB_Settings_Helper {
             'hrb_whatsapp_notifications' => __('Send WhatsApp notifications', 'hourly-room-booking'),
             'hrb_invoice_counter' => __('Starting number for invoice numbering', 'hourly-room-booking'),
             'hrb_tax_rate' => __('Tax rate percentage for invoices', 'hourly-room-booking'),
+            'hrb_company_logo' => __('Company logo that will appear on invoices (recommended size: 200x100px)', 'hourly-room-booking'),
+            'hrb_pricing_label' => __('Custom label to display with pricing (e.g., "Starting from", "From", etc.)', 'hourly-room-booking'),
+            'hrb_admin_email_notifications' => __('Send booking notifications to admin email', 'hourly-room-booking'),
+            'hrb_staff_email' => __('Staff email address for notifications', 'hourly-room-booking'),
+            'hrb_staff_email_notifications' => __('Send booking notifications to staff email', 'hourly-room-booking'),
+            'hrb_plugin_language' => __('Select the language for the plugin interface. This overrides the WordPress site language for this plugin only.', 'hourly-room-booking'),
+        // Customizable Labels Descriptions
+        'hrb_use_custom_labels' => __('Enable to use custom labels instead of translated text. When disabled, labels will be automatically translated based on the selected language.', 'hourly-room-booking'),
+        'hrb_label_booking_date' => __('Custom label for booking date field', 'hourly-room-booking'),
+        'hrb_label_duration' => __('Custom label for duration field', 'hourly-room-booking'),
+        'hrb_label_start_time' => __('Custom label for start time field', 'hourly-room-booking'),
+        'hrb_label_extra_people' => __('Custom label for extra people field', 'hourly-room-booking'),
+        'hrb_label_special_requests' => __('Custom label for special requests field', 'hourly-room-booking'),
+        'hrb_label_next_button' => __('Custom text for next button', 'hourly-room-booking'),
+        'hrb_label_previous_button' => __('Custom text for previous button', 'hourly-room-booking'),
+        'hrb_label_book_now_button' => __('Custom text for book now button', 'hourly-room-booking'),
+        'hrb_label_search_button' => __('Custom text for search button', 'hourly-room-booking'),
+        'hrb_label_clear_all_button' => __('Custom text for clear all button', 'hourly-room-booking'),
+        'hrb_label_select_duration' => __('Custom text for select duration placeholder', 'hourly-room-booking'),
+        'hrb_label_select_date' => __('Custom text for select date placeholder', 'hourly-room-booking'),
+        'hrb_label_loading_message' => __('Custom loading message text', 'hourly-room-booking'),
+        'hrb_label_no_slots_message' => __('Custom message when no time slots available', 'hourly-room-booking'),
+        // Additional booking form labels descriptions
+        'hrb_label_your_details' => __('Custom label for your details section', 'hourly-room-booking'),
+        'hrb_label_welcome_back' => __('Custom welcome back message for returning users', 'hourly-room-booking'),
+        'hrb_label_first_name' => __('Custom label for first name field', 'hourly-room-booking'),
+        'hrb_label_last_name' => __('Custom label for last name field', 'hourly-room-booking'),
+        'hrb_label_email_address' => __('Custom label for email address field', 'hourly-room-booking'),
+        'hrb_label_phone_number' => __('Custom label for phone number field', 'hourly-room-booking'),
+        'hrb_label_company' => __('Custom label for company field', 'hourly-room-booking'),
+        'hrb_label_company_optional' => __('Custom label for optional company field', 'hourly-room-booking'),
+        'hrb_label_contact_verification' => __('Custom label for contact verification section', 'hourly-room-booking'),
+        'hrb_label_verification_required' => __('Custom message for verification requirement', 'hourly-room-booking'),
+        'hrb_label_email_to_verify' => __('Custom label for email verification field', 'hourly-room-booking'),
+        // Booking confirmation labels descriptions
+        'hrb_label_booking_confirmation' => __('Custom label for booking confirmation title', 'hourly-room-booking'),
+        'hrb_label_booking_details' => __('Custom label for booking details section', 'hourly-room-booking'),
+        'hrb_label_room' => __('Custom label for room field', 'hourly-room-booking'),
+        'hrb_label_date' => __('Custom label for date field', 'hourly-room-booking'),
+        'hrb_label_time' => __('Custom label for time field', 'hourly-room-booking'),
+        'hrb_label_duration_hours' => __('Custom label for duration field in confirmation', 'hourly-room-booking'),
+        'hrb_label_additional_people' => __('Custom label for additional people field', 'hourly-room-booking'),
+        'hrb_label_extras' => __('Custom label for extras field', 'hourly-room-booking'),
+        'hrb_label_customer_details' => __('Custom label for customer details section', 'hourly-room-booking'),
+        'hrb_label_name' => __('Custom label for name field', 'hourly-room-booking'),
+        'hrb_label_email' => __('Custom label for email field', 'hourly-room-booking'),
+        'hrb_label_phone' => __('Custom label for phone field', 'hourly-room-booking'),
+        'hrb_label_payment' => __('Custom label for payment field', 'hourly-room-booking'),
+        'hrb_label_terms_conditions' => __('Custom text for terms and conditions checkbox', 'hourly-room-booking'),
+        'hrb_label_complete_booking' => __('Custom text for complete booking button', 'hourly-room-booking'),
+        'hrb_label_what_happens_next' => __('Custom label for what happens next section', 'hourly-room-booking'),
+        'hrb_label_confirmation_email' => __('Custom message about confirmation email', 'hourly-room-booking'),
+        'hrb_label_payment_onsite' => __('Custom message about onsite payment', 'hourly-room-booking'),
+        'hrb_label_arrive_early' => __('Custom message about arriving early', 'hourly-room-booking'),
+        'hrb_label_contact_modify' => __('Custom message about contacting for modifications', 'hourly-room-booking'),
+        'hrb_label_total_amount' => __('Custom label for total amount field', 'hourly-room-booking'),
+        'hrb_label_payment_method' => __('Custom label for payment method field', 'hourly-room-booking'),
         ];
 
         return $descriptions[$key] ?? '';
@@ -109,7 +227,8 @@ class HRB_Settings_Helper {
 
     public function get_setting_field_type(string $key): string {
         $boolean_fields = ['hrb_paypal_sandbox', 'hrb_enable_guest_booking', 'hrb_require_otp',
-                          'hrb_email_notifications', 'hrb_sms_notifications', 'hrb_whatsapp_notifications'];
+                          'hrb_email_notifications', 'hrb_sms_notifications', 'hrb_whatsapp_notifications',
+                          'hrb_admin_email_notifications', 'hrb_staff_email_notifications'];
 
         $number_fields = ['hrb_booking_advance_days', 'hrb_cancellation_hours', 'hrb_default_booking_duration',
                          'hrb_cooldown_minutes', 'hrb_max_concurrent_bookings', 'hrb_price_2_hours',
@@ -117,9 +236,10 @@ class HRB_Settings_Helper {
                          'hrb_extra_person_price', 'hrb_max_extra_people', 'hrb_paypal_fee_percentage',
                          'hrb_invoice_counter', 'hrb_tax_rate'];
 
-        $email_fields = ['hrb_company_email', 'hrb_admin_email'];
+        $email_fields = ['hrb_company_email', 'hrb_admin_email', 'hrb_staff_email'];
         $password_fields = ['hrb_paypal_client_secret', 'hrb_twilio_token', 'hrb_whatsapp_token'];
         $textarea_fields = ['hrb_company_address'];
+        $file_fields = ['hrb_company_logo'];
         $select_fields = ['hrb_timezone', 'hrb_terms_page', 'hrb_privacy_page', 'hrb_currency'];
 
         if (in_array($key, $boolean_fields)) return 'checkbox';
@@ -127,6 +247,7 @@ class HRB_Settings_Helper {
         if (in_array($key, $email_fields)) return 'email';
         if (in_array($key, $password_fields)) return 'password';
         if (in_array($key, $textarea_fields)) return 'textarea';
+        if (in_array($key, $file_fields)) return 'file';
         if (in_array($key, $select_fields)) return 'select';
 
         return 'text';
@@ -162,7 +283,10 @@ class HRB_Settings_Helper {
             'hrb_company_address' => __('Enter company address', 'hourly-room-booking'),
             'hrb_company_phone' => __('Enter company phone number', 'hourly-room-booking'),
             'hrb_company_email' => __('Enter company email', 'hourly-room-booking'),
+            'hrb_company_logo' => __('Upload company logo for invoices', 'hourly-room-booking'),
             'hrb_admin_email' => __('Enter admin email', 'hourly-room-booking'),
+            'hrb_staff_email' => __('Enter staff email', 'hourly-room-booking'),
+            'hrb_pricing_label' => __('Enter pricing label (e.g., "Starting from")', 'hourly-room-booking'),
         ];
 
         return $placeholders[$key] ?? '';
@@ -259,6 +383,11 @@ $helper = new HRB_Settings_Helper();
                                     $field_label = $helper->get_setting_label($setting_key);
                                     $field_description = $helper->get_setting_description($setting_key);
                                     $field_type = $helper->get_setting_field_type($setting_key);
+                                    
+                                    // Debug: Log logo field value
+                                    if ($setting_key === 'hrb_company_logo') {
+                                        error_log('HRB: Logo field value: ' . $field_value);
+                                    }
                                     ?>
 
                                     <div class="hrb-setting-field" data-setting="<?php echo esc_attr($setting_key); ?>">
@@ -293,6 +422,34 @@ $helper = new HRB_Settings_Helper();
                                                 <?php endforeach; ?>
                                             </select>
 
+                                        <?php elseif ($setting_key === 'hrb_plugin_language'): ?>
+                                            <select id="<?php echo esc_attr($setting_key); ?>" name="settings[<?php echo esc_attr($setting_key); ?>]">
+                                                <?php
+                                                // Check which language files actually exist
+                                                $available_languages = [
+                                                    'en_US' => 'English (US)',
+                                                    'de_DE' => 'Deutsch (German)'
+                                                ];
+                                                
+                                                foreach ($available_languages as $code => $name):
+                                                    $mo_file = HRB_PLUGIN_DIR . 'languages/hourly-room-booking-' . $code . '.mo';
+                                                    if (file_exists($mo_file)):
+                                                ?>
+                                                    <option value="<?php echo esc_attr($code); ?>" <?php selected($field_value, $code); ?>>
+                                                        <?php echo esc_html($name); ?>
+                                                    </option>
+                                                <?php 
+                                                    endif;
+                                                endforeach; 
+                                                ?>
+                                            </select>
+
+                                        <?php elseif ($setting_key === 'hrb_use_custom_labels'): ?>
+                                            <select id="<?php echo esc_attr($setting_key); ?>" name="settings[<?php echo esc_attr($setting_key); ?>]">
+                                                <option value="0" <?php selected($field_value, '0'); ?>><?php _e('Off', 'hourly-room-booking'); ?></option>
+                                                <option value="1" <?php selected($field_value, '1'); ?>><?php _e('On', 'hourly-room-booking'); ?></option>
+                                            </select>
+
                                         <?php elseif ($field_type === 'textarea'): ?>
                                             <textarea
                                                 id="<?php echo esc_attr($setting_key); ?>"
@@ -311,6 +468,35 @@ $helper = new HRB_Settings_Helper();
                                                 placeholder="<?php echo esc_attr($helper->get_setting_placeholder($setting_key)); ?>"
                                                 autocomplete="new-password"
                                             >
+
+                                        <?php elseif ($field_type === 'file'): ?>
+                                            <div class="hrb-media-upload-wrapper">
+                                                <?php if (!empty($field_value)): ?>
+                                                    <div class="hrb-current-file">
+                                                        <img src="<?php echo esc_url($field_value); ?>" alt="Current logo" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;">
+                                                        <p><strong><?php _e('Current logo:', 'hourly-room-booking'); ?></strong></p>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <input
+                                                    type="hidden"
+                                                    id="<?php echo esc_attr($setting_key); ?>"
+                                                    name="settings[<?php echo esc_attr($setting_key); ?>]"
+                                                    value="<?php echo esc_attr($field_value); ?>"
+                                                >
+                                                
+                                                <button type="button" class="button hrb-media-upload-btn" data-target="<?php echo esc_attr($setting_key); ?>">
+                                                    <?php echo !empty($field_value) ? __('Change Logo', 'hourly-room-booking') : __('Select Logo from Library', 'hourly-room-booking'); ?>
+                                                </button>
+                                                
+                                                <?php if (!empty($field_value)): ?>
+                                                    <button type="button" class="button hrb-media-remove-btn" data-target="<?php echo esc_attr($setting_key); ?>" style="margin-left: 10px;">
+                                                        <?php _e('Remove Logo', 'hourly-room-booking'); ?>
+                                                    </button>
+                                                <?php endif; ?>
+                                                
+                                                <p class="description"><?php _e('Select an image from your media library. Recommended size: 200x100px', 'hourly-room-booking'); ?></p>
+                                            </div>
 
                                         <?php else: ?>
                                             <input
@@ -398,8 +584,8 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Then collect all other field types
-        activeTab.find('input:not([type="checkbox"]):not([type="hidden"]), select, textarea').each(function() {
+        // Then collect all other field types (including hidden inputs for file fields)
+        activeTab.find('input:not([type="checkbox"]), select, textarea').each(function() {
             var $field = $(this);
             var name = $field.attr('name');
             var type = $field.attr('type');
@@ -417,6 +603,9 @@ jQuery(document).ready(function($) {
             }
         });
 
+        // Debug: Log settings being saved
+        console.log('Settings being saved:', settings);
+        
         // Add all settings to formData
         $.each(settings, function(key, value) {
             formData.append('settings[' + key + ']', value);
@@ -496,7 +685,79 @@ jQuery(document).ready(function($) {
             }, 3000);
         }
     }
-});
+    });
+    
+    // Media library integration for logo upload
+    jQuery(document).ready(function($) {
+        var mediaUploader;
+        
+        // Handle media library button click
+        $('.hrb-media-upload-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            var targetInput = $(this).data('target');
+            
+            // If the uploader object has already been created, reopen the dialog
+            if (mediaUploader) {
+                mediaUploader.open();
+                return;
+            }
+            
+            // Create the media frame
+            mediaUploader = wp.media({
+                title: 'Select Company Logo',
+                button: {
+                    text: 'Use this logo'
+                },
+                multiple: false,
+                library: {
+                    type: 'image'
+                }
+            });
+            
+            // When an image is selected, run a callback
+            mediaUploader.on('select', function() {
+                var attachment = mediaUploader.state().get('selection').first().toJSON();
+                $('#' + targetInput).val(attachment.url);
+                
+                // Update the preview
+                var wrapper = $('#' + targetInput).closest('.hrb-media-upload-wrapper');
+                if (wrapper.find('.hrb-current-file').length === 0) {
+                    wrapper.prepend('<div class="hrb-current-file"><img src="' + attachment.url + '" alt="Current logo" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;"><p><strong>Current logo:</strong></p></div>');
+                } else {
+                    wrapper.find('.hrb-current-file img').attr('src', attachment.url);
+                }
+                
+                // Update button text
+                $(this).text('Change Logo');
+                
+                // Show remove button if not already visible
+                if (wrapper.find('.hrb-media-remove-btn').length === 0) {
+                    wrapper.find('.hrb-media-upload-btn').after('<button type="button" class="button hrb-media-remove-btn" data-target="' + targetInput + '" style="margin-left: 10px;">Remove Logo</button>');
+                }
+            });
+            
+            // Open the uploader dialog
+            mediaUploader.open();
+        });
+        
+        // Handle remove button click
+        $(document).on('click', '.hrb-media-remove-btn', function(e) {
+            e.preventDefault();
+            
+            var targetInput = $(this).data('target');
+            $('#' + targetInput).val('');
+            
+            // Remove preview
+            $('#' + targetInput).closest('.hrb-media-upload-wrapper').find('.hrb-current-file').remove();
+            
+            // Update button text
+            $('#' + targetInput).closest('.hrb-media-upload-wrapper').find('.hrb-media-upload-btn').text('Select Logo from Library');
+            
+            // Hide remove button
+            $(this).remove();
+        });
+    });
 </script>
 
 <style>

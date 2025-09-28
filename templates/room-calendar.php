@@ -62,8 +62,10 @@ $calendar = HRB_Calendar::getInstance();
                 <?php printf(__('%d people', 'hourly-room-booking'), $room->capacity); ?>
             </p>
             <p class="hrb-room-price">
-                <strong><?php _e('Starting from:', 'hourly-room-booking'); ?></strong>
-                �<?php echo number_format($room->hourly_price, 2); ?> <?php _e('per hour', 'hourly-room-booking'); ?>
+                <strong><?php _e('Price Range:', 'hourly-room-booking'); ?></strong>
+                �<?php $room_manager = HRB_Room_Manager::getInstance();
+                $price_range = $room_manager->get_room_price_range($room);
+                echo $price_range['formatted']; ?>
             </p>
             <a href="#" class="hrb-btn hrb-btn-primary hrb-book-this-room" data-room-id="<?php echo $room_id; ?>">
                 <?php _e('Book This Room', 'hourly-room-booking'); ?>
@@ -239,9 +241,8 @@ jQuery(document).ready(function($) {
     // Add a small delay to ensure all scripts are loaded
     setTimeout(function() {
         // Check if FullCalendar is loaded
-        if (typeof $.fn.fullCalendar === 'undefined') {
+        if (typeof FullCalendar === 'undefined') {
             console.error('FullCalendar library is not loaded');
-            console.log('Available jQuery plugins:', Object.keys($.fn));
             $('#hrb-room-calendar-<?php echo $room_id; ?>').html('<div class="hrb-error" style="padding: 20px; text-align: center; color: #dc3545;"><?php _e('Calendar library failed to load. Please refresh the page.', 'hourly-room-booking'); ?></div>');
             return;
         }
@@ -251,54 +252,59 @@ jQuery(document).ready(function($) {
 
     function initializeCalendar() {
 
-    // Initialize FullCalendar
-    $('#hrb-room-calendar-<?php echo $room_id; ?>').fullCalendar({
-        defaultView: '<?php echo esc_js($view); ?>',
+    // Initialize FullCalendar v6 with plugins
+    const calendarEl = document.getElementById('hrb-room-calendar-<?php echo $room_id; ?>');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [FullCalendar.DayGrid, FullCalendar.TimeGrid],
+        initialView: '<?php echo esc_js($view === 'month' ? 'dayGridMonth' : ($view === 'week' ? 'timeGridWeek' : 'timeGridDay')); ?>',
         height: <?php echo $height; ?>,
-        header: {
+        headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'month,agendaWeek,agendaDay'
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         businessHours: {
-            start: '08:00',
-            end: '20:00',
-            dow: [1, 2, 3, 4, 5, 6] // Monday through Saturday
+            startTime: '<?php echo get_option('hrb_booking_start_time', '08:00'); ?>',
+            endTime: '<?php echo get_option('hrb_booking_end_time', '20:00'); ?>',
+            daysOfWeek: [1, 2, 3, 4, 5, 6] // Monday through Saturday
         },
-        minTime: '08:00:00',
-        maxTime: '20:00:00',
+        slotMinTime: '<?php echo get_option('hrb_booking_start_time', '08:00'); ?>:00',
+        slotMaxTime: '<?php echo get_option('hrb_booking_end_time', '20:00'); ?>:00',
         allDaySlot: false,
         slotDuration: '00:30:00',
         snapDuration: '00:30:00',
-        events: function(start, end, timezone, callback) {
+        events: function(info, successCallback, failureCallback) {
             // Load events for the calendar
-            loadCalendarEvents(start, end, callback);
+            loadCalendarEvents(info.start, info.end, successCallback);
         },
-        eventRender: function(event, element) {
+        eventDidMount: function(info) {
             // Customize event appearance
-            element.addClass('hrb-' + event.status);
+            info.el.classList.add('hrb-' + info.event.extendedProps.status);
 
             // Add tooltip with more information
-            element.attr('title', event.title + '\n' +
-                        '<?php _e('Time:', 'hourly-room-booking'); ?> ' + event.start.format('HH:mm') + ' - ' + event.end.format('HH:mm') + '\n' +
-                        '<?php _e('Status:', 'hourly-room-booking'); ?> ' + event.statusText);
+            info.el.setAttribute('title', info.event.title + '\n' +
+                        '<?php _e('Time:', 'hourly-room-booking'); ?> ' + info.event.start.toLocaleTimeString() + ' - ' + info.event.end.toLocaleTimeString() + '\n' +
+                        '<?php _e('Status:', 'hourly-room-booking'); ?> ' + info.event.extendedProps.statusText);
         },
-        dayClick: function(date, jsEvent, view) {
+        dateClick: function(info) {
             // Handle day/time slot click for booking
-            if (date.isBefore(moment())) {
+            if (info.date < new Date()) {
                 alert('<?php _e('Cannot book for past dates', 'hourly-room-booking'); ?>');
                 return;
             }
 
             // Redirect to booking form with pre-selected date
-            const bookingUrl = '<?php echo site_url(); ?>?room_booking=<?php echo $room_id; ?>&date=' + date.format('YYYY-MM-DD') + '&time=' + date.format('HH:mm');
+            const bookingUrl = '<?php echo site_url(); ?>?room_booking=<?php echo $room_id; ?>&date=' + info.dateStr + '&time=' + info.date.toTimeString().slice(0,5);
             window.location.href = bookingUrl;
         },
-        eventClick: function(event, jsEvent, view) {
+        eventClick: function(info) {
             // Show booking details
-            showBookingDetails(event);
+            showBookingDetails(info.event);
         }
     });
+
+    // Render the calendar
+    calendar.render();
 
     // Handle book this room button
     $('.hrb-book-this-room').on('click', function(e) {
@@ -316,8 +322,8 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'hrb_get_calendar_events',
                 room_id: <?php echo $room_id; ?>,
-                start: start.format('YYYY-MM-DD'),
-                end: end.format('YYYY-MM-DD'),
+                start: start.toISOString().split('T')[0],
+                end: end.toISOString().split('T')[0],
                 nonce: '<?php echo wp_create_nonce('hrb_calendar_nonce'); ?>'
             },
             success: function(response) {

@@ -349,7 +349,7 @@ class HRB_Payment_Handler {
                 $booking_manager = HRB_Booking_Manager::getInstance();
                 $booking_manager->update_booking($booking_id, array(
                     'status' => 'confirmed',
-                    'payment_status' => 'paid',
+                    'payment_status' => 'completed',
                     'payment_method' => 'paypal'
                 ), false); // Don't send notification during payment processing
                 
@@ -526,7 +526,7 @@ class HRB_Payment_Handler {
         // Update booking payment status
         $booking_manager = HRB_Booking_Manager::getInstance();
         $booking_manager->update_booking($booking_id, array(
-            'payment_status' => 'paid'
+            'payment_status' => 'completed'
         ), false); // Don't send notification during payment processing
         
         // Send payment confirmation
@@ -961,7 +961,7 @@ class HRB_Payment_Handler {
                 $booking_manager = HRB_Booking_Manager::getInstance();
                 $booking_manager->update_booking($booking_id, array(
                     'status' => 'confirmed',
-                    'payment_status' => 'paid',
+                    'payment_status' => 'completed',
                     'payment_method' => 'paypal'
                 ), false); // Don't send notification during payment processing
                 

@@ -55,8 +55,16 @@ if ($filter_status !== 'all') {
         </div>
         <div class="hrb-stat-card">
             <div class="hrb-stat-content">
-            <div class="hrb-stat-number"><?php echo hrb_format_amount(array_sum(array_map(function($r) { return $r->hourly_price; }, $rooms))); ?></div>
-            <div class="hrb-stat-label"><?php _e('Total Base Price', 'hourly-room-booking'); ?></div>
+            <div class="hrb-stat-number"><?php 
+            $room_manager = HRB_Room_Manager::getInstance();
+            $total_min_price = 0;
+            foreach ($rooms as $room) {
+                $price_range = $room_manager->get_room_price_range($room);
+                $total_min_price += $price_range['min'];
+            }
+            echo hrb_format_amount($total_min_price); 
+            ?></div>
+            <div class="hrb-stat-label"><?php _e('Starting from', 'hourly-room-booking'); ?></div>
             </div>
         </div>
     </div>
@@ -138,8 +146,11 @@ if ($filter_status !== 'all') {
                                 <span class="capacity-badge"><?php echo esc_html($room->capacity); ?> <?php _e('people', 'hourly-room-booking'); ?></span>
                             </td>
                             <td class="column-price">
-                                <strong><?php echo hrb_format_amount($room->hourly_price); ?></strong>
-                                <div class="price-info"><?php _e('per hour', 'hourly-room-booking'); ?></div>
+                                <?php 
+                                $room_manager = HRB_Room_Manager::getInstance();
+                                $price_range = $room_manager->get_room_price_range($room);
+                                ?>
+                                <strong><?php echo $price_range['formatted']; ?></strong>
                             </td>
                             <td class="column-amenities">
                                 <?php
@@ -240,15 +251,6 @@ if ($filter_status !== 'all') {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="room_hourly_price"><?php printf(__('Hourly Price (%s)', 'hourly-room-booking'), hrb_get_currency_symbol()); ?> *</label>
-                        </th>
-                        <td>
-                            <input type="number" name="room_hourly_price" id="room_hourly_price" min="0" step="0.01" class="regular-text" required>
-                            <p class="description"><?php _e('Base hourly rate for this room.', 'hourly-room-booking'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
                             <label for="room_price_2_hours"><?php printf(__('2 Hours Price (%s)', 'hourly-room-booking'), hrb_get_currency_symbol()); ?></label>
                         </th>
                         <td>
@@ -290,6 +292,15 @@ if ($filter_status !== 'all') {
                         <td>
                             <input type="text" name="room_amenities" id="room_amenities" class="regular-text">
                             <p class="description"><?php _e('Comma-separated list of amenities (e.g., WiFi, Projector, Whiteboard).', 'hourly-room-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="room_external_link"><?php _e('External Link', 'hourly-room-booking'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" name="room_external_link" id="room_external_link" class="regular-text" placeholder="https://example.com/room-details">
+                            <p class="description"><?php _e('Optional external link for room details. When provided, "View Details" button will redirect to this link instead of showing popup.', 'hourly-room-booking'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -1021,12 +1032,12 @@ function editRoom(roomId) {
                 document.getElementById('room_name').value = room.name || '';
                 document.getElementById('room_description').value = room.description || '';
                 document.getElementById('room_capacity').value = room.capacity || '';
-                document.getElementById('room_hourly_price').value = room.hourly_price || '';
                 document.getElementById('room_price_2_hours').value = room.price_2_hours || '';
                 document.getElementById('room_price_3_hours').value = room.price_3_hours || '';
                 document.getElementById('room_price_4_hours').value = room.price_4_hours || '';
                 document.getElementById('room_price_extra_hour').value = room.price_extra_hour || '';
                 document.getElementById('room_amenities').value = room.amenities || '';
+                document.getElementById('room_external_link').value = room.external_link || '';
                 document.getElementById('room_is_active').checked = parseInt(room.is_active) === 1;
                 
                 // Load existing images

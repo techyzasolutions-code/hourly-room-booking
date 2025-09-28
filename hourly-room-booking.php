@@ -28,6 +28,11 @@ if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
 
+// Start session for email verification
+if (!session_id()) {
+    session_start();
+}
+
 // Prevent multiple plugin instances
 if (defined('HRB_VERSION')) {
     return;
@@ -100,7 +105,10 @@ final class HourlyRoomBooking {
         'HRB_Input_Validator'     => 'class-input-validator.php',
         'HRB_Currency_Manager'    => 'class-currency-manager.php',
         'HRB_Extra_Stock_Manager' => 'class-extra-stock-manager.php',
+        'HRB_Status_Constants'    => 'class-status-constants.php',
         'HRB_Extras'              => 'class-extras.php',
+        'HRB_Invoice_Generator'   => 'class-invoice-generator.php',
+        'HRB_PDF_Generator'       => 'class-pdf-generator.php',
         'HRB_Admin'               => 'class-admin.php',
         'HRB_Frontend'            => 'class-frontend.php',
         'HRB_Shortcodes'          => 'class-shortcodes.php',
@@ -365,7 +373,12 @@ final class HourlyRoomBooking {
      */
     public function load_textdomain(): void {
         $domain = 'hourly-room-booking';
-        $locale = determine_locale();
+        
+        // Get plugin language setting
+        $plugin_language = get_option('hrb_plugin_language', 'en_US');
+        
+        // Use plugin language setting if available, otherwise use WordPress locale
+        $locale = !empty($plugin_language) ? $plugin_language : determine_locale();
         $locale = apply_filters('plugin_locale', $locale, $domain);
         
         // Load from global languages directory first
@@ -374,12 +387,18 @@ final class HourlyRoomBooking {
             WP_LANG_DIR . '/plugins/' . $domain . '-' . $locale . '.mo'
         );
         
-        // Load from plugin languages directory
-        load_plugin_textdomain(
-            $domain,
-            false,
-            dirname(HRB_PLUGIN_BASENAME) . '/languages/'
-        );
+        // Load from plugin languages directory with specific locale
+        $mo_file = HRB_PLUGIN_DIR . 'languages/hourly-room-booking-' . $locale . '.mo';
+        if (file_exists($mo_file)) {
+            load_textdomain($domain, $mo_file);
+        } else {
+            // Fallback to default loading
+            load_plugin_textdomain(
+                $domain,
+                false,
+                dirname(HRB_PLUGIN_BASENAME) . '/languages/'
+            );
+        }
     }
     
     /**
@@ -467,6 +486,7 @@ final class HourlyRoomBooking {
                 'ajaxUrl' => admin_url('admin-ajax.php'), // Keep both for compatibility
                 'nonce'   => wp_create_nonce('hrb_nonce'),
                 'currency_symbol' => HRB_Currency_Manager::getInstance()->get_currency_symbol(),
+                'currency_code' => HRB_Currency_Manager::getInstance()->get_currency_code(),
                 'strings' => [
                     'loading' => __('Loading...', 'hourly-room-booking'),
                     'error'   => __('An error occurred', 'hourly-room-booking'),

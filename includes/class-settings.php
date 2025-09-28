@@ -48,7 +48,7 @@ class HRB_Settings {
     private array $default_settings = [
         // Core plugin settings
         'hrb_version' => [
-            'default' => HRB_VERSION,
+            'default' => '1.0.0',
             'type' => 'string',
             'sanitize' => 'sanitize_text_field'
         ],
@@ -87,6 +87,16 @@ class HRB_Settings {
             'sanitize' => 'absint',
             'min' => 1,
             'max' => 168
+        ],
+        'hrb_booking_start_time' => [
+            'default' => '08:00',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_booking_end_time' => [
+            'default' => '20:00',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
         ],
         'hrb_default_booking_duration' => [
             'default' => 2,
@@ -250,10 +260,35 @@ class HRB_Settings {
             'type' => 'email',
             'sanitize' => 'sanitize_email'
         ],
+        'hrb_company_logo' => [
+            'default' => '',
+            'type' => 'string',
+            'sanitize' => 'esc_url_raw'
+        ],
         'hrb_admin_email' => [
             'default' => '',
             'type' => 'email',
             'sanitize' => 'sanitize_email'
+        ],
+        'hrb_staff_email' => [
+            'default' => '',
+            'type' => 'email',
+            'sanitize' => 'sanitize_email'
+        ],
+        'hrb_pricing_label' => [
+            'default' => '',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_admin_email_notifications' => [
+            'default' => 1,
+            'type' => 'boolean',
+            'sanitize' => 'absint'
+        ],
+        'hrb_staff_email_notifications' => [
+            'default' => 0,
+            'type' => 'boolean',
+            'sanitize' => 'absint'
         ],
 
         // Legal pages
@@ -281,8 +316,405 @@ class HRB_Settings {
             'sanitize' => 'floatval',
             'min' => 0,
             'max' => 100
+        ],
+        // Customizable Labels Defaults
+        'hrb_label_booking_date' => [
+            'default' => 'Booking Date',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_duration' => [
+            'default' => 'Duration',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_start_time' => [
+            'default' => 'Start Time',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_extra_people' => [
+            'default' => 'Extra People',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_special_requests' => [
+            'default' => 'Special Requests',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_next_button' => [
+            'default' => 'Next',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_previous_button' => [
+            'default' => 'Previous',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_book_now_button' => [
+            'default' => 'Book Now',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_search_button' => [
+            'default' => 'Search Rooms',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_clear_all_button' => [
+            'default' => 'Clear All',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_select_duration' => [
+            'default' => 'Select duration',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_select_date' => [
+            'default' => 'Select date',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_loading_message' => [
+            'default' => 'Loading...',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_no_slots_message' => [
+            'default' => 'No time slots available for the selected date and duration.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_use_custom_labels' => [
+            'default' => false,
+            'type' => 'boolean',
+            'sanitize' => 'rest_sanitize_boolean'
+        ],
+        // Additional booking form labels
+        'hrb_label_your_details' => [
+            'default' => 'Your Details',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_welcome_back' => [
+            'default' => 'Welcome back! Your details have been pre-filled from your account. You can modify them if needed.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_first_name' => [
+            'default' => 'First Name',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_last_name' => [
+            'default' => 'Last Name',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_email_address' => [
+            'default' => 'Email Address',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_phone_number' => [
+            'default' => 'Phone Number',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_company' => [
+            'default' => 'Company',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_company_optional' => [
+            'default' => 'Company (Optional)',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_contact_verification' => [
+            'default' => 'Contact Verification',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_verification_required' => [
+            'default' => 'Verification Required Please verify your email address before proceeding. We will send you a verification code.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_email_to_verify' => [
+            'default' => 'Email to verify:',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        // Booking confirmation labels
+        'hrb_label_booking_confirmation' => [
+            'default' => 'Booking Confirmation',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_booking_details' => [
+            'default' => 'Booking Details',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_room' => [
+            'default' => 'Room',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_date' => [
+            'default' => 'Date',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_time' => [
+            'default' => 'Time',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_duration_hours' => [
+            'default' => 'Duration',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_additional_people' => [
+            'default' => 'Additional People',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_extras' => [
+            'default' => 'Extras',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_customer_details' => [
+            'default' => 'Customer Details',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_name' => [
+            'default' => 'Name',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_email' => [
+            'default' => 'Email',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_phone' => [
+            'default' => 'Phone',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_payment' => [
+            'default' => 'Payment',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_terms_conditions' => [
+            'default' => 'I accept the Terms & Conditions and Privacy Policy.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_complete_booking' => [
+            'default' => 'Complete Booking',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_what_happens_next' => [
+            'default' => 'What happens next?',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_confirmation_email' => [
+            'default' => 'You will receive a confirmation email shortly with all the booking details.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_payment_onsite' => [
+            'default' => 'Please bring payment (cash or card) when you arrive for your booking.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_arrive_early' => [
+            'default' => 'Please arrive a few minutes before your booking time.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_contact_modify' => [
+            'default' => 'If you need to cancel or modify your booking, please contact us as soon as possible.',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_total_amount' => [
+            'default' => 'Total Amount',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        'hrb_label_payment_method' => [
+            'default' => 'Payment Method',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
+        // Language Settings
+        'hrb_plugin_language' => [
+            'default' => 'en_US',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
         ]
     ];
+
+    /**
+     * Get customizable label
+     *
+     * @since 1.0.0
+     * @param string $label_key The label key
+     * @return string The customized label or default
+     */
+    public function get_label(string $label_key): string {
+        // Check if we should use custom labels or translations
+        $use_custom_labels = $this->get('hrb_use_custom_labels', false);
+        
+        if ($use_custom_labels) {
+            // Use custom labels from database
+            $label_value = $this->get($label_key);
+            if (!empty($label_value)) {
+                return $label_value;
+            }
+        }
+        
+        // Always use translated text (respects language setting)
+        switch ($label_key) {
+            case 'hrb_label_booking_date':
+                return __('Booking Date', 'hourly-room-booking');
+            case 'hrb_label_duration':
+                return __('Duration', 'hourly-room-booking');
+            case 'hrb_label_start_time':
+                return __('Start Time', 'hourly-room-booking');
+            case 'hrb_label_extra_people':
+                return __('Extra People', 'hourly-room-booking');
+            case 'hrb_label_special_requests':
+                return __('Special Requests', 'hourly-room-booking');
+            case 'hrb_label_next_button':
+                return __('Next', 'hourly-room-booking');
+            case 'hrb_label_previous_button':
+                return __('Previous', 'hourly-room-booking');
+            case 'hrb_label_book_now_button':
+                return __('Book Now', 'hourly-room-booking');
+            case 'hrb_label_search_button':
+                return __('Search Rooms', 'hourly-room-booking');
+            case 'hrb_label_clear_all_button':
+                return __('Clear All', 'hourly-room-booking');
+            case 'hrb_label_select_duration':
+                return __('Select duration', 'hourly-room-booking');
+            case 'hrb_label_select_date':
+                return __('Select date', 'hourly-room-booking');
+            case 'hrb_label_loading_message':
+                return __('Loading...', 'hourly-room-booking');
+            case 'hrb_label_no_slots_message':
+                return __('No time slots available for the selected date and duration.', 'hourly-room-booking');
+            // Additional booking form labels
+            case 'hrb_label_your_details':
+                return __('Your Details', 'hourly-room-booking');
+            case 'hrb_label_welcome_back':
+                return __('Welcome back! Your details have been pre-filled from your account. You can modify them if needed.', 'hourly-room-booking');
+            case 'hrb_label_first_name':
+                return __('First Name', 'hourly-room-booking');
+            case 'hrb_label_last_name':
+                return __('Last Name', 'hourly-room-booking');
+            case 'hrb_label_email_address':
+                return __('Email Address', 'hourly-room-booking');
+            case 'hrb_label_phone_number':
+                return __('Phone Number', 'hourly-room-booking');
+            case 'hrb_label_company':
+                return __('Company', 'hourly-room-booking');
+            case 'hrb_label_company_optional':
+                return __('Company (Optional)', 'hourly-room-booking');
+            case 'hrb_label_contact_verification':
+                return __('Contact Verification', 'hourly-room-booking');
+            case 'hrb_label_verification_required':
+                return __('Verification Required Please verify your email address before proceeding. We will send you a verification code.', 'hourly-room-booking');
+            case 'hrb_label_email_to_verify':
+                return __('Email to verify:', 'hourly-room-booking');
+            // Booking confirmation labels
+            case 'hrb_label_booking_confirmation':
+                return __('Booking Confirmation', 'hourly-room-booking');
+            case 'hrb_label_booking_details':
+                return __('Booking Details', 'hourly-room-booking');
+            case 'hrb_label_room':
+                return __('Room', 'hourly-room-booking');
+            case 'hrb_label_date':
+                return __('Date', 'hourly-room-booking');
+            case 'hrb_label_time':
+                return __('Time', 'hourly-room-booking');
+            case 'hrb_label_duration_hours':
+                return __('Duration', 'hourly-room-booking');
+            case 'hrb_label_additional_people':
+                return __('Additional People', 'hourly-room-booking');
+            case 'hrb_label_extras':
+                return __('Extras', 'hourly-room-booking');
+            case 'hrb_label_customer_details':
+                return __('Customer Details', 'hourly-room-booking');
+            case 'hrb_label_name':
+                return __('Name', 'hourly-room-booking');
+            case 'hrb_label_email':
+                return __('Email', 'hourly-room-booking');
+            case 'hrb_label_phone':
+                return __('Phone', 'hourly-room-booking');
+            case 'hrb_label_payment':
+                return __('Payment', 'hourly-room-booking');
+            case 'hrb_label_terms_conditions':
+                return __('I accept the Terms & Conditions and Privacy Policy.', 'hourly-room-booking');
+            case 'hrb_label_complete_booking':
+                return __('Complete Booking', 'hourly-room-booking');
+            case 'hrb_label_what_happens_next':
+                return __('What happens next?', 'hourly-room-booking');
+            case 'hrb_label_confirmation_email':
+                return __('You will receive a confirmation email shortly with all the booking details.', 'hourly-room-booking');
+            case 'hrb_label_payment_onsite':
+                return __('Please bring payment (cash or card) when you arrive for your booking.', 'hourly-room-booking');
+            case 'hrb_label_arrive_early':
+                return __('Please arrive a few minutes before your booking time.', 'hourly-room-booking');
+            case 'hrb_label_contact_modify':
+                return __('If you need to cancel or modify your booking, please contact us as soon as possible.', 'hourly-room-booking');
+            case 'hrb_label_total_amount':
+                return __('Total Amount', 'hourly-room-booking');
+            case 'hrb_label_payment_method':
+                return __('Payment Method', 'hourly-room-booking');
+            default:
+                return $default_value;
+        }
+    }
+
+    /**
+     * Reload text domain when language setting changes
+     *
+     * @since 1.0.0
+     */
+    public function reload_textdomain(): void {
+        $domain = 'hourly-room-booking';
+        $locale = get_option('hrb_plugin_language', 'en_US');
+        
+        // Unload current text domain
+        unload_textdomain($domain);
+        
+        // Load new text domain with specific locale
+        $mo_file = HRB_PLUGIN_DIR . 'languages/hourly-room-booking-' . $locale . '.mo';
+        if (file_exists($mo_file)) {
+            load_textdomain($domain, $mo_file);
+        } else {
+            // Fallback to default
+            load_plugin_textdomain(
+                $domain,
+                false,
+                dirname(HRB_PLUGIN_BASENAME) . '/languages/'
+            );
+        }
+    }
 
     /**
      * Get singleton instance
@@ -589,7 +1021,9 @@ class HRB_Settings {
                     'hrb_currency',
                     'hrb_date_format',
                     'hrb_time_format',
-                    'hrb_timezone'
+                    'hrb_timezone',
+                    'hrb_pricing_label',
+                    'hrb_plugin_language'
                 ]
             ],
             'booking' => [
@@ -597,6 +1031,8 @@ class HRB_Settings {
                 'settings' => [
                     'hrb_booking_advance_days',
                     'hrb_cancellation_hours',
+                    'hrb_booking_start_time',
+                    'hrb_booking_end_time',
                     'hrb_default_booking_duration',
                     'hrb_cooldown_minutes',
                     'hrb_enable_guest_booking',
@@ -644,7 +1080,11 @@ class HRB_Settings {
                     'hrb_company_address',
                     'hrb_company_phone',
                     'hrb_company_email',
-                    'hrb_admin_email'
+                    'hrb_company_logo',
+                    'hrb_admin_email',
+                    'hrb_admin_email_notifications',
+                    'hrb_staff_email',
+                    'hrb_staff_email_notifications'
                 ]
             ],
             'legal' => [
@@ -655,7 +1095,62 @@ class HRB_Settings {
                     'hrb_invoice_counter',
                     'hrb_tax_rate'
                 ]
+            ],
+        'labels' => [
+            'title' => __('Customizable Labels & Texts', 'hourly-room-booking'),
+            'settings' => [
+                'hrb_use_custom_labels',
+                'hrb_label_booking_date',
+                'hrb_label_duration',
+                'hrb_label_start_time',
+                'hrb_label_extra_people',
+                'hrb_label_special_requests',
+                'hrb_label_next_button',
+                'hrb_label_previous_button',
+                'hrb_label_book_now_button',
+                'hrb_label_search_button',
+                'hrb_label_clear_all_button',
+                'hrb_label_select_duration',
+                'hrb_label_select_date',
+                'hrb_label_loading_message',
+                'hrb_label_no_slots_message',
+                // Additional booking form labels
+                'hrb_label_your_details',
+                'hrb_label_welcome_back',
+                'hrb_label_first_name',
+                'hrb_label_last_name',
+                'hrb_label_email_address',
+                'hrb_label_phone_number',
+                'hrb_label_company',
+                'hrb_label_company_optional',
+                'hrb_label_contact_verification',
+                'hrb_label_verification_required',
+                'hrb_label_email_to_verify',
+                // Booking confirmation labels
+                'hrb_label_booking_confirmation',
+                'hrb_label_booking_details',
+                'hrb_label_room',
+                'hrb_label_date',
+                'hrb_label_time',
+                'hrb_label_duration_hours',
+                'hrb_label_additional_people',
+                'hrb_label_extras',
+                'hrb_label_customer_details',
+                'hrb_label_name',
+                'hrb_label_email',
+                'hrb_label_phone',
+                'hrb_label_payment',
+                'hrb_label_terms_conditions',
+                'hrb_label_complete_booking',
+                'hrb_label_what_happens_next',
+                'hrb_label_confirmation_email',
+                'hrb_label_payment_onsite',
+                'hrb_label_arrive_early',
+                'hrb_label_contact_modify',
+                'hrb_label_total_amount',
+                'hrb_label_payment_method'
             ]
+        ]
         ];
     }
 
@@ -695,6 +1190,11 @@ class HRB_Settings {
             } else {
                 $errors[$key] = __('Failed to save setting', 'hourly-room-booking');
             }
+        }
+
+        // Reload text domain if language setting was changed
+        if (isset($settings['hrb_plugin_language'])) {
+            $this->reload_textdomain();
         }
 
         if (!empty($errors)) {

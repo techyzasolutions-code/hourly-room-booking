@@ -308,8 +308,14 @@ class HRB_Calendar {
      */
     public function get_available_time_slots(int $room_id, string $date): array {
         $slots = [];
-        $start_hour = 8; // 8 AM
-        $end_hour = 20;  // 8 PM
+        
+        // Get booking time range from settings
+        $booking_start_time = get_option('hrb_booking_start_time', '08:00');
+        $booking_end_time = get_option('hrb_booking_end_time', '20:00');
+        
+        // Parse start and end times
+        $start_hour = intval(substr($booking_start_time, 0, 2));
+        $end_hour = intval(substr($booking_end_time, 0, 2));
 
         for ($hour = $start_hour; $hour < $end_hour; $hour++) {
             $start_time = sprintf('%02d:00:00', $hour);

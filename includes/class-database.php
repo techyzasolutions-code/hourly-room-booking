@@ -302,6 +302,7 @@ class HRB_Database {
             id int(11) NOT NULL AUTO_INCREMENT,
             template_key varchar(50) NOT NULL,
             template_name varchar(100) NOT NULL,
+            template_type varchar(20) NOT NULL DEFAULT 'user',
             subject varchar(255) NOT NULL,
             heading varchar(255) NOT NULL,
             message text NOT NULL,
@@ -310,7 +311,7 @@ class HRB_Database {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY template_key (template_key)
+            UNIQUE KEY template_key_type (template_key, template_type)
         ) $charset_collate;";
 
         // Execute table creation with error logging
@@ -370,6 +371,10 @@ class HRB_Database {
 
         // Update database version
         update_option('hrb_database_version', HRB_VERSION);
+        
+        // Run migrations for existing installations
+        self::add_template_type_column();
+        self::add_missing_templates();
 
         // Clean output buffer to prevent unexpected output
         if (ob_get_level()) {
@@ -527,7 +532,12 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN price_extra_hour decimal(10,2) NOT NULL DEFAULT 0.00 AFTER price_4_hours");
             }
 
-            error_log("HRB Database: Fixed rooms table structure with new pricing columns");
+            // Add external_link column if missing
+            if (!in_array('external_link', $column_names)) {
+                $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN external_link varchar(500) NULL AFTER amenities");
+            }
+
+            error_log("HRB Database: Fixed rooms table structure with new pricing columns and external link");
         }
 
         return true;
@@ -697,8 +707,10 @@ class HRB_Database {
 
         // Insert default email templates
         $default_templates = array(
-            'booking_confirmation' => array(
-                'template_name' => 'Booking Confirmation',
+            // User templates
+            'booking_confirmation_user' => array(
+                'template_name' => 'Booking Confirmation (User)',
+                'template_type' => 'user',
                 'subject' => 'Booking Confirmed - {booking_reference}',
                 'heading' => 'Booking Confirmed!',
                 'message' => 'Thank you for your booking. Here are your booking details:',
@@ -780,8 +792,9 @@ class HRB_Database {
 </body>
 </html>'
             ),
-            'payment_confirmation' => array(
-                'template_name' => 'Payment Confirmation',
+            'payment_confirmation_user' => array(
+                'template_name' => 'Payment Confirmation (User)',
+                'template_type' => 'user',
                 'subject' => 'Payment Confirmed - {booking_reference}',
                 'heading' => 'Payment Received!',
                 'message' => 'Your payment has been successfully processed.',
@@ -1051,6 +1064,191 @@ class HRB_Database {
     </div>
 </body>
 </html>'
+            ),
+            
+            // Admin templates
+            'booking_confirmation_admin' => array(
+                'template_name' => 'Booking Confirmation (Admin)',
+                'template_type' => 'admin',
+                'subject' => 'New Booking Received - {booking_reference}',
+                'heading' => 'New Booking Alert!',
+                'message' => 'A new booking has been received. Here are the details:',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Booking Alert</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .alert { background: #e74c3c; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Booking Alert</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>Action Required:</strong> A new booking has been received and requires your attention.
+            </div>
+            
+            <div class="booking-details">
+                <h3>Customer Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Customer Name:</span>
+                    <span class="detail-value">{customer_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{customer_email}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Phone:</span>
+                    <span class="detail-value">{customer_phone}</span>
+                </div>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Booking Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">{total_amount}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{payment_method}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">{booking_status}</span>
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking Details</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
+            
+            'payment_confirmation_admin' => array(
+                'template_name' => 'Payment Confirmation (Admin)',
+                'template_type' => 'admin',
+                'subject' => 'Payment Received - {booking_reference}',
+                'heading' => 'Payment Confirmed!',
+                'message' => 'A payment has been successfully processed for a booking.',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #27ae60; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .success { background: #27ae60; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Payment Confirmed</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="success">
+                <strong>Payment Successfully Processed!</strong>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Customer Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Customer Name:</span>
+                    <span class="detail-value">{customer_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{customer_email}</span>
+                </div>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Payment Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value">{total_amount}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{payment_method}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking Details</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
             )
         );
 
@@ -1061,13 +1259,14 @@ class HRB_Database {
                 array(
                     'template_key' => $key,
                     'template_name' => $template['template_name'],
+                    'template_type' => $template['template_type'],
                     'subject' => $template['subject'],
                     'heading' => $template['heading'],
                     'message' => $template['message'],
                     'html_content' => $template['html_content'],
                     'is_active' => 1
                 ),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
             );
         }
     }
@@ -1236,6 +1435,346 @@ class HRB_Database {
         } while ($exists > 0);
         
         return $reference;
+    }
+    
+    /**
+     * Add template_type column to existing email_templates table
+     */
+    public static function add_template_type_column() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'hrb_email_templates';
+        
+        // Check if template_type column exists
+        $column_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'template_type'",
+            DB_NAME, $table_name
+        ));
+        
+        if (empty($column_exists)) {
+            // Add the template_type column
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN template_type varchar(20) NOT NULL DEFAULT 'user' AFTER template_name");
+            
+            // Update existing templates to be user type
+            $wpdb->query("UPDATE $table_name SET template_type = 'user' WHERE template_type = '' OR template_type IS NULL");
+            
+            // Add unique constraint
+            $wpdb->query("ALTER TABLE $table_name ADD UNIQUE KEY template_key_type (template_key, template_type)");
+        }
+    }
+    
+    /**
+     * Add missing email templates for existing installations
+     */
+    public static function add_missing_templates() {
+        global $wpdb;
+        
+        $templates_table = $wpdb->prefix . 'hrb_email_templates';
+        
+        // Check if templates table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$templates_table'");
+        if (!$table_exists) {
+            return;
+        }
+        
+        // Define missing templates
+        $missing_templates = array(
+            'booking_reminder_user' => array(
+                'template_name' => 'Booking Reminder (User)',
+                'template_type' => 'user',
+                'subject' => 'Booking Reminder - {booking_reference}',
+                'heading' => 'Booking Reminder',
+                'message' => 'This is a reminder that your booking starts in 1 hour.',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Reminder</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #f39c12; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .reminder { background: #f39c12; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Reminder</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="reminder">
+                <strong>Reminder:</strong> Your booking starts in 1 hour!
+            </div>
+            
+            <div class="booking-details">
+                <h3>Booking Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking Details</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
+            
+            'booking_cancelled_user' => array(
+                'template_name' => 'Booking Cancelled (User)',
+                'template_type' => 'user',
+                'subject' => 'Booking Cancelled - {booking_reference}',
+                'heading' => 'Booking Cancelled',
+                'message' => 'Your booking has been cancelled.',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Cancelled</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .cancelled { background: #e74c3c; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Cancelled</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="cancelled">
+                <strong>Booking Cancelled</strong>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Cancelled Booking Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+            </div>
+            
+            <p>If you have any questions about this cancellation, please contact us at {company_email} or {company_phone}</p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for using our booking service.</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
+            
+            'booking_modified_user' => array(
+                'template_name' => 'Booking Modified (User)',
+                'template_type' => 'user',
+                'subject' => 'Booking Modified - {booking_reference}',
+                'heading' => 'Booking Updated',
+                'message' => 'Your booking has been modified. Please review the updated details:',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Modified</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #3498db; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .modified { background: #3498db; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Updated</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="modified">
+                <strong>Booking Modified</strong>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Updated Booking Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">{total_amount}</span>
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Updated Booking</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions about these changes, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
+            
+            'otp_verification_user' => array(
+                'template_name' => 'OTP Verification (User)',
+                'template_type' => 'user',
+                'subject' => 'Your Verification Code - {otp_code}',
+                'heading' => 'Email Verification',
+                'message' => 'Please use the following code to verify your email address:',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #27ae60; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .otp-code { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 2px dashed #27ae60; }
+        .otp-number { font-size: 32px; font-weight: bold; color: #27ae60; letter-spacing: 5px; margin: 10px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .warning { background: #f39c12; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Email Verification</h1>
+            <p>Please verify your email address</p>
+        </div>
+        
+        <div class="content">
+            <p>Hello {customer_name},</p>
+            
+            <p>To complete your booking, please verify your email address using the code below:</p>
+            
+            <div class="otp-code">
+                <h3>Your Verification Code</h3>
+                <div class="otp-number">{otp_code}</div>
+                <p><small>This code will expire in 15 minutes</small></p>
+            </div>
+            
+            <div class="warning">
+                <strong>Important:</strong> Do not share this code with anyone. Our team will never ask for your verification code.
+            </div>
+            
+            <p>If you did not request this verification, please ignore this email.</p>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>'
+            )
+        );
+        
+        // Insert missing templates
+        foreach ($missing_templates as $key => $template) {
+            // Check if template already exists
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $templates_table WHERE template_key = %s AND template_type = %s",
+                $key, $template['template_type']
+            ));
+            
+            if (!$exists) {
+                $wpdb->insert(
+                    $templates_table,
+                    array(
+                        'template_key' => $key,
+                        'template_name' => $template['template_name'],
+                        'template_type' => $template['template_type'],
+                        'subject' => $template['subject'],
+                        'heading' => $template['heading'],
+                        'message' => $template['message'],
+                        'html_content' => $template['html_content'],
+                        'is_active' => 1
+                    ),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                );
+            }
+        }
     }
 }
 ?>

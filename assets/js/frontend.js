@@ -355,7 +355,7 @@
             const formData = this.getFormData(form);
             const resultsContainer = form.siblings('.hrb-search-results');
             
-            this.showLoading(resultsContainer);
+            //this.showLoading(resultsContainer);
 
             const ajaxObj = window.hrbAjax || window.hrb_ajax || {};
             $.ajax({
@@ -602,11 +602,23 @@
         }
 
         showLoading(element) {
-            //element.append('<div class="hrb-loading-overlay"><div class="hrb-loading"></div></div>');
+            // Remove any existing loading states
+            this.hideLoading(element);
+            
+            // Create overlay loading
+            const overlay = $(`
+                <div class="hrb-loading-overlay">
+                    <div class="hrb-loading-message">
+                        <div class="hrb-loading-spinner"></div>
+                    </div>
+                </div>
+            `);
+            
+            element.append(overlay);
         }
 
         hideLoading(element) {
-            element.find('.hrb-loading-overlay').remove();
+            element.find('.hrb-loading-overlay, .hrb-loading-message').remove();
         }
 
         showMessage(type, message) {
@@ -634,9 +646,18 @@
         formatPrice(amount) {
             const ajaxData = window.hrbAjax || {};
             const currencySymbol = ajaxData.currency_symbol || '$';
-
-            // Simple formatting with dynamic currency symbol
-            return currencySymbol + parseFloat(amount).toFixed(2);
+            const currencyCode = ajaxData.currency_code || 'EUR';
+            
+            const formattedAmount = parseFloat(amount).toFixed(2);
+            
+            // Currency positioning logic
+            if (currencyCode === 'USD') {
+                // USD: symbol before amount
+                return currencySymbol + formattedAmount;
+            } else {
+                // EUR and others: symbol after amount
+                return formattedAmount + ' ' + currencySymbol;
+            }
         }
 
         formatDate(date) {

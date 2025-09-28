@@ -270,7 +270,7 @@ if ($booking_ref) {
         border-color: var(--hrb-warning);
     }
 
-    .hrb-payment-paid {
+    .hrb-payment-completed {
         background: linear-gradient(135deg, #d1fae5, #a7f3d0);
         color: #047857;
         border-color: var(--hrb-success);
@@ -591,12 +591,12 @@ if ($booking_ref) {
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Tax', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo get_option('hrb_currency_symbol', '€') . number_format($booking->tax_amount, 2); ?></span>
+                    <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->tax_amount); ?></span>
                 </div>
 
                 <div class="hrb-detail-row hrb-total-amount">
                     <span class="hrb-detail-label"><?php _e('Total Amount', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo get_option('hrb_currency_symbol', '€') . number_format($booking->total_amount, 2); ?></span>
+                    <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->total_amount); ?></span>
                 </div>
             </div>
 
@@ -634,9 +634,7 @@ if ($booking_ref) {
                     <?php _e('Request Modification', 'hourly-room-booking'); ?>
                 </a>
 
-                <button onclick="confirmCancellation('<?php echo esc_js($booking->booking_reference); ?>')" class="hrb-btn hrb-btn-danger">
-                    <?php _e('Cancel Booking', 'hourly-room-booking'); ?>
-                </button>
+               
             <?php endif; ?>
 
             <a href="<?php echo home_url(); ?>" class="hrb-btn hrb-btn-secondary">

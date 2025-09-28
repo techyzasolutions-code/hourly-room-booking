@@ -29,180 +29,62 @@ msgid "Error: Room ID is required"
 msgstr "Fehler: Raum-ID ist erforderlich"
 
 msgid "Error: Room not available"
-msgstr "Fehler: Raum nicht verfügbar"
+msgstr "Fehler: Raum nicht verfÃ¼gbar"
 
 msgid "Room not found or inactive"
 msgstr "Raum nicht gefunden oder inaktiv"
 
-# Room Management
-msgid "Room name is required"
-msgstr "Raumname ist erforderlich"
-
-msgid "Room capacity must be at least 1"
-msgstr "Raumkapazität muss mindestens 1 sein"
-
-msgid "Hourly price cannot be negative"
-msgstr "Stundensatz kann nicht negativ sein"
-
-msgid "Failed to create room"
-msgstr "Raum konnte nicht erstellt werden"
-
-msgid "Room not found"
-msgstr "Raum nicht gefunden"
-
-msgid "Failed to update room"
-msgstr "Raum konnte nicht aktualisiert werden"
-
-msgid "Cannot delete room with existing bookings"
-msgstr "Raum mit bestehenden Buchungen kann nicht gelöscht werden"
-
-msgid "Failed to delete room"
-msgstr "Raum konnte nicht gelöscht werden"
-
-msgid "Permission denied"
-msgstr "Zugriff verweigert"
-
-msgid "Failed to update room status"
-msgstr "Raumstatus konnte nicht aktualisiert werden"
-
-# Booking Management
-msgid "Field %s is required"
-msgstr "Feld %s ist erforderlich"
-
-msgid "Selected room is not available"
-msgstr "Ausgewählter Raum ist nicht verfügbar"
-
-msgid "Cannot book for past dates"
-msgstr "Buchungen für vergangene Daten sind nicht möglich"
-
-msgid "Cannot book more than %d days in advance"
-msgstr "Buchungen können nicht mehr als %d Tage im Voraus erfolgen"
-
-msgid "Minimum booking duration is 2 hours"
-msgstr "Mindest-Buchungsdauer beträgt 2 Stunden"
-
-msgid "Maximum booking duration is 12 hours"
-msgstr "Maximale Buchungsdauer beträgt 12 Stunden"
-
-msgid "Bookings of 4 hours or more require PayPal payment"
-msgstr "Buchungen von 4 Stunden oder mehr erfordern PayPal-Zahlung"
-
-msgid "Selected time slot is not available"
-msgstr "Ausgewählter Zeitslot ist nicht verfügbar"
-
-msgid "Failed to create booking"
-msgstr "Buchung konnte nicht erstellt werden"
-
-msgid "Booking not found"
-msgstr "Buchung nicht gefunden"
-
-msgid "Failed to update booking"
-msgstr "Buchung konnte nicht aktualisiert werden"
-
-msgid "Updated time slot conflicts with existing booking"
-msgstr "Aktualisierter Zeitslot kollidiert mit bestehender Buchung"
-
-msgid "Invoice creation failed"
-msgstr "Rechnungserstellung fehlgeschlagen"
-
-msgid "Failed to create invoice"
-msgstr "Rechnung konnte nicht erstellt werden"
-
-# Payment
-msgid "PayPal configuration is missing"
-msgstr "PayPal-Konfiguration fehlt"
-
-msgid "Failed to get PayPal access token"
-msgstr "PayPal-Zugriffstoken konnte nicht abgerufen werden"
-
-msgid "Security check failed"
-msgstr "Sicherheitsüberprüfung fehlgeschlagen"
-
-msgid "Invalid booking data"
-msgstr "Ungültige Buchungsdaten"
-
-msgid "Room booking: %s on %s"
-msgstr "Raumbuchung: %s am %s"
-
-msgid "Failed to create PayPal order"
-msgstr "PayPal-Bestellung konnte nicht erstellt werden"
-
-msgid "Payment completed successfully"
-msgstr "Zahlung erfolgreich abgeschlossen"
-
-msgid "Payment failed"
-msgstr "Zahlung fehlgeschlagen"
-
-# Admin Interface
-msgid "Room Bookings"
-msgstr "Raumbuchungen"
-
-msgid "All Bookings"
-msgstr "Alle Buchungen"
-
-msgid "Rooms"
-msgstr "Räume"
-
-msgid "Calendar"
-msgstr "Kalender"
-
-msgid "Customers"
-msgstr "Kunden"
-
-msgid "Payments"
-msgstr "Zahlungen"
-
-msgid "Reports"
-msgstr "Berichte"
-
-msgid "Settings"
-msgstr "Einstellungen"
-
-msgid "Dashboard"
-msgstr "Dashboard"
+# Frontend Form Labels
+msgid "Date & Time"
+msgstr "Datum & Zeit"
 
 msgid "Extras"
 msgstr "Extras"
 
-# Booking Form
-msgid "Date & Time"
-msgstr "Datum & Zeit"
+msgid "Details"
+msgstr "Details"
 
-msgid "Select Date"
-msgstr "Datum auswählen"
+msgid "Payment"
+msgstr "Zahlung"
 
-msgid "Start Time"
-msgstr "Startzeit"
+msgid "Confirm"
+msgstr "BestÃ¤tigen"
 
-msgid "End Time"
-msgstr "Endzeit"
+msgid "Select Date & Time"
+msgstr "Datum & Zeit auswÃ¤hlen"
 
-msgid "Duration"
-msgstr "Dauer"
+msgid "Available Time Slots"
+msgstr "VerfÃ¼gbare Zeitslots"
 
-msgid "hours"
-msgstr "Stunden"
+msgid "Please select a date and duration first"
+msgstr "Bitte wÃ¤hlen Sie zuerst ein Datum und eine Dauer aus"
 
-msgid "hour"
-msgstr "Stunde"
-
-msgid "Extra People"
-msgstr "Zusätzliche Personen"
-
-msgid "Number of extra people"
-msgstr "Anzahl zusätzlicher Personen"
-
-msgid "Maximum 10 extra people allowed"
-msgstr "Maximal 10 zusätzliche Personen erlaubt"
-
-msgid "¬15 per person"
-msgstr "15¬ pro Person"
+msgid "Extras & Additional People"
+msgstr "Extras & ZusÃ¤tzliche Personen"
 
 msgid "Available Extras"
-msgstr "Verfügbare Extras"
+msgstr "VerfÃ¼gbare Extras"
 
-msgid "Personal Details"
-msgstr "Persönliche Daten"
+msgid "No extras available at this time."
+msgstr "Derzeit sind keine Extras verfÃ¼gbar."
+
+msgid "Additional People"
+msgstr "ZusÃ¤tzliche Personen"
+
+msgid "Special Requests"
+msgstr "Besondere WÃ¼nsche"
+
+msgid "Any special requirements or requests..."
+msgstr "Besondere Anforderungen oder WÃ¼nsche..."
+
+msgid "Your Details"
+msgstr "Ihre Details"
+
+msgid "Welcome back!"
+msgstr "Willkommen zurÃ¼ck!"
+
+msgid "Your details have been pre-filled from your account. You can modify them if needed."
+msgstr "Ihre Daten wurden aus Ihrem Konto vorausgefÃ¼llt. Sie kÃ¶nnen sie bei Bedarf Ã¤ndern."
 
 msgid "First Name"
 msgstr "Vorname"
@@ -210,142 +92,305 @@ msgstr "Vorname"
 msgid "Last Name"
 msgstr "Nachname"
 
-msgid "Email"
-msgstr "E-Mail"
+msgid "Email Address"
+msgstr "E-Mail-Adresse"
 
-msgid "Phone"
-msgstr "Telefon"
+msgid "Phone Number"
+msgstr "Telefonnummer"
 
-msgid "Company"
-msgstr "Firma"
+msgid "Company (Optional)"
+msgstr "Unternehmen (Optional)"
 
-msgid "Special Requests"
-msgstr "Sonderwünsche"
+msgid "Contact Verification"
+msgstr "Kontaktverifizierung"
 
-msgid "Payment Method"
-msgstr "Zahlungsart"
+msgid "Verification Required"
+msgstr "Verifizierung erforderlich"
 
-msgid "PayPal"
-msgstr "PayPal"
+msgid "Please verify your contact information before proceeding. Choose your preferred verification method."
+msgstr "Bitte verifizieren Sie Ihre Kontaktinformationen, bevor Sie fortfahren. WÃ¤hlen Sie Ihre bevorzugte Verifizierungsmethode."
 
-msgid "Pay on-site"
-msgstr "Vor Ort bezahlen"
+msgid "Please verify your phone number before proceeding. We will send you a verification code via SMS."
+msgstr "Bitte verifizieren Sie Ihre Telefonnummer, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode per SMS."
 
-msgid "Summary"
-msgstr "Zusammenfassung"
+msgid "Please verify your email address before proceeding. We will send you a verification code."
+msgstr "Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode."
 
-msgid "Room"
-msgstr "Raum"
+msgid "Choose Verification Method:"
+msgstr "Verifizierungsmethode wÃ¤hlen:"
 
+msgid "Email Verification"
+msgstr "E-Mail-Verifizierung"
+
+msgid "Send verification code to your email address"
+msgstr "Verifizierungscode an Ihre E-Mail-Adresse senden"
+
+msgid "SMS Verification"
+msgstr "SMS-Verifizierung"
+
+msgid "Send verification code to your phone number"
+msgstr "Verifizierungscode an Ihre Telefonnummer senden"
+
+msgid "Email to verify:"
+msgstr "E-Mail zur Verifizierung:"
+
+msgid "Phone to verify:"
+msgstr "Telefon zur Verifizierung:"
+
+# Search Form
 msgid "Date"
 msgstr "Datum"
 
 msgid "Time"
 msgstr "Zeit"
 
-msgid "Base Price"
-msgstr "Grundpreis"
+msgid "Select date"
+msgstr "Datum auswÃ¤hlen"
 
-msgid "Extra People Cost"
-msgstr "Kosten für zusätzliche Personen"
+msgid "Any time"
+msgstr "Beliebige Zeit"
 
-msgid "Extras Cost"
-msgstr "Kosten für Extras"
+msgid "Duration"
+msgstr "Dauer"
 
-msgid "Subtotal"
-msgstr "Zwischensumme"
+msgid "Any duration"
+msgstr "Beliebige Dauer"
 
-msgid "Tax"
-msgstr "Steuer"
+msgid "hour"
+msgstr "Stunde"
 
-msgid "PayPal Fee"
-msgstr "PayPal-Gebühr"
+msgid "hours"
+msgstr "Stunden"
 
-msgid "Total"
-msgstr "Gesamt"
+msgid "Search Results (%d rooms found)"
+msgstr "Suchergebnisse (%d RÃ¤ume gefunden)"
+
+msgid "Available Rooms (%d)"
+msgstr "VerfÃ¼gbare RÃ¤ume (%d)"
+
+msgid "Sort by Name"
+msgstr "Nach Name sortieren"
+
+msgid "Sort by Price"
+msgstr "Nach Preis sortieren"
+
+msgid "No rooms available matching your criteria."
+msgstr "Keine RÃ¤ume verfÃ¼gbar, die Ihren Kriterien entsprechen."
+
+msgid "Up to %d people"
+msgstr "Bis zu %d Personen"
+
+msgid "more"
+msgstr "mehr"
+
+msgid "View Details"
+msgstr "Details anzeigen"
 
 msgid "Book Now"
 msgstr "Jetzt buchen"
 
-msgid "Previous"
-msgstr "Zurück"
+msgid "Load More Rooms"
+msgstr "Weitere RÃ¤ume laden"
 
-msgid "Next"
-msgstr "Weiter"
+msgid "No More Rooms"
+msgstr "Keine weiteren RÃ¤ume"
 
-# Booking Status
+msgid "Book This Room"
+msgstr "Diesen Raum buchen"
+
+msgid "Failed to load booking form"
+msgstr "Buchungsformular konnte nicht geladen werden"
+
+msgid "Room Details"
+msgstr "Raumdetails"
+
+msgid "Failed to load room details"
+msgstr "Raumdetails konnten nicht geladen werden"
+
+msgid "No rooms available for the selected criteria."
+msgstr "Keine RÃ¤ume fÃ¼r die ausgewÃ¤hlten Kriterien verfÃ¼gbar."
+
+# JavaScript Error Messages
+msgid "This field is required"
+msgstr "Dieses Feld ist erforderlich"
+
+msgid "Please enter a valid email address"
+msgstr "Bitte geben Sie eine gÃ¼ltige E-Mail-Adresse ein"
+
+msgid "Please enter a valid phone number"
+msgstr "Bitte geben Sie eine gÃ¼ltige Telefonnummer ein"
+
+msgid "An error occurred. Please try again."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+
+msgid "Failed to calculate price"
+msgstr "Preisberechnung fehlgeschlagen"
+
+msgid "Search failed"
+msgstr "Suche fehlgeschlagen"
+
+msgid "Booking submission failed"
+msgstr "Buchungseingabe fehlgeschlagen"
+
+msgid "Network error occurred"
+msgstr "Netzwerkfehler aufgetreten"
+
+# Calendar
+msgid "Booking Details"
+msgstr "Buchungsdetails"
+
+msgid "Room"
+msgstr "Raum"
+
+msgid "Customer"
+msgstr "Kunde"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Amount"
+msgstr "Betrag"
+
+msgid "Extra People"
+msgstr "ZusÃ¤tzliche Personen"
+
+msgid "Close"
+msgstr "SchlieÃŸen"
+
 msgid "Pending"
 msgstr "Ausstehend"
 
 msgid "Confirmed"
-msgstr "Bestätigt"
-
-msgid "Cancelled"
-msgstr "Storniert"
+msgstr "BestÃ¤tigt"
 
 msgid "Completed"
 msgstr "Abgeschlossen"
 
+msgid "Cancelled"
+msgstr "Storniert"
+
 msgid "No Show"
 msgstr "Nicht erschienen"
 
-# Payment Status
-msgid "Paid"
-msgstr "Bezahlt"
+# Booking Form Steps
+msgid "Next"
+msgstr "Weiter"
 
-msgid "Unpaid"
-msgstr "Unbezahlt"
+msgid "Previous"
+msgstr "ZurÃ¼ck"
 
-msgid "Partially Paid"
-msgstr "Teilweise bezahlt"
+# Customizable Labels
+msgid "Booking Date"
+msgstr "Buchungsdatum"
 
-msgid "Refunded"
-msgstr "Erstattet"
+msgid "Start Time"
+msgstr "Startzeit"
 
-# Plugin activation
-msgid "Hourly Room Booking"
-msgstr "Stündliche Raumbuchung"
+msgid "Search Rooms"
+msgstr "RÃ¤ume suchen"
 
-msgid "plugin activated successfully!"
-msgstr "Plugin erfolgreich aktiviert!"
+msgid "Clear All"
+msgstr "Alle lÃ¶schen"
 
-msgid "Hourly Room Booking Plugin Error"
-msgstr "Fehler beim Stündliche Raumbuchung Plugin"
+msgid "Select duration"
+msgstr "Dauer auswÃ¤hlen"
 
-msgid "Room Booking Plugin Warning"
-msgstr "Warnung beim Raumbuchung Plugin"
+msgid "No time slots available for the selected date and duration."
+msgstr "Keine Zeitslots fÃ¼r das ausgewÃ¤hlte Datum und die Dauer verfÃ¼gbar."
 
-# Validation Messages
-msgid "Please select a valid date"
-msgstr "Bitte wählen Sie ein gültiges Datum"
+# Booking Confirmation Page
+msgid "Booking Confirmation"
+msgstr "BuchungsbestÃ¤tigung"
 
-msgid "Please select a valid time"
-msgstr "Bitte wählen Sie eine gültige Zeit"
+msgid "Room:"
+msgstr "Raum:"
 
-msgid "Please fill in all required fields"
-msgstr "Bitte füllen Sie alle erforderlichen Felder aus"
+msgid "Date:"
+msgstr "Datum:"
 
-msgid "Invalid email address"
-msgstr "Ungültige E-Mail-Adresse"
+msgid "Time:"
+msgstr "Zeit:"
 
-msgid "Invalid phone number"
-msgstr "Ungültige Telefonnummer"
+msgid "Duration:"
+msgstr "Dauer:"
 
-# Notification Messages
-msgid "Booking confirmation"
-msgstr "Buchungsbestätigung"
+msgid "Customer Details"
+msgstr "Kundendetails"
 
-msgid "Your booking has been confirmed"
-msgstr "Ihre Buchung wurde bestätigt"
+msgid "Name:"
+msgstr "Name:"
 
-msgid "Booking reminder"
-msgstr "Buchungserinnerung"
+msgid "Email:"
+msgstr "E-Mail:"
 
-msgid "Your booking starts in 1 hour"
-msgstr "Ihre Buchung beginnt in 1 Stunde"
+msgid "Phone:"
+msgstr "Telefon:"
 
-msgid "Booking cancelled"
-msgstr "Buchung storniert"
+msgid "Payment:"
+msgstr "Zahlung:"
 
-msgid "Your booking has been cancelled"
-msgstr "Ihre Buchung wurde storniert"
+msgid "I accept the Terms & Conditions and Privacy Policy."
+msgstr "Ich akzeptiere die Allgemeinen GeschÃ¤ftsbedingungen und die Datenschutzrichtlinie."
+
+msgid "Complete Booking"
+msgstr "Buchung abschlieÃŸen"
+
+msgid "What happens next?"
+msgstr "Was passiert als nÃ¤chstes?"
+
+msgid "You will receive a confirmation email shortly with all the booking details."
+msgstr "Sie erhalten in KÃ¼rze eine BestÃ¤tigungs-E-Mail mit allen Buchungsdetails."
+
+msgid "Please bring payment (cash or card) when you arrive for your booking."
+msgstr "Bitte bringen Sie die Zahlung (Bargeld oder Karte) mit, wenn Sie zu Ihrer Buchung kommen."
+
+msgid "Please arrive a few minutes before your booking time."
+msgstr "Bitte kommen Sie ein paar Minuten vor Ihrer Buchungszeit an."
+
+msgid "If you need to cancel or modify your booking, please contact us as soon as possible."
+msgstr "Wenn Sie Ihre Buchung stornieren oder Ã¤ndern mÃ¼ssen, kontaktieren Sie uns bitte so schnell wie mÃ¶glich."
+
+msgid "Total Amount"
+msgstr "Gesamtbetrag"
+
+msgid "Booking Confirmed!"
+msgstr "Buchung bestÃ¤tigt!"
+
+msgid "Your room booking has been successfully created."
+msgstr "Ihre Raumbuchung wurde erfolgreich erstellt."
+
+msgid "Booking Information"
+msgstr "Buchungsinformationen"
+
+msgid "Your booking has been confirmed. You should receive a confirmation email shortly."
+msgstr "Ihre Buchung wurde bestÃ¤tigt. Sie sollten in KÃ¼rze eine BestÃ¤tigungs-E-Mail erhalten."
+
+msgid "View Full Details"
+msgstr "VollstÃ¤ndige Details anzeigen"
+
+msgid "Back to Home"
+msgstr "ZurÃ¼ck zur Startseite"
+
+msgid "Booking Actions"
+msgstr "Buchungsaktionen"
+
+msgid "Pending Booking"
+msgstr "Ausstehende Buchung"
+
+msgid "Your booking is currently pending confirmation. You will receive an email once it is confirmed."
+msgstr "Ihre Buchung steht derzeit zur BestÃ¤tigung aus. Sie erhalten eine E-Mail, sobald sie bestÃ¤tigt wurde."
+
+msgid "Confirmed Booking"
+msgstr "BestÃ¤tigte Buchung"
+
+msgid "Your booking is confirmed. Please bring payment when you arrive."
+msgstr "Ihre Buchung ist bestÃ¤tigt. Bitte bringen Sie die Zahlung mit, wenn Sie ankommen."
+
+msgid "Your booking is confirmed. We look forward to seeing you!"
+msgstr "Ihre Buchung ist bestÃ¤tigt. Wir freuen uns auf Ihren Besuch!"

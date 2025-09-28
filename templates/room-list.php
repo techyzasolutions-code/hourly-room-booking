@@ -49,10 +49,13 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 
                         <?php if ($show_price): ?>
                             <div class="hrb-room-price">
+                                <?php 
+                                $room_manager = HRB_Room_Manager::getInstance();
+                                $price_range = $room_manager->get_room_price_range($room);
+                                ?>
                                 <span class="hrb-price">
-                                    <?php echo $currency_symbol; ?><?php echo number_format($room->hourly_price, 2); ?>
+                                    <?php echo $price_range['formatted']; ?>
                                 </span>
-                                <span class="hrb-price-label"><?php _e('per hour', 'hourly-room-booking'); ?></span>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -92,7 +95,7 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
                         </div>
 
                         <div class="hrb-room-actions">
-                            <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>">
+                            <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
                                 <?php _e('View Details', 'hourly-room-booking'); ?>
                             </a>
                             <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
@@ -432,23 +435,29 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
     border-radius: 3px;
 }
 
-.hrb-loading {
+.hrb-loading-message {
     text-align: center;
     padding: 40px;
     color: var(--hrb-text-light);
-    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-.hrb-loading::before {
-    content: '';
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--hrb-border);
+.hrb-loading-spinner {
+    width: 35px;
+    height: 35px;
+    border: 2px solid #e5e7eb;
     border-radius: 50%;
-    border-top-color: var(--hrb-primary);
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
+    border-top-color: #007cba;
+    animation: hrb-spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes hrb-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @keyframes spin {
@@ -506,9 +515,16 @@ jQuery(document).ready(function($) {
     $('.hrb-view-room').on('click', function(e) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
+        const externalLink = $(this).data('external-link');
+        console.log('View room clicked:', roomId, 'External link:', externalLink);
 
-        // Show room details in modal
-        showRoomDetailsModal(roomId);
+        // Use external link if available, otherwise show modal
+        if (externalLink && externalLink.trim() !== '') {
+            window.open(externalLink, '_blank');
+        } else {
+            // Show room details in modal
+            showRoomDetailsModal(roomId);
+        }
     });
 
     function showBookingModal(roomId) {
@@ -521,7 +537,7 @@ jQuery(document).ready(function($) {
                         <button class="hrb-modal-close">&times;</button>
                     </div>
                     <div class="hrb-modal-body">
-                        <div class="hrb-loading"><?php _e('Loading booking form...', 'hourly-room-booking'); ?></div>
+                        <div class="hrb-loading-message"><div class="hrb-loading-spinner"></div></div>
                     </div>
                 </div>
             </div>
@@ -561,7 +577,7 @@ jQuery(document).ready(function($) {
                         <button class="hrb-modal-close">&times;</button>
                     </div>
                     <div class="hrb-modal-body">
-                        <div class="hrb-loading"><?php _e('Loading room details...', 'hourly-room-booking'); ?></div>
+                        <div class="hrb-loading-message"><div class="hrb-loading-spinner"></div></div>
                     </div>
                 </div>
             </div>

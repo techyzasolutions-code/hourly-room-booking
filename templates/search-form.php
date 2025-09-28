@@ -15,6 +15,11 @@ $rooms_per_page = isset($atts['rooms_per_page']) ? intval($atts['rooms_per_page'
 $settings = HRB_Settings::getInstance();
 $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 
+// Get customizable labels
+$label_search_button = $settings->get_label('hrb_label_search_button');
+$label_clear_all_button = $settings->get_label('hrb_label_clear_all_button');
+$label_loading_message = $settings->get_label('hrb_label_loading_message');
+
 // Get room manager
 $room_manager = HRB_Room_Manager::getInstance();
 $all_rooms = $room_manager->get_all_rooms();
@@ -23,7 +28,231 @@ $all_rooms = $room_manager->get_all_rooms();
 $rooms = array_filter($all_rooms, function($room) {
     return $room->is_active;
 });
+
+// Get filter parameters from URL
+$filter_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : '';
+$filter_time = isset($_GET['time']) ? sanitize_text_field($_GET['time']) : '';
+$filter_duration = isset($_GET['duration']) ? sanitize_text_field($_GET['duration']) : '';
+
+// Apply filters if provided
+if ($filter_date || $filter_time || $filter_duration) {
+    $rooms = array_filter($rooms, function($room) use ($filter_date, $filter_time, $filter_duration, $room_manager) {
+        // Check date availability
+        if ($filter_date) {
+            // Get booking time range from settings
+            $booking_start_time = get_option('hrb_booking_start_time', '08:00');
+            $booking_end_time = get_option('hrb_booking_end_time', '20:00');
+            
+            $start_time = $filter_time ?: $booking_start_time . ':00';
+            $end_time = $filter_time ? date('H:i:s', strtotime($filter_time . ' +' . ($filter_duration ?: 2) . ' hours')) : $booking_end_time . ':00';
+            
+            $is_available = $room_manager->is_room_available($room->id, $filter_date, $start_time, $end_time);
+            if (!$is_available) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
 ?>
+
+<style>
+/* Enhanced Search Form Styles */
+:root {
+    --hrb-primary: #6366f1;
+    --hrb-primary-dark: #4f46e5;
+    --hrb-secondary: #8b5cf6;
+    --hrb-accent: #06b6d4;
+    --hrb-success: #10b981;
+    --hrb-warning: #f59e0b;
+    --hrb-error: #ef4444;
+    --hrb-text: #1f2937;
+    --hrb-text-light: #6b7280;
+    --hrb-text-muted: #9ca3af;
+    --hrb-border: #e5e7eb;
+    --hrb-border-light: #f3f4f6;
+    --hrb-background: #ffffff;
+    --hrb-background-light: #f8fafc;
+    --hrb-background-dark: #f1f5f9;
+    --hrb-gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --hrb-gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+    --hrb-shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+    --hrb-radius: 8px;
+    --hrb-radius-lg: 12px;
+    --hrb-radius-xl: 16px;
+    --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hrb-search-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.hrb-search-form {
+    background: var(--hrb-gradient-primary);
+    border-radius: var(--hrb-radius-xl);
+    padding: 40px;
+    margin-bottom: 40px;
+    box-shadow: var(--hrb-shadow-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.hrb-search-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+}
+
+.hrb-filters-form {
+    position: relative;
+    z-index: 2;
+}
+
+.hrb-search-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 20px;
+    align-items: end;
+}
+
+.hrb-search-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.hrb-search-col label {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hrb-search-col input,
+.hrb-search-col select {
+    padding: 16px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--hrb-radius-lg);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--hrb-text);
+    font-size: 16px;
+    font-weight: 500;
+    transition: var(--hrb-transition);
+    backdrop-filter: blur(10px);
+}
+
+.hrb-search-col input:focus,
+.hrb-search-col select:focus {
+    outline: none;
+    border-color: white;
+    background: white;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.hrb-search-col input::placeholder {
+    color: var(--hrb-text-muted);
+}
+
+.hrb-btn {
+    padding: 16px 32px;
+    background: white;
+    color: var(--hrb-primary);
+    border: none;
+    border-radius: var(--hrb-radius-lg);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: var(--hrb-shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+
+
+.hrb-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--hrb-shadow-xl);
+    color: white;
+}
+
+.hrb-btn:hover::before {
+    left: 0;
+}
+
+.hrb-btn span {
+    position: relative;
+    z-index: 2;
+}
+
+/* Search Buttons Container */
+.hrb-search-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Clear Filters Button Styles */
+.hrb-search-buttons .hrb-clear-filters {
+    padding: 10px 24px;
+    border: 2px solid var(--hrb-error);
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--hrb-error);
+}
+
+.hrb-search-buttons .hrb-clear-filters:hover {
+    background: var(--hrb-error);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: var(--hrb-shadow-md);
+}
+
+@media (max-width: 768px) {
+    .hrb-search-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .hrb-search-form {
+        padding: 30px 20px;
+    }
+    
+    .hrb-search-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .hrb-search-buttons .hrb-clear-filters {
+        font-size: 12px;
+        padding: 16px 20px;
+        width: 100%;
+        min-width: auto;
+    }
+}
+</style>
 
 <div class="hrb-search-container">
     <?php if ($show_filters): ?>
@@ -36,26 +265,30 @@ $rooms = array_filter($all_rooms, function($room) {
                            id="hrb-search-date"
                            name="date"
                            min="<?php echo date('Y-m-d'); ?>"
-                           max="<?php echo date('Y-m-d', strtotime('+1 year')); ?>">
+                           max="<?php echo date('Y-m-d', strtotime('+1 year')); ?>"
+                           placeholder="<?php _e('Select date', 'hourly-room-booking'); ?>"
+                           value="<?php echo esc_attr($filter_date); ?>">
                 </div>
 
                 <div class="hrb-search-col">
                     <label for="hrb-search-time"><?php _e('Time', 'hourly-room-booking'); ?></label>
                     <select id="hrb-search-time" name="time">
                         <option value=""><?php _e('Any time', 'hourly-room-booking'); ?></option>
-                        <option value="08:00">08:00</option>
-                        <option value="09:00">09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="13:00">13:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                        <option value="18:00">18:00</option>
-                        <option value="19:00">19:00</option>
-                        <option value="20:00">20:00</option>
+                        <?php
+                        // Get booking time range from settings
+                        $booking_start_time = get_option('hrb_booking_start_time', '08:00');
+                        $booking_end_time = get_option('hrb_booking_end_time', '20:00');
+                        
+                        // Parse start and end times
+                        $start_hour = intval(substr($booking_start_time, 0, 2));
+                        $end_hour = intval(substr($booking_end_time, 0, 2));
+                        
+                        // Generate time options based on settings
+                        for ($hour = $start_hour; $hour <= $end_hour; $hour++) {
+                            $time_value = sprintf('%02d:00', $hour);
+                            echo '<option value="' . esc_attr($time_value) . '" ' . selected($filter_time, $time_value, false) . '>' . esc_html($time_value) . '</option>';
+                        }
+                        ?>
                     </select>
                 </div>
 
@@ -63,20 +296,26 @@ $rooms = array_filter($all_rooms, function($room) {
                     <label for="hrb-search-duration"><?php _e('Duration', 'hourly-room-booking'); ?></label>
                     <select id="hrb-search-duration" name="duration">
                         <option value=""><?php _e('Any duration', 'hourly-room-booking'); ?></option>
-                        <option value="1">1 <?php _e('hour', 'hourly-room-booking'); ?></option>
-                        <option value="2">2 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="3">3 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="4">4 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="5">5 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="6">6 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="8">8+ <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="2" <?php selected($filter_duration, '2'); ?>>2 <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="3" <?php selected($filter_duration, '3'); ?>>3 <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="4" <?php selected($filter_duration, '4'); ?>>4 <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="5" <?php selected($filter_duration, '5'); ?>>5 <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="6" <?php selected($filter_duration, '6'); ?>>6 <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <option value="8" <?php selected($filter_duration, '8'); ?>>8+ <?php _e('hours', 'hourly-room-booking'); ?></option>
                     </select>
                 </div>
 
-                <div class="hrb-search-col">
+                <div class="hrb-search-col ">
                     <button type="submit" class="hrb-btn hrb-btn-primary">
-                        <?php _e('Search Rooms', 'hourly-room-booking'); ?>
+                        <span><?php echo esc_html($label_search_button); ?></span>
                     </button>
+                </div>
+                <div class="hrb-search-col hrb-search-buttons">
+                
+                    <a href="<?php echo remove_query_arg(array('date', 'time', 'duration')); ?>" class="hrb-clear-filters">
+                        <?php echo esc_html($label_clear_all_button); ?>
+                    </a>
+                
                 </div>
             </div>
         </form>
@@ -86,7 +325,13 @@ $rooms = array_filter($all_rooms, function($room) {
     <div class="hrb-search-results">
         <div class="hrb-results-header">
             <h3 class="hrb-results-title">
-                <?php printf(__('Available Rooms (%d)', 'hourly-room-booking'), count($rooms)); ?>
+                <?php 
+                if ($filter_date || $filter_time || $filter_duration) {
+                    printf(__('Search Results (%d rooms found)', 'hourly-room-booking'), count($rooms));
+                } else {
+                    printf(__('Available Rooms (%d)', 'hourly-room-booking'), count($rooms));
+                }
+                ?>
             </h3>
             <div class="hrb-results-controls">
                 <select id="hrb-sort-rooms">
@@ -121,10 +366,13 @@ $rooms = array_filter($all_rooms, function($room) {
                                 <?php endif; ?>
 
                                 <div class="hrb-room-price">
+                                    <?php 
+                                    $room_manager = HRB_Room_Manager::getInstance();
+                                    $price_range = $room_manager->get_room_price_range($room);
+                                    ?>
                                     <span class="hrb-price">
-                                        <?php echo $currency_symbol; ?><?php echo number_format($room->hourly_price, 2); ?>
+                                        <?php echo $price_range['formatted']; ?>
                                     </span>
-                                    <span class="hrb-price-label"><?php _e('per hour', 'hourly-room-booking'); ?></span>
                                 </div>
                             </div>
 
@@ -160,7 +408,7 @@ $rooms = array_filter($all_rooms, function($room) {
                                 </div>
 
                                 <div class="hrb-room-actions">
-                                    <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>">
+                                    <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
                                         <?php _e('View Details', 'hourly-room-booking'); ?>
                                     </a>
                                     <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
@@ -203,7 +451,7 @@ $rooms = array_filter($all_rooms, function($room) {
 
 .hrb-search-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 20px;
     align-items: end;
 }
@@ -447,14 +695,14 @@ $rooms = array_filter($all_rooms, function($room) {
 }
 
 .hrb-modal-content {
-    background: var(--hrb-background);
-    border: 1px solid var(--hrb-border);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     width: 100%;
     max-width: 800px;
     max-height: 90vh;
     overflow: hidden;
-    box-shadow: var(--hrb-shadow-hover);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     animation: modalSlideIn 0.3s ease-out;
 }
 
@@ -470,9 +718,9 @@ $rooms = array_filter($all_rooms, function($room) {
 }
 
 .hrb-modal-header {
-    background: var(--hrb-background-light);
+    background: #f8f9fa;
     padding: 20px 24px;
-    border-bottom: 1px solid var(--hrb-border);
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -480,16 +728,16 @@ $rooms = array_filter($all_rooms, function($room) {
 
 .hrb-modal-header h3 {
     margin: 0;
-    color: var(--hrb-text);
+    color: #1f2937;
     font-size: 20px;
     font-weight: 600;
 }
 
 .hrb-modal-close {
-    background: var(--hrb-background);
-    border: 1px solid var(--hrb-border);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     font-size: 18px;
-    color: var(--hrb-text);
+    color: #1f2937;
     cursor: pointer;
     width: 30px;
     height: 30px;
@@ -501,14 +749,15 @@ $rooms = array_filter($all_rooms, function($room) {
 }
 
 .hrb-modal-close:hover {
-    background: var(--hrb-background-light);
-    border-color: var(--hrb-primary);
+    background: #f8f9fa;
+    border-color: #007cba;
 }
 
 .hrb-modal-body {
     padding: 24px;
     max-height: calc(90vh - 80px);
     overflow-y: auto;
+    background: #ffffff;
 }
 
 .hrb-modal-body::-webkit-scrollbar {
@@ -516,19 +765,38 @@ $rooms = array_filter($all_rooms, function($room) {
 }
 
 .hrb-modal-body::-webkit-scrollbar-track {
-    background: var(--hrb-background-light);
+    background: #f8f9fa;
     border-radius: 3px;
 }
 
 .hrb-modal-body::-webkit-scrollbar-thumb {
-    background: var(--hrb-border);
+    background: #e5e7eb;
     border-radius: 3px;
 }
 
-.hrb-loading {
+.hrb-loading-message {
     text-align: center;
     padding: 40px 20px;
-    color: var(--hrb-text-light);
+    color: #6b7280;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.hrb-loading-spinner {
+    width: 35px;
+    height: 35px;
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    border-top-color: #007cba;
+    animation: hrb-spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes hrb-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .hrb-error {
@@ -661,12 +929,44 @@ $rooms = array_filter($all_rooms, function($room) {
 jQuery(document).ready(function($) {
     // Translation strings
     const hrbTranslations = {
-        perHour: '<?php _e('per hour', 'hourly-room-booking'); ?>',
         bookNow: '<?php _e('Book Now', 'hourly-room-booking'); ?>',
         viewDetails: '<?php _e('View Details', 'hourly-room-booking'); ?>',
         upToPeople: '<?php _e('Up to %d people', 'hourly-room-booking'); ?>',
         more: '<?php _e('more', 'hourly-room-booking'); ?>'
     };
+    
+    // Overlay Loading Functions
+    function showOverlayLoading() {
+        // Remove any existing overlay
+        hideOverlayLoading();
+        
+        // Create overlay
+        const overlay = $(`
+            <div class="hrb-loading-overlay">
+                <div class="hrb-loading-message">
+                    <div class="hrb-loading-spinner"></div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(overlay);
+    }
+    
+    function hideOverlayLoading() {
+        $('.hrb-loading-overlay').remove();
+    }
+    
+    // Check if URL has filter parameters and trigger search on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilters = urlParams.has('date') || urlParams.has('time') || urlParams.has('duration');
+    
+    if (hasFilters) {
+        // Show overlay loading and trigger search on page load if URL has parameters
+        showOverlayLoading();
+        setTimeout(function() {
+            filterRooms();
+        }, 100); // Small delay to ensure DOM is ready
+    }
     // Handle search form submission
     $('#hrb-room-search-form').on('submit', function(e) {
         e.preventDefault();
@@ -688,14 +988,20 @@ jQuery(document).ready(function($) {
         showBookingModal(roomId);
     });
 
-    // Handle view room details button
+    // Handle view room details button - redirect to external link
     $(document).on('click', '.hrb-view-room', function(e) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
-        console.log('View room clicked:', roomId);
+        const externalLink = $(this).data('external-link');
+        console.log('View room clicked:', roomId, 'External link:', externalLink);
 
-        // Show room details in modal (same as room-list.php)
-        showRoomDetailsModal(roomId);
+        // Use external link if available, otherwise use default room detail page
+        if (externalLink && externalLink.trim() !== '') {
+            window.open(externalLink, '_blank');
+        } else {
+            const roomDetailUrl = '<?php echo home_url('/room-details/'); ?>' + roomId;
+            window.location.href = roomDetailUrl;
+        }
     });
 
     // Handle legacy book now button (for backward compatibility)
@@ -746,18 +1052,27 @@ jQuery(document).ready(function($) {
             duration: $('#hrb-search-duration').val()
         };
 
-        // Show loading state
-        $('.hrb-search-results').append('<div class="hrb-loading"><?php _e('Searching rooms...', 'hourly-room-booking'); ?></div>');
+        // Show overlay loading
+        showOverlayLoading();
 
         // Calculate start and end times from time and duration
         let startTime = formData.time || '09:00';
         let endTime = startTime;
 
-        // Default to 1 hour if no duration specified
-        const duration = formData.duration || '1';
+        // Default to 2 hours if no duration specified (minimum booking requirement)
+        const duration = formData.duration || '2';
+        
+        // Ensure time format includes seconds for database compatibility
+        if (startTime && !startTime.includes(':')) {
+            startTime = startTime + ':00';
+        } else if (startTime && startTime.split(':').length === 2) {
+            startTime = startTime + ':00';
+        }
+        
         const startHour = parseInt(startTime.split(':')[0]);
         const endHour = startHour + parseInt(duration);
         endTime = endHour.toString().padStart(2, '0') + ':00';
+        
 
         // Make AJAX call to filter rooms based on availability
         $.ajax({
@@ -773,7 +1088,7 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('hrb_nonce'); ?>'
             },
             success: function(response) {
-                $('.hrb-loading').remove();
+                hideOverlayLoading();
                 if (response.success && Array.isArray(response.data)) {
                     // Generate HTML from room data
                     let roomsHtml = '';
@@ -790,20 +1105,18 @@ jQuery(document).ready(function($) {
                     $('#hrb-rooms-container').html(roomsHtml);
                     $('.hrb-results-title').text('Available Rooms (' + response.data.length + ')');
                 } else {
-                    console.error('Search failed:', response.data);
                     // Fallback to showing all rooms
                     showAllRooms();
                 }
             },
             error: function() {
-                $('.hrb-loading').remove();
+                hideOverlayLoading();
                 console.error('Search request failed');
                 // Fallback to showing all rooms
                 showAllRooms();
             }
         });
 
-        console.log('Searching rooms with:', formData);
     }
 
     function showAllRooms() {
@@ -844,7 +1157,6 @@ jQuery(document).ready(function($) {
                     ${imageHtml}
                     <div class="hrb-room-price">
                         <span class="hrb-price">${room.formatted_price}</span>
-                        <span class="hrb-price-label">${hrbTranslations.perHour}</span>
                     </div>
                 </div>
                 <div class="hrb-room-content">
@@ -858,7 +1170,7 @@ jQuery(document).ready(function($) {
                         ${amenitiesHtml}
                     </div>
                     <div class="hrb-room-actions">
-                        <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="${room.id}">
+                        <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="${room.id}" data-external-link="${room.external_link || ''}">
                             ${hrbTranslations.viewDetails}
                         </a>
                         <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="${room.id}">
@@ -960,7 +1272,7 @@ jQuery(document).ready(function($) {
 
         // Show loading state
         const originalText = loadMoreBtn.text();
-        loadMoreBtn.text('<?php _e('Loading...', 'hourly-room-booking'); ?>').prop('disabled', true);
+        loadMoreBtn.html('<div class="hrb-loading-spinner"></div>').prop('disabled', true);
 
         // Load more rooms via AJAX
         $.ajax({
@@ -1001,6 +1313,17 @@ jQuery(document).ready(function($) {
     }
 
     function showBookingModal(roomId) {
+        // Get current search form values to pre-fill booking form
+        const searchDate = $('#hrb-search-date').val();
+        const searchTime = $('#hrb-search-time').val();
+        const searchDuration = $('#hrb-search-duration').val();
+        
+        console.log('Pre-fill values:', {
+            date: searchDate,
+            time: searchTime,
+            duration: searchDuration
+        });
+        
         // Create modal overlay
         const modalHtml = `
             <div class="hrb-modal-overlay" id="hrb-booking-modal">
@@ -1010,7 +1333,7 @@ jQuery(document).ready(function($) {
                         <button class="hrb-modal-close">&times;</button>
                     </div>
                     <div class="hrb-modal-body">
-                        <div class="hrb-loading"><?php _e('Loading booking form...', 'hourly-room-booking'); ?></div>
+                        <div class="hrb-loading-message"><div class="hrb-loading-spinner"></div></div>
                     </div>
                 </div>
             </div>
@@ -1018,18 +1341,23 @@ jQuery(document).ready(function($) {
 
         $('body').append(modalHtml);
 
-        // Load booking form via AJAX
+        // Load booking form via AJAX with pre-filled values
         $.ajax({
             url: '<?php echo admin_url('admin-ajax.php'); ?>',
             type: 'POST',
             data: {
                 action: 'hrb_get_booking_form',
                 room_id: roomId,
+                // Pass search form values to pre-fill booking form
+                date: searchDate,
+                time: searchTime,
+                duration: searchDuration,
                 nonce: '<?php echo wp_create_nonce('hrb_booking_form_nonce'); ?>'
             },
             success: function(response) {
                 if (response.success) {
                     $('#hrb-booking-modal .hrb-modal-body').html(response.data.html);
+                    console.log('Booking form loaded with pre-fill values');
                 } else {
                     $('#hrb-booking-modal .hrb-modal-body').html('<p class="hrb-error">' + response.data + '</p>');
                 }
@@ -1050,7 +1378,7 @@ jQuery(document).ready(function($) {
                         <button class="hrb-modal-close">&times;</button>
                     </div>
                     <div class="hrb-modal-body">
-                        <div class="hrb-loading"><?php _e('Loading room details...', 'hourly-room-booking'); ?></div>
+                        <div class="hrb-loading-message"><div class="hrb-loading-spinner"></div></div>
                     </div>
                 </div>
             </div>

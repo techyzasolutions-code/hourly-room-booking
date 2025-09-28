@@ -447,7 +447,7 @@ class HRB_Payment_Manager {
 
         foreach ($bookings as $booking) {
             $payment_method = $booking->payment_method ?: 'onsite';
-            $payment_status = 'completed'; // Assume existing bookings are paid
+            $payment_status = 'completed'; // Assume existing bookings are completed
 
             // Generate transaction ID for existing booking
             $transaction_id = 'TXN_MIGRATED_' . $booking->id . '_' . time();

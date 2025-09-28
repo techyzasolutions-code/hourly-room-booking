@@ -1,0 +1,332 @@
+# German translation for Hourly Room Booking Plugin
+# Copyright (C) 2024
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Hourly Room Booking 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-09-18 10:00+0000\n"
+"PO-Revision-Date: 2024-09-18 10:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# General
+msgid "Loading..."
+msgstr "Wird geladen..."
+
+msgid "An error occurred"
+msgstr "Ein Fehler ist aufgetreten"
+
+msgid "Success!"
+msgstr "Erfolgreich!"
+
+msgid "Error: Room ID is required"
+msgstr "Fehler: Raum-ID ist erforderlich"
+
+msgid "Error: Room not available"
+msgstr "Fehler: Raum nicht verfügbar"
+
+msgid "Room not found or inactive"
+msgstr "Raum nicht gefunden oder inaktiv"
+
+# Frontend Form Labels
+msgid "Date & Time"
+msgstr "Datum & Zeit"
+
+msgid "Extras"
+msgstr "Extras"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Payment"
+msgstr "Zahlung"
+
+msgid "Confirm"
+msgstr "Bestätigen"
+
+msgid "Select Date & Time"
+msgstr "Datum & Zeit auswählen"
+
+msgid "Available Time Slots"
+msgstr "Verfügbare Zeitslots"
+
+msgid "Please select a date and duration first"
+msgstr "Bitte wählen Sie zuerst ein Datum und eine Dauer aus"
+
+msgid "Extras & Additional People"
+msgstr "Extras & Zusätzliche Personen"
+
+msgid "Available Extras"
+msgstr "Verfügbare Extras"
+
+msgid "No extras available at this time."
+msgstr "Derzeit sind keine Extras verfügbar."
+
+msgid "Additional People"
+msgstr "Zusätzliche Personen"
+
+msgid "Special Requests"
+msgstr "Besondere Wünsche"
+
+msgid "Any special requirements or requests..."
+msgstr "Besondere Anforderungen oder Wünsche..."
+
+msgid "Your Details"
+msgstr "Ihre Details"
+
+msgid "Welcome back!"
+msgstr "Willkommen zurück!"
+
+msgid "Your details have been pre-filled from your account. You can modify them if needed."
+msgstr "Ihre Daten wurden aus Ihrem Konto vorausgefüllt. Sie können sie bei Bedarf ändern."
+
+msgid "First Name"
+msgstr "Vorname"
+
+msgid "Last Name"
+msgstr "Nachname"
+
+msgid "Email Address"
+msgstr "E-Mail-Adresse"
+
+msgid "Phone Number"
+msgstr "Telefonnummer"
+
+msgid "Company (Optional)"
+msgstr "Unternehmen (Optional)"
+
+msgid "Contact Verification"
+msgstr "Kontaktverifizierung"
+
+msgid "Verification Required"
+msgstr "Verifizierung erforderlich"
+
+msgid "Please verify your contact information before proceeding. Choose your preferred verification method."
+msgstr "Bitte verifizieren Sie Ihre Kontaktinformationen, bevor Sie fortfahren. Wählen Sie Ihre bevorzugte Verifizierungsmethode."
+
+msgid "Please verify your phone number before proceeding. We will send you a verification code via SMS."
+msgstr "Bitte verifizieren Sie Ihre Telefonnummer, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode per SMS."
+
+msgid "Please verify your email address before proceeding. We will send you a verification code."
+msgstr "Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode."
+
+msgid "Choose Verification Method:"
+msgstr "Verifizierungsmethode wählen:"
+
+msgid "Email Verification"
+msgstr "E-Mail-Verifizierung"
+
+msgid "Send verification code to your email address"
+msgstr "Verifizierungscode an Ihre E-Mail-Adresse senden"
+
+msgid "SMS Verification"
+msgstr "SMS-Verifizierung"
+
+msgid "Send verification code to your phone number"
+msgstr "Verifizierungscode an Ihre Telefonnummer senden"
+
+msgid "Email to verify:"
+msgstr "E-Mail zur Verifizierung:"
+
+msgid "Phone to verify:"
+msgstr "Telefon zur Verifizierung:"
+
+# Search Form
+msgid "Date"
+msgstr "Datum"
+
+msgid "Time"
+msgstr "Zeit"
+
+msgid "Select date"
+msgstr "Datum auswählen"
+
+msgid "Any time"
+msgstr "Beliebige Zeit"
+
+msgid "Duration"
+msgstr "Dauer"
+
+msgid "Any duration"
+msgstr "Beliebige Dauer"
+
+msgid "hour"
+msgstr "Stunde"
+
+msgid "hours"
+msgstr "Stunden"
+
+msgid "Search Results (%d rooms found)"
+msgstr "Suchergebnisse (%d Räume gefunden)"
+
+msgid "Available Rooms (%d)"
+msgstr "Verfügbare Räume (%d)"
+
+msgid "Sort by Name"
+msgstr "Nach Name sortieren"
+
+msgid "Sort by Price"
+msgstr "Nach Preis sortieren"
+
+msgid "No rooms available matching your criteria."
+msgstr "Keine Räume verfügbar, die Ihren Kriterien entsprechen."
+
+msgid "Up to %d people"
+msgstr "Bis zu %d Personen"
+
+msgid "more"
+msgstr "mehr"
+
+msgid "View Details"
+msgstr "Details anzeigen"
+
+msgid "Book Now"
+msgstr "Jetzt buchen"
+
+msgid "Load More Rooms"
+msgstr "Weitere Räume laden"
+
+msgid "No More Rooms"
+msgstr "Keine weiteren Räume"
+
+msgid "Book This Room"
+msgstr "Diesen Raum buchen"
+
+msgid "Failed to load booking form"
+msgstr "Buchungsformular konnte nicht geladen werden"
+
+msgid "Room Details"
+msgstr "Raumdetails"
+
+msgid "Failed to load room details"
+msgstr "Raumdetails konnten nicht geladen werden"
+
+msgid "No rooms available for the selected criteria."
+msgstr "Keine Räume für die ausgewählten Kriterien verfügbar."
+
+# JavaScript Error Messages
+msgid "This field is required"
+msgstr "Dieses Feld ist erforderlich"
+
+msgid "Please enter a valid email address"
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+
+msgid "Please enter a valid phone number"
+msgstr "Bitte geben Sie eine gültige Telefonnummer ein"
+
+msgid "An error occurred. Please try again."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+
+msgid "Failed to calculate price"
+msgstr "Preisberechnung fehlgeschlagen"
+
+msgid "Search failed"
+msgstr "Suche fehlgeschlagen"
+
+msgid "Booking submission failed"
+msgstr "Buchungseingabe fehlgeschlagen"
+
+msgid "Network error occurred"
+msgstr "Netzwerkfehler aufgetreten"
+
+# Calendar
+msgid "Booking Details"
+msgstr "Buchungsdetails"
+
+msgid "Room"
+msgstr "Raum"
+
+msgid "Customer"
+msgstr "Kunde"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Amount"
+msgstr "Betrag"
+
+msgid "Extra People"
+msgstr "Zusätzliche Personen"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "Pending"
+msgstr "Ausstehend"
+
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+msgid "Cancelled"
+msgstr "Storniert"
+
+msgid "No Show"
+msgstr "Nicht erschienen"
+
+# Booking Form Steps
+msgid "Next"
+msgstr "Weiter"
+
+msgid "Previous"
+msgstr "Zurück"
+
+msgid "Book Now"
+msgstr "Jetzt buchen"
+
+# Customizable Labels
+msgid "Booking Date"
+msgstr "Buchungsdatum"
+
+msgid "Duration"
+msgstr "Dauer"
+
+msgid "Start Time"
+msgstr "Startzeit"
+
+msgid "Extra People"
+msgstr "Zusätzliche Personen"
+
+msgid "Special Requests"
+msgstr "Besondere Wünsche"
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "Previous"
+msgstr "Zurück"
+
+msgid "Book Now"
+msgstr "Jetzt buchen"
+
+msgid "Search Rooms"
+msgstr "Räume suchen"
+
+msgid "Clear All"
+msgstr "Alle löschen"
+
+msgid "Select duration"
+msgstr "Dauer auswählen"
+
+msgid "Select date"
+msgstr "Datum auswählen"
+
+msgid "Loading..."
+msgstr "Wird geladen..."
+
+msgid "No time slots available for the selected date and duration."
+msgstr "Keine Zeitslots für das ausgewählte Datum und die Dauer verfügbar."

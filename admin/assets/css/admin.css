@@ -19,6 +19,76 @@
     /* color: #fff; */
     background: #fff;
 }
+
+/* Sortable Table Headers */
+.wp-list-table th .sortable {
+    color: #0073aa;
+    text-decoration: none;
+    position: relative;
+    display: inline-block;
+    padding-right: 20px;
+}
+
+.wp-list-table th .sortable:hover {
+    color: #005177;
+}
+
+.wp-list-table th .sortable.sorted {
+    color: #000;
+    font-weight: 600;
+}
+
+.wp-list-table th .sortable.sorted::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+
+.wp-list-table th .sortable.sorted.asc::after {
+    border-bottom: 4px solid #000;
+}
+
+.wp-list-table th .sortable.sorted.desc::after {
+    border-top: 4px solid #000;
+}
+
+.wp-list-table th .sortable-desc::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #c3c4c7;
+}
+
+.wp-list-table th .sortable-desc:hover::after {
+    border-top-color: #0073aa;
+}
+
+/* Sorting Info */
+.hrb-sorting-info {
+    background: #f0f6fc;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    color: #646970;
+}
+
+.hrb-sorting-info small {
+    font-size: 12px;
+    font-weight: 500;
+}
 .hrb-admin-dashboard {
     margin: 0;
 }
@@ -762,4 +832,76 @@ table.widefat {
 
 .hrb-form-actions .button:first-child {
     margin-left: 0;
+}
+
+/* ==========================================================================
+   Admin Price Summary Styles
+   ========================================================================== */
+.hrb-admin-summary {
+    background: #f8f9fa;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.hrb-admin-summary .hrb-summary-content {
+    background: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    border: 1px solid #e1e1e1;
+}
+
+.hrb-admin-summary .hrb-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hrb-admin-summary .hrb-summary-item:last-child {
+    border-bottom: none;
+}
+
+.hrb-admin-summary .hrb-summary-section {
+    font-weight: 600;
+    color: #1d2327;
+    margin: 10px 0 5px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.hrb-admin-summary .hrb-summary-extra {
+    font-size: 13px;
+    color: #646970;
+    padding-left: 15px;
+}
+
+.hrb-admin-summary .hrb-summary-fee {
+    color: #d63638;
+    font-style: italic;
+}
+
+.hrb-admin-summary .hrb-summary-total {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1d2327;
+    background: #f0f6fc;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #c3c4c7;
+}
+
+.hrb-admin-summary .hrb-loading-message,
+.hrb-admin-summary .hrb-error-message {
+    text-align: center;
+    padding: 20px;
+    color: #646970;
+    font-style: italic;
+}
+
+.hrb-admin-summary .hrb-error-message {
+    color: #d63638;
 }

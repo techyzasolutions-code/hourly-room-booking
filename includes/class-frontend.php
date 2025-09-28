@@ -31,6 +31,7 @@ class HRB_Frontend {
         add_rewrite_rule('^booking-details/?$', 'index.php?hrb_page=booking-details', 'top');
         add_rewrite_rule('^booking-success/?(.*)$', 'index.php?hrb_page=booking-success&booking_ref=$matches[1]', 'top');
         add_rewrite_rule('^booking-cancelled/?$', 'index.php?hrb_page=booking-cancelled', 'top');
+        add_rewrite_rule('^room-details/([0-9]+)/?$', 'index.php?hrb_page=room-details&room_id=$matches[1]', 'top');
 
         // Check if rewrite rules need to be flushed
         if (get_option('hrb_rewrite_rules_flushed') !== HRB_VERSION) {
@@ -42,6 +43,7 @@ class HRB_Frontend {
     public function add_query_vars($vars) {
         $vars[] = 'hrb_page';
         $vars[] = 'booking_ref';
+        $vars[] = 'room_id';
         return $vars;
     }
     
@@ -88,6 +90,10 @@ class HRB_Frontend {
             case 'booking-cancelled':
                 $this->show_booking_cancelled();
                 exit;
+
+            case 'room-details':
+                $this->show_room_details();
+                exit;
         }
     }
     
@@ -131,6 +137,21 @@ class HRB_Frontend {
         get_header();
         include HRB_PLUGIN_DIR . 'templates/booking-cancelled.php';
         get_footer();
+    }
+    
+    private function show_room_details() {
+        $room_id = get_query_var('room_id') ?: (isset($_GET['room_id']) ? intval($_GET['room_id']) : 0);
+        
+        if (!$room_id) {
+            wp_redirect(home_url());
+            exit;
+        }
+        
+        // Set room_id for the template
+        $GLOBALS['hrb_room_id'] = $room_id;
+        
+        include HRB_PLUGIN_DIR . 'templates/room-details.php';
+        exit;
     }
 }
 

@@ -64,7 +64,6 @@ class HRB_Room_Manager {
             'name' => '',
             'description' => '',
             'capacity' => 1,
-            'hourly_price' => 0.00,
             'price_2_hours' => 0.00,
             'price_3_hours' => 0.00,
             'price_4_hours' => 0.00,
@@ -87,9 +86,9 @@ class HRB_Room_Manager {
             return new WP_Error('invalid_capacity', __('Room capacity must be at least 1', 'hourly-room-booking'));
         }
         
-        if ($room_data['hourly_price'] < 0) {
-            return new WP_Error('invalid_price', __('Hourly price cannot be negative', 'hourly-room-booking'));
-        }
+        // if ($room_data['hourly_price'] < 0) {
+        //     return new WP_Error('invalid_price', __('Hourly price cannot be negative', 'hourly-room-booking'));
+        // }
         
         // Handle amenities array
         if (is_array($room_data['amenities'])) {
@@ -140,10 +139,6 @@ class HRB_Room_Manager {
         // Validate data
         if (isset($data['capacity']) && $data['capacity'] < 1) {
             return new WP_Error('invalid_capacity', __('Room capacity must be at least 1', 'hourly-room-booking'));
-        }
-        
-        if (isset($data['hourly_price']) && $data['hourly_price'] < 0) {
-            return new WP_Error('invalid_price', __('Hourly price cannot be negative', 'hourly-room-booking'));
         }
         
         $result = $wpdb->update(
@@ -252,8 +247,8 @@ class HRB_Room_Manager {
         }
         
         // Get business hours and time slots
-        $business_start = HRB_Database::get_setting('business_hours_start', '08:00');
-        $business_end = HRB_Database::get_setting('business_hours_end', '20:00');
+        $business_start = get_option('hrb_booking_start_time', '08:00');
+        $business_end = get_option('hrb_booking_end_time', '20:00');
         $time_slots = HRB_Database::get_setting('booking_time_slots', array());
         
         // Check for room-specific availability exceptions
@@ -350,6 +345,73 @@ class HRB_Room_Manager {
     }
     
     /**
+     * Get price range for room (2-4 hours)
+     */
+    public function get_room_price_range($room) {
+        if (is_numeric($room)) {
+            $room = $this->get_room($room);
+        }
+        
+        if (!$room) {
+            return ['min' => 0, 'max' => 0, 'formatted' => 'N/A'];
+        }
+        
+        $prices = [];
+        
+        // Get room-specific prices first, fallback to global for missing ones
+        $room_2h = floatval($room->price_2_hours);
+        $room_3h = floatval($room->price_3_hours);
+        $room_4h = floatval($room->price_4_hours);
+        
+        $global_2h = floatval(get_option('hrb_price_2_hours', 0));
+        $global_3h = floatval(get_option('hrb_price_3_hours', 0));
+        $global_4h = floatval(get_option('hrb_price_4_hours', 0));
+        
+        // Use room-specific price if available, otherwise use global
+        if ($room_2h > 0) {
+            $prices[] = $room_2h;
+        } elseif ($global_2h > 0) {
+            $prices[] = $global_2h;
+        }
+        
+        if ($room_3h > 0) {
+            $prices[] = $room_3h;
+        } elseif ($global_3h > 0) {
+            $prices[] = $global_3h;
+        }
+        
+        if ($room_4h > 0) {
+            $prices[] = $room_4h;
+        } elseif ($global_4h > 0) {
+            $prices[] = $global_4h;
+        }
+        
+        // If no prices found, return 0
+        if (empty($prices)) {
+            return ['min' => 0, 'max' => 0, 'formatted' => 'N/A'];
+        }
+        
+        $min_price = min($prices);
+        $max_price = max($prices);
+        
+        $currency_manager = HRB_Currency_Manager::getInstance();
+        $pricing_label = get_option('hrb_pricing_label', '');
+        
+        $formatted = hrb_format_amount($min_price) . ' - ' . hrb_format_amount($max_price);
+        
+        // Add pricing label if set
+        if (!empty($pricing_label)) {
+            $formatted = $pricing_label . ' ' . $formatted;
+        }
+        
+        return [
+            'min' => $min_price,
+            'max' => $max_price,
+            'formatted' => $formatted
+        ];
+    }
+    
+    /**
      * Get rooms with search filters
      */
     public function search_rooms($filters = array()) {
@@ -381,10 +443,14 @@ class HRB_Room_Manager {
             $params[] = intval($filters['min_capacity']);
         }
         
-        // Price range filter
+        // Price range filter - check if any of the 2-4 hour prices are within range
         if (!empty($filters['max_price'])) {
-            $where_conditions[] = 'hourly_price <= %f';
-            $params[] = floatval($filters['max_price']);
+            $max_price = floatval($filters['max_price']);
+            $where_conditions[] = '(price_2_hours <= %f OR price_3_hours <= %f OR price_4_hours <= %f OR hourly_price * 2 <= %f)';
+            $params[] = $max_price;
+            $params[] = $max_price;
+            $params[] = $max_price;
+            $params[] = $max_price;
         }
         
         // Amenities filter

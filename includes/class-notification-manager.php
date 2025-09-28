@@ -84,15 +84,94 @@ class HRB_Notification_Manager {
             'From: ' . get_option('hrb_company_name', get_bloginfo('name')) . ' <' . get_option('hrb_company_email', get_option('admin_email')) . '>'
         );
         
-        // Add BCC for admin notifications
+        // Attach invoice for booking confirmation and payment confirmation
+        $attachments = array();
         if (in_array($event, array('booking_confirmation', 'payment_confirmation'))) {
-            $headers[] = 'Bcc: ' . get_option('hrb_admin_email', get_option('admin_email'));
+            error_log('HRB: Attempting to generate invoice for booking ' . $booking->id . ' with event: ' . $event);
+            $invoice_path = $this->get_or_generate_invoice($booking->id);
+            error_log('HRB: Invoice path: ' . ($invoice_path ? $invoice_path : 'NULL'));
+            if ($invoice_path && file_exists($invoice_path)) {
+                $attachments[] = $invoice_path;
+                error_log('HRB: Invoice attached: ' . $invoice_path);
+            } else {
+                error_log('HRB: Invoice file not found or path is invalid');
+            }
+        } else {
+            error_log('HRB: Event is not booking_confirmation or payment_confirmation, it is: ' . $event);
         }
+        
+        // Send separate admin notifications
+        if (in_array($event, array('booking_confirmation', 'payment_confirmation'))) {
+            $this->send_admin_notification($booking, $event);
+        }
+        
+        $sent = wp_mail($to, $subject, $message, $headers, $attachments);
+        
+        // Log notification
+        $this->log_notification($booking->id, $booking->customer_id, 'email', $event, $to, $subject, $message, $sent ? 'sent' : 'failed');
+        
+        return $sent;
+    }
+    
+    /**
+     * Send admin notification
+     */
+    private function send_admin_notification($booking, $event) {
+        global $wpdb;
+        
+        $settings = HRB_Settings::getInstance();
+        
+        // Get admin template
+        $template_key = $event . '_admin';
+        
+        $template = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_email_templates WHERE template_key = %s AND template_type = 'admin' AND is_active = 1",
+            $template_key
+        ));
+        
+        if (!$template) {
+            // Fallback to default admin template
+            $template_data = $this->get_default_admin_template_data($booking, $event);
+        } else {
+            $template_data = $this->prepare_admin_template_data($booking, $event, $template);
+        }
+        
+        if (!$template_data) {
+            return false;
+        }
+        
+        // Send to admin email if enabled
+        if ($settings->get('hrb_admin_email_notifications', 1)) {
+            $admin_email = $settings->get('hrb_admin_email', get_option('admin_email'));
+            if (!empty($admin_email)) {
+                $this->send_admin_email($admin_email, $template_data, $booking, $event);
+            }
+        }
+        
+        // Send to staff email if enabled
+        if ($settings->get('hrb_staff_email_notifications', 0)) {
+            $staff_email = $settings->get('hrb_staff_email', '');
+            if (!empty($staff_email)) {
+                $this->send_admin_email($staff_email, $template_data, $booking, $event);
+            }
+        }
+    }
+    
+    /**
+     * Send admin email
+     */
+    private function send_admin_email($to, $template_data, $booking, $event) {
+        $subject = $template_data['subject'];
+        $message = $this->generate_email_html($template_data);
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . get_option('hrb_company_name', get_bloginfo('name')) . ' <' . get_option('hrb_company_email', get_option('admin_email')) . '>'
+        );
         
         $sent = wp_mail($to, $subject, $message, $headers);
         
         // Log notification
-        $this->log_notification($booking->id, $booking->customer_id, 'email', $event, $to, $subject, $message, $sent ? 'sent' : 'failed');
+        $this->log_notification($booking->id, $booking->customer_id, 'email', $event . '_admin', $to, $subject, $message, $sent ? 'sent' : 'failed');
         
         return $sent;
     }
@@ -207,11 +286,20 @@ class HRB_Notification_Manager {
             return false;
         }
         
-        // Get template from database
+        // Get template from database based on recipient type
+        $template_key = $event . '_user'; // Default to user template
         $template = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}hrb_email_templates WHERE template_key = %s AND is_active = 1",
-            $event
+            "SELECT * FROM {$wpdb->prefix}hrb_email_templates WHERE template_key = %s AND template_type = 'user' AND is_active = 1",
+            $template_key
         ));
+        
+        // If user template not found, try the original template key (for backward compatibility)
+        if (!$template) {
+            $template = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_email_templates WHERE template_key = %s AND is_active = 1",
+                $event
+            ));
+        }
         
         if (!$template) {
             // Fallback to default template if not found in database
@@ -257,6 +345,55 @@ class HRB_Notification_Manager {
             $data['html_content']
         );
         
+        
+        return $data;
+    }
+    
+    /**
+     * Prepare admin template data for notifications
+     */
+    private function prepare_admin_template_data($booking, $event, $template) {
+        $room_manager = HRB_Room_Manager::getInstance();
+        $room = $room_manager->get_room($booking->room_id);
+        
+        if (!$room) {
+            return false;
+        }
+        
+        $company_name = get_option('hrb_company_name', get_bloginfo('name'));
+        $booking_url = site_url("/booking-details/?ref=" . $booking->booking_reference);
+        
+        // Create admin-specific data with additional fields
+        $data = array(
+            'customer_name' => $booking->first_name . ' ' . $booking->last_name,
+            'customer_first_name' => $booking->first_name,
+            'customer_email' => $booking->email,
+            'customer_phone' => $booking->phone,
+            'booking_reference' => $booking->booking_reference,
+            'room_name' => $room->name,
+            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
+            'total_amount' => hrb_format_amount($booking->total_amount),
+            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'company_name' => $company_name,
+            'company_phone' => get_option('hrb_company_phone', ''),
+            'company_email' => get_option('hrb_company_email', get_option('admin_email')),
+            'booking_url' => $booking_url,
+            'cancel_url' => $booking_url . '&action=cancel',
+            'booking_status' => ucfirst($booking->status),
+            'subject' => $template->subject,
+            'heading' => $template->heading,
+            'message' => $template->message,
+            'html_content' => $template->html_content
+        );
+        
+        // Replace template variables in content
+        $data['html_content'] = $this->replace_template_variables($template->html_content, $booking, $room, $data);
+        $data['subject'] = $this->replace_template_variables($template->subject, $booking, $room, $data);
+        $data['heading'] = $this->replace_template_variables($template->heading, $booking, $room, $data);
+        $data['message'] = $this->replace_template_variables($template->message, $booking, $room, $data);
         
         return $data;
     }
@@ -356,6 +493,61 @@ class HRB_Notification_Manager {
                 $data['subject'] = sprintf(__('Booking Modified - %s', 'hourly-room-booking'), $booking->booking_reference);
                 $data['heading'] = __('Booking Updated', 'hourly-room-booking');
                 $data['message'] = __('Your booking has been modified. Please review the updated details:', 'hourly-room-booking');
+                break;
+                
+            default:
+                return false;
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get default admin template data (fallback)
+     */
+    private function get_default_admin_template_data($booking, $event) {
+        $room_manager = HRB_Room_Manager::getInstance();
+        $room = $room_manager->get_room($booking->room_id);
+        
+        if (!$room) {
+            return false;
+        }
+        
+        $company_name = get_option('hrb_company_name', get_bloginfo('name'));
+        $booking_url = site_url("/booking-details/?ref=" . $booking->booking_reference);
+        
+        $data = array(
+            'customer_name' => $booking->first_name . ' ' . $booking->last_name,
+            'customer_first_name' => $booking->first_name,
+            'customer_email' => $booking->email,
+            'customer_phone' => $booking->phone,
+            'booking_reference' => $booking->booking_reference,
+            'room_name' => $room->name,
+            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
+            'total_amount' => hrb_format_amount($booking->total_amount),
+            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'company_name' => $company_name,
+            'company_phone' => get_option('hrb_company_phone', ''),
+            'company_email' => get_option('hrb_company_email', get_option('admin_email')),
+            'booking_url' => $booking_url,
+            'cancel_url' => $booking_url . '&action=cancel',
+            'booking_status' => ucfirst($booking->status)
+        );
+        
+        switch ($event) {
+            case 'booking_confirmation':
+                $data['subject'] = sprintf(__('New Booking Received - %s', 'hourly-room-booking'), $booking->booking_reference);
+                $data['heading'] = __('New Booking Alert!', 'hourly-room-booking');
+                $data['message'] = __('A new booking has been received. Here are the details:', 'hourly-room-booking');
+                break;
+                
+            case 'payment_confirmation':
+                $data['subject'] = sprintf(__('Payment Received - %s', 'hourly-room-booking'), $booking->booking_reference);
+                $data['heading'] = __('Payment Confirmed!', 'hourly-room-booking');
+                $data['message'] = __('A payment has been successfully processed for a booking.', 'hourly-room-booking');
                 break;
                 
             default:
@@ -574,14 +766,54 @@ class HRB_Notification_Manager {
         $company_name = get_option('hrb_company_name', get_bloginfo('name'));
         
         if ($type === 'email') {
-            $subject = sprintf(__('Your verification code - %s', 'hourly-room-booking'), $company_name);
-            $message = sprintf(
-                __('Your verification code is: %s\n\nThis code will expire in 15 minutes.\n\n%s', 'hourly-room-booking'),
-                $otp_code,
-                $company_name
+            // Use OTP email template from database
+            $template = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_email_templates WHERE template_key = 'otp_verification_user' AND template_type = 'user' AND is_active = 1"
+            ));
+            
+            if ($template) {
+                // Use template from database
+                $template_data = array(
+                    'otp_code' => $otp_code,
+                    'customer_name' => 'Customer', // We don't have customer name at this point
+                    'company_name' => $company_name,
+                    'company_email' => get_option('hrb_company_email', get_option('admin_email')),
+                    'company_phone' => get_option('hrb_company_phone', ''),
+                );
+                
+                // Replace template variables
+                $subject = $this->replace_template_variables($template->subject, null, null, $template_data);
+                $heading = $this->replace_template_variables($template->heading, null, null, $template_data);
+                $message = $this->replace_template_variables($template->message, null, null, $template_data);
+                $html_content = $this->replace_template_variables($template->html_content, null, null, $template_data);
+                
+                $message = $this->generate_email_html(array(
+                    'subject' => $subject,
+                    'heading' => $heading,
+                    'message' => $message,
+                    'html_content' => $html_content,
+                ));
+            } else {
+                // Fallback to hardcoded message if template not found
+                $subject = sprintf(__('Your verification code - %s', 'hourly-room-booking'), $company_name);
+                $message = sprintf(
+                    __('Your verification code is: %s\n\nThis code will expire in 15 minutes.\n\n%s', 'hourly-room-booking'),
+                    $otp_code,
+                    $company_name
+                );
+            }
+
+            $headers = array(
+                'Content-Type: text/html; charset=UTF-8',
+                'From: ' . $company_name . ' <' . get_option('hrb_company_email', get_option('admin_email')) . '>'
             );
 
-            return wp_mail($email, $subject, $message);
+            $sent = wp_mail($email, $subject, $message, $headers);
+            
+            // Log OTP notification (no booking_id or customer_id for OTP)
+            $this->log_notification(0, 0, 'email', 'otp_verification', $email, $subject, $message, $sent ? 'sent' : 'failed');
+            
+            return $sent;
         } elseif ($type === 'sms' && !empty($this->twilio_sid)) {
             $message = sprintf(
                 __('Your %s verification code is: %s. Valid for 15 minutes.', 'hourly-room-booking'),
@@ -606,7 +838,12 @@ class HRB_Notification_Manager {
                 'timeout' => 30
             ));
 
-            return !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 201;
+            $success = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 201;
+            
+            // Log SMS OTP notification
+            $this->log_notification(0, 0, 'sms', 'otp_verification', $formatted_phone, null, $message, $success ? 'sent' : 'failed');
+            
+            return $success;
         }
         
         return false;
@@ -621,7 +858,7 @@ class HRB_Notification_Manager {
         $otp_record = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}hrb_otp_verification 
              WHERE email = %s AND phone = %s AND otp_code = %s 
-             AND expires_at > NOW() AND is_verified = 0",
+             AND expires_at > UTC_TIMESTAMP() AND is_verified = 0",
             $email, $phone, $otp_code
         ));
         
@@ -730,6 +967,41 @@ class HRB_Notification_Manager {
         $params[] = $offset;
         
         return $wpdb->get_results($wpdb->prepare($sql, $params));
+    }
+    
+    /**
+     * Get or generate invoice for booking
+     */
+    private function get_or_generate_invoice($booking_id) {
+        global $wpdb;
+        
+        // Check if invoice already exists
+        $invoice = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_invoices WHERE booking_id = %d",
+            $booking_id
+        ));
+        
+        if ($invoice && !empty($invoice->pdf_file_path) && file_exists($invoice->pdf_file_path)) {
+            return $invoice->pdf_file_path;
+        }
+        
+        // Create invoice if it doesn't exist
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $invoice_id = $booking_manager->create_invoice($booking_id);
+        
+        if (is_wp_error($invoice_id)) {
+            return false;
+        }
+        
+        // Generate PDF
+        $invoice_generator = HRB_Invoice_Generator::getInstance();
+        $pdf_path = $invoice_generator->generate_invoice_pdf($invoice_id);
+        
+        if (is_wp_error($pdf_path)) {
+            return false;
+        }
+        
+        return $pdf_path;
     }
 }
 ?>

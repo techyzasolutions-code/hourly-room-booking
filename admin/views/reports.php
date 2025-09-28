@@ -135,10 +135,33 @@ foreach ($daily_bookings as $day) {
 $cancellation_rate = $booking_stats->total_bookings > 0 ?
     ($booking_stats->cancelled_bookings / $booking_stats->total_bookings) * 100 : 0;
 
+// Calculate occupancy rate
+$occupancy_rate = 0;
+if ($booking_stats->total_bookings > 0) {
+    // Get total booked time slots (confirmed bookings)
+    $total_booked_slots = $wpdb->get_var($wpdb->prepare("
+        SELECT COUNT(*) 
+        FROM {$wpdb->prefix}hrb_bookings
+        WHERE booking_date BETWEEN %s AND %s
+        AND status IN ('confirmed', 'completed')
+    ", $start_date, $end_date));
+    
+    // Get total possible time slots (assuming 8-hour workday, 7 days a week)
+    $days_in_period = (strtotime($end_date) - strtotime($start_date)) / (24 * 60 * 60) + 1;
+    $hours_per_day = 8; // Assuming 8-hour workday
+    $total_rooms = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_rooms WHERE is_active = 1");
+    $total_possible_slots = $days_in_period * $hours_per_day * $total_rooms;
+    
+    // Calculate occupancy rate
+    if ($total_possible_slots > 0) {
+        $occupancy_rate = ($total_booked_slots / $total_possible_slots) * 100;
+    }
+}
+
 $analytics_data = [
     'total_bookings' => (int)($booking_stats->total_bookings ?? 0),
     'bookings_growth' => 0, // Would need historical comparison
-    'occupancy_rate' => 0, // Would need room capacity data
+    'occupancy_rate' => $occupancy_rate,
     'occupancy_growth' => 0,
     'unique_customers' => (int)($unique_customers ?? 0),
     'customers_growth' => 0, // Would need historical comparison
@@ -187,7 +210,7 @@ $revenue_data = [
 // Get room performance data
 $room_performance = $wpdb->get_results($wpdb->prepare("
     SELECT
-        r.name as room_name,
+        r.name as room_name, r.id as id,
         COUNT(b.id) as booking_count,
         SUM(CASE WHEN b.status NOT IN ('cancelled') THEN b.total_amount ELSE 0 END) as total_revenue,
         AVG(CASE WHEN b.status NOT IN ('cancelled') THEN b.total_hours ELSE NULL END) as avg_duration
@@ -199,9 +222,29 @@ $room_performance = $wpdb->get_results($wpdb->prepare("
     ORDER BY booking_count DESC
 ", $start_date, $end_date));
 
-// Calculate occupancy rates (simplified - would need more complex calculation with operating hours)
+// Calculate occupancy rates for each room
 foreach ($room_performance as $room) {
-    $room->occupancy_rate = 0; // Placeholder - would need operating hours and available time slots
+    
+    // Get booked time slots for this room (confirmed bookings only)
+    $room_booked_slots = $wpdb->get_var($wpdb->prepare("
+        SELECT COUNT(*)
+        FROM {$wpdb->prefix}hrb_bookings
+        WHERE room_id = %d
+        AND booking_date BETWEEN %s AND %s
+        AND status IN ('confirmed', 'completed')
+    ", $room->id, $start_date, $end_date));
+    
+    // Get total possible time slots for this room (8 hours per day)
+    $days_in_period = (strtotime($end_date) - strtotime($start_date)) / (24 * 60 * 60) + 1;
+    $hours_per_day = 8; // Assuming 8-hour workday
+    $room_possible_slots = $days_in_period * $hours_per_day;
+    
+    // Calculate occupancy rate for this room
+    if ($room_possible_slots > 0) {
+        $room->occupancy_rate = ($room_booked_slots / $room_possible_slots) * 100;
+    } else {
+        $room->occupancy_rate = 0;
+    }
 }
 
 // Get currency symbol from settings
@@ -215,10 +258,10 @@ $currency_symbol = hrb_get_currency_symbol();
             <p class="description"><?php _e('Comprehensive analytics and reports for your room booking business.', 'hourly-room-booking'); ?></p>
         </div>
         <div class="hrb-page-actions">
-            <button type="button" class="button" onclick="exportReport()">
+            <!-- <button type="button" class="button" onclick="exportReport()">
                 <span class="dashicons dashicons-download"></span>
                 <?php _e('Export Report', 'hourly-room-booking'); ?>
-            </button>
+            </button> -->
             <button type="button" class="button button-primary" onclick="printReport()">
                 <span class="dashicons dashicons-printer"></span>
                 <?php _e('Print Report', 'hourly-room-booking'); ?>

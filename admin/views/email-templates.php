@@ -13,9 +13,10 @@ if (!defined('ABSPATH')) {
     <h1 class="wp-heading-inline">
         <?php _e('Email Templates', 'hourly-room-booking'); ?>
     </h1>
-    <p class="description">
-        <?php _e('Manage your email templates for booking notifications. You can customize the content, styling, and variables used in each template.', 'hourly-room-booking'); ?>
-    </p>
+    <div class="hrb-template-tabs">
+        <button class="hrb-tab-button active" data-tab="user"><?php _e('User Templates', 'hourly-room-booking'); ?></button>
+        <button class="hrb-tab-button" data-tab="admin"><?php _e('Admin Templates', 'hourly-room-booking'); ?></button>
+    </div>
 
     <div class="hrb-templates-container">
         <?php if (empty($templates)): ?>
@@ -27,8 +28,14 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         <?php else: ?>
-            <div class="hrb-templates-grid">
-                <?php foreach ($templates as $template): ?>
+            <!-- User Templates -->
+            <div class="hrb-templates-grid hrb-tab-content" id="user-templates">
+                <?php 
+                $user_templates = array_filter($templates, function($template) {
+                    return $template->template_type === 'user';
+                });
+                foreach ($user_templates as $template): 
+                ?>
                     <div class="hrb-template-card <?php echo $template->is_active ? 'active' : 'inactive'; ?>">
                         <div class="hrb-template-header">
                             <h3><?php echo esc_html($template->template_name); ?></h3>
@@ -45,6 +52,49 @@ if (!defined('ABSPATH')) {
                                 <button type="button" class="button button-primary button-small hrb-edit-template" 
                                         data-template-id="<?php echo $template->id; ?>">
                                     <?php _e('Edit', 'hourly-room-booking'); ?>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="hrb-template-content">
+                            <div class="hrb-template-info">
+                                <p><strong><?php _e('Subject:', 'hourly-room-booking'); ?></strong> <?php echo esc_html($template->subject); ?></p>
+                                <p><strong><?php _e('Heading:', 'hourly-room-booking'); ?></strong> <?php echo esc_html($template->heading); ?></p>
+                                <p><strong><?php _e('Status:', 'hourly-room-booking'); ?></strong> 
+                                    <span class="hrb-status-badge <?php echo $template->is_active ? 'active' : 'inactive'; ?>">
+                                        <?php echo $template->is_active ? __('Active', 'hourly-room-booking') : __('Inactive', 'hourly-room-booking'); ?>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <!-- Admin Templates -->
+            <div class="hrb-templates-grid hrb-tab-content" id="admin-templates" style="display: none;">
+                <?php 
+                $admin_templates = array_filter($templates, function($template) {
+                    return $template->template_type === 'admin';
+                });
+                foreach ($admin_templates as $template): 
+                ?>
+                    <div class="hrb-template-card <?php echo $template->is_active ? 'active' : 'inactive'; ?>">
+                        <div class="hrb-template-header">
+                            <h3><?php echo esc_html($template->template_name); ?></h3>
+                            <div class="hrb-template-actions">
+                                <button type="button" class="button button-small hrb-view-template" 
+                                        data-template-id="<?php echo $template->id; ?>">
+                                    <?php _e('View', 'hourly-room-booking'); ?>
+                                </button>
+                                <button type="button" class="button button-small hrb-edit-template" 
+                                        data-template-id="<?php echo $template->id; ?>">
+                                    <?php _e('Edit', 'hourly-room-booking'); ?>
+                                </button>
+                                <button type="button" class="button button-small hrb-toggle-template" 
+                                        data-template-id="<?php echo $template->id; ?>" 
+                                        data-is-active="<?php echo $template->is_active; ?>">
+                                    <?php echo $template->is_active ? __('Deactivate', 'hourly-room-booking') : __('Activate', 'hourly-room-booking'); ?>
                                 </button>
                             </div>
                         </div>
@@ -84,6 +134,15 @@ if (!defined('ABSPATH')) {
                 <div class="hrb-form-row_c">
                     <label for="template_name"><?php _e('Template Name', 'hourly-room-booking'); ?></label>
                     <input type="text" id="template_name" name="template_name" class="regular-text" required>
+                </div>
+                
+                <div class="hrb-form-row_c">
+                    <label for="template_type"><?php _e('Template Type', 'hourly-room-booking'); ?></label>
+                    <select id="template_type" name="template_type" class="regular-text" required>
+                        <option value="user"><?php _e('User Template', 'hourly-room-booking'); ?></option>
+                        <option value="admin"><?php _e('Admin Template', 'hourly-room-booking'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('User templates are sent to customers, admin templates are sent to administrators.', 'hourly-room-booking'); ?></p>
                 </div>
                 
                 <div class="hrb-form-row_c">
@@ -181,6 +240,36 @@ if (!defined('ABSPATH')) {
 <style>
 .hrb-admin-email-templates {
     max-width: 1200px;
+}
+
+.hrb-template-tabs {
+    margin: 20px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.hrb-tab-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+    color: #666;
+}
+
+.hrb-tab-button.active {
+    color: #0073aa;
+    border-bottom-color: #0073aa;
+    font-weight: 600;
+}
+
+.hrb-tab-button:hover {
+    color: #0073aa;
+}
+
+.hrb-tab-content {
+    margin-top: 20px;
 }
 
 .hrb-templates-container {
@@ -590,5 +679,56 @@ function closeTemplateModal() {
 function closeViewModal() {
     document.getElementById('hrb-view-template-modal').style.display = 'none';
 }
+
+// Tab switching functionality
+jQuery(document).ready(function($) {
+    $('.hrb-tab-button').on('click', function() {
+        var tab = $(this).data('tab');
+        
+        // Update button states
+        $('.hrb-tab-button').removeClass('active');
+        $(this).addClass('active');
+        
+        // Show/hide content
+        $('.hrb-tab-content').hide();
+        $('#' + tab + '-templates').show();
+    });
+    
+    // Update template editing to include template_type
+    $('.hrb-edit-template').on('click', function() {
+        var templateId = $(this).data('template-id');
+        
+        // Get template data via AJAX
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hrb_get_template',
+                template_id: templateId,
+                nonce: '<?php echo wp_create_nonce('hrb_get_template'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    var template = response.data;
+                    $('#template_id').val(template.id);
+                    $('#template_name').val(template.template_name);
+                    $('#template_type').val(template.template_type);
+                    $('#subject').val(template.subject);
+                    $('#heading').val(template.heading);
+                    $('#message').val(template.message);
+                    $('#html_content').val(template.html_content);
+                    $('#is_active').prop('checked', template.is_active == 1);
+                    
+                    $('#hrb-edit-template-modal').show();
+                } else {
+                    alert('Error loading template: ' + response.data);
+                }
+            },
+            error: function() {
+                alert('Error loading template data.');
+            }
+        });
+    });
+});
 </script>
 
