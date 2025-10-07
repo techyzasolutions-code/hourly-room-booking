@@ -1,11 +1,7 @@
-# English (US) translation for Hourly Room Booking Plugin
-# Copyright (C) 2024
-# This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
 "Project-Id-Version: Hourly Room Booking 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-18 10:00+0000\n"
 "PO-Revision-Date: 2024-09-18 10:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: English\n"
@@ -15,15 +11,367 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-# General
-msgid "Loading..."
-msgstr "Loading..."
+msgid "%d Hours"
+msgstr "%d Hours"
+
+msgid "%d extra people"
+msgstr "%d extra people"
+
+msgid "%s per additional person (max 10)"
+msgstr "%s per additional person (max 10)"
+
+msgid "&laquo; Previous"
+msgstr "&laquo; Previous"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Activate Room"
+msgstr "Activate Room"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Active Bookings"
+msgstr "Active Bookings"
+
+msgid "Active Only"
+msgstr "Active Only"
+
+msgid "Active Rooms"
+msgstr "Active Rooms"
+
+msgid "Add Customer"
+msgstr "Add Customer"
+
+msgid "Add First Room"
+msgstr "Add First Room"
+
+msgid "Add New Booking"
+msgstr "Add New Booking"
+
+msgid "Add New Room"
+msgstr "Add New Room"
+
+msgid "Add Room"
+msgstr "Add Room"
+
+msgid "Add, edit, and manage your bookable rooms and meeting spaces."
+msgstr "Add, edit, and manage your bookable rooms and meeting spaces."
+
+msgid "Additional People"
+msgstr "Additional People"
+
+msgid "All Bookings"
+msgstr "All Bookings"
+
+msgid "All Customers"
+msgstr "All Customers"
+
+msgid "All Rooms"
+msgstr "All Rooms"
+
+msgid "America/Chicago"
+msgstr "America/Chicago"
+
+msgid "America/Los_Angeles"
+msgstr "America/Los_Angeles"
+
+msgid "America/New_York"
+msgstr "America/New_York"
+
+msgid "Amount"
+msgstr "Amount"
 
 msgid "An error occurred"
 msgstr "An error occurred"
 
-msgid "Success!"
-msgstr "Success!"
+msgid "Ascending"
+msgstr "Ascending"
+
+msgid "Asia/Tokyo"
+msgstr "Asia/Tokyo"
+
+msgid "Australia/Sydney"
+msgstr "Australia/Sydney"
+
+msgid "Available"
+msgstr "Available"
+
+msgid "Avg Bookings"
+msgstr "Avg Bookings"
+
+msgid "Back to Bookings"
+msgstr "Back to Bookings"
+
+msgid "Back to Home"
+msgstr "Back to Home"
+
+msgid "Back to Old Bookings"
+msgstr "Back to Old Bookings"
+
+msgid "Base Price"
+msgstr "Base Price"
+
+msgid "Book Now"
+msgstr "Book Now"
+
+msgid "Booking Advance Days"
+msgstr "Booking Advance Days"
+
+msgid "Booking Cancelled"
+msgstr "Booking Cancelled"
+
+msgid "Booking Confirmation"
+msgstr "Booking Confirmation"
+
+msgid "Booking Confirmed"
+msgstr "Booking Confirmed"
+
+msgid "Booking Date"
+msgstr "Booking Date"
+
+msgid "Booking Details"
+msgstr "Booking Details"
+
+msgid "Booking Details - #%s"
+msgstr "Booking Details - #%s"
+
+msgid "Booking End Time"
+msgstr "Booking End Time"
+
+msgid "Booking ID"
+msgstr "Booking ID"
+
+msgid "Booking Information"
+msgstr "Booking Information"
+
+msgid "Booking Reference"
+msgstr "Booking Reference"
+
+msgid "Booking Start Time"
+msgstr "Booking Start Time"
+
+msgid "Booking Trends (Last 30 Days)"
+msgstr "Booking Trends (Last 30 Days)"
+
+msgid "Booking cancelled successfully."
+msgstr "Booking cancelled successfully."
+
+msgid "Booking confirmed successfully."
+msgstr "Booking confirmed successfully."
+
+msgid "Booking created successfully."
+msgstr "Booking created successfully."
+
+msgid "Booking deleted successfully."
+msgstr "Booking deleted successfully."
+
+msgid "Booking not found."
+msgstr "Booking not found."
+
+msgid "Booking updated successfully."
+msgstr "Booking updated successfully."
+
+msgid "Bookings"
+msgstr "Bookings"
+
+msgid ""
+"Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds"
+msgstr ""
+"Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds"
+
+msgid "Bookings must be between %s and %s"
+msgstr "Bookings must be between %s and %s"
+
+msgid "Bookings under 4 hours: PayPal or on-site payment available"
+msgstr "Bookings under 4 hours: PayPal or on-site payment available"
+
+msgid "Calendar"
+msgstr "Calendar"
+
+msgid "Calendar View"
+msgstr "Calendar View"
+
+msgid "Cancel Booking"
+msgstr "Cancel Booking"
+
+msgid "Cancellation Confirmed"
+msgstr "Cancellation Confirmed"
+
+msgid "Cancellation Hours"
+msgstr "Cancellation Hours"
+
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgid "Cannot book more than %d days in advance"
+msgstr "Cannot book more than %d days in advance"
+
+msgid "Capacity"
+msgstr "Capacity"
+
+msgid "Clear Filters"
+msgstr "Clear Filters"
+
+msgid ""
+"Code expires in 15 minutes. Check your spam folder if you don't see the "
+"email."
+msgstr ""
+"Code expires in 15 minutes. Check your spam folder if you don't see the "
+"email."
+
+msgid "Company"
+msgstr "Company"
+
+msgid "Company (Optional)"
+msgstr "Company (Optional)"
+
+msgid "Complete Booking"
+msgstr "Complete Booking"
+
+msgid "Complete information about your room booking"
+msgstr "Complete information about your room booking"
+
+msgid "Completed"
+msgstr "Completed"
+
+msgid "Confirm"
+msgstr "Confirm"
+
+msgid "Confirm Booking"
+msgstr "Confirm Booking"
+
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgid "Contact Info"
+msgstr "Contact Info"
+
+msgid "Contact Support"
+msgstr "Contact Support"
+
+msgid "Contact Verification"
+msgstr "Contact Verification"
+
+msgid "Continue"
+msgstr "Continue"
+
+msgid "Created"
+msgstr "Created"
+
+msgid "Created Date"
+msgstr "Created Date"
+
+msgid "Currency"
+msgstr "Currency"
+
+msgid "Customer"
+msgstr "Customer"
+
+msgid "Customer Details"
+msgstr "Customer Details"
+
+msgid "Customer Information"
+msgstr "Customer Information"
+
+msgid ""
+"Customer with this email already exists. Using existing customer record."
+msgstr ""
+"Customer with this email already exists. Using existing customer record."
+
+msgid "Customers"
+msgstr "Customers"
+
+msgid "Database"
+msgstr "Database"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Date & Time"
+msgstr "Date & Time"
+
+msgid "Date Format"
+msgstr "Date Format"
+
+msgid "Date, start time, and end time are required."
+msgstr "Date, start time, and end time are required."
+
+msgid "Day"
+msgstr "Day"
+
+msgid "Deactivate Room"
+msgstr "Deactivate Room"
+
+msgid "Default Booking Duration"
+msgstr "Default Booking Duration"
+
+msgid "Delete Booking"
+msgstr "Delete Booking"
+
+msgid "Delete Room"
+msgstr "Delete Room"
+
+msgid "Descending"
+msgstr "Descending"
+
+msgid "Didn't receive the code?"
+msgstr "Didn't receive the code?"
+
+msgid "Disabled"
+msgstr "Disabled"
+
+msgid "Duration"
+msgstr "Duration"
+
+msgid "Edit Booking"
+msgstr "Edit Booking"
+
+msgid "Edit Booking - #%s"
+msgstr "Edit Booking - #%s"
+
+msgid "Edit Room"
+msgstr "Edit Room"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Email Address"
+msgstr "Email Address"
+
+msgid "Email Notifications"
+msgstr "Email Notifications"
+
+msgid "Email Settings"
+msgstr "Email Settings"
+
+msgid "Email Templates"
+msgstr "Email Templates"
+
+msgid "Email address is required"
+msgstr "Email address is required"
+
+msgid "Email is required"
+msgstr "Email is required"
+
+msgid "Email to verify:"
+msgstr "Email to verify:"
+
+msgid "Email verification code sent! Please check your email."
+msgstr "Email verification code sent! Please check your email."
+
+msgid "Enabled"
+msgstr "Enabled"
+
+msgid "End time must be after start time."
+msgstr "End time must be after start time."
+
+msgid "Enter 6-digit code"
+msgstr "Enter 6-digit code"
+
+msgid "Enter the name of the room or meeting space."
+msgstr "Enter the name of the room or meeting space."
 
 msgid "Error: Room ID is required"
 msgstr "Error: Room ID is required"
@@ -31,121 +379,884 @@ msgstr "Error: Room ID is required"
 msgid "Error: Room not available"
 msgstr "Error: Room not available"
 
-# Booking Form
-msgid "Booking Date"
-msgstr "Booking Date"
+msgid "Europe/Berlin"
+msgstr "Europe/Berlin"
 
-msgid "Duration"
-msgstr "Duration"
+msgid "Europe/London"
+msgstr "Europe/London"
 
-msgid "Start Time"
-msgstr "Start Time"
+msgid "Europe/Paris"
+msgstr "Europe/Paris"
 
 msgid "Extra People"
 msgstr "Extra People"
 
-msgid "Special Requests"
-msgstr "Special Requests"
+msgid "Extras"
+msgstr "Extras"
 
-msgid "Book Now"
-msgstr "Book Now"
+msgid "Failed"
+msgstr "Failed"
 
-msgid "Next"
-msgstr "Next"
+msgid "Failed to cancel booking."
+msgstr "Failed to cancel booking."
 
-msgid "Previous"
-msgstr "Previous"
+msgid "Failed to confirm booking."
+msgstr "Failed to confirm booking."
 
-# New Customizable Labels
-msgid "Your Details"
-msgstr "Your Details"
+msgid "Failed to create PayPal order"
+msgstr "Failed to create PayPal order"
 
-msgid "Welcome back! Your details have been pre-filled from your account. You can modify them if needed."
-msgstr "Welcome back! Your details have been pre-filled from your account. You can modify them if needed."
+msgid "Failed to delete booking."
+msgstr "Failed to delete booking."
+
+msgid "Failed to save settings."
+msgstr "Failed to save settings."
+
+msgid "Failed to update booking."
+msgstr "Failed to update booking."
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Filter by Room:"
+msgstr "Filter by Room:"
 
 msgid "First Name"
 msgstr "First Name"
 
-msgid "Last Name"
-msgstr "Last Name"
+msgid "General Settings"
+msgstr "General Settings"
 
-msgid "Email Address"
-msgstr "Email Address"
+msgid "Guest Customers"
+msgstr "Guest Customers"
 
-msgid "Phone Number"
-msgstr "Phone Number"
+msgid "Guest Customers Only"
+msgstr "Guest Customers Only"
 
-msgid "Company (Optional)"
-msgstr "Company (Optional)"
-
-msgid "Contact Verification"
-msgstr "Contact Verification"
-
-msgid "Verification Required Please verify your email address before proceeding. We will send you a verification code."
-msgstr "Verification Required Please verify your email address before proceeding. We will send you a verification code."
-
-msgid "Email to verify:"
-msgstr "Email to verify:"
-
-msgid "Booking Confirmation"
-msgstr "Booking Confirmation"
-
-msgid "Booking Details"
-msgstr "Booking Details"
-
-msgid "Room"
-msgstr "Room"
-
-msgid "Date"
-msgstr "Date"
-
-msgid "Time"
-msgstr "Time"
-
-msgid "Additional People"
-msgstr "Additional People"
-
-msgid "Extras"
-msgstr "Extras"
-
-msgid "Customer Details"
-msgstr "Customer Details"
-
-msgid "Name"
-msgstr "Name"
-
-msgid "Email"
-msgstr "Email"
-
-msgid "Phone"
-msgstr "Phone"
-
-msgid "Payment"
-msgstr "Payment"
+msgid "Hourly Price"
+msgstr "Hourly Price"
 
 msgid "I accept the Terms & Conditions and Privacy Policy."
 msgstr "I accept the Terms & Conditions and Privacy Policy."
 
-msgid "Complete Booking"
-msgstr "Complete Booking"
+msgid ""
+"If you have already paid, refunds will be processed within 3-5 business days."
+msgstr ""
+"If you have already paid, refunds will be processed within 3-5 business days."
 
-msgid "What happens next?"
-msgstr "What happens next?"
+msgid "If you have any questions or need assistance, please contact us:"
+msgstr "If you have any questions or need assistance, please contact us:"
 
-msgid "You will receive a confirmation email shortly with all the booking details."
-msgstr "You will receive a confirmation email shortly with all the booking details."
+msgid ""
+"If you have any questions, please contact us using the information below."
+msgstr ""
+"If you have any questions, please contact us using the information below."
 
-msgid "Please bring payment (cash or card) when you arrive for your booking."
-msgstr "Please bring payment (cash or card) when you arrive for your booking."
+msgid ""
+"If you need to cancel or modify your booking, please contact us as soon as "
+"possible."
+msgstr ""
+"If you need to cancel or modify your booking, please contact us as soon as "
+"possible."
+
+msgid "Image"
+msgstr "Image"
+
+msgid "Inactive"
+msgstr "Inactive"
+
+msgid "Inactive Only"
+msgstr "Inactive Only"
+
+msgid "Inactive Rooms"
+msgstr "Inactive Rooms"
+
+msgid "Invalid or expired verification code"
+msgstr "Invalid or expired verification code"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Linked Users"
+msgstr "Linked Users"
+
+msgid "Linked Users Only"
+msgstr "Linked Users Only"
+
+msgid "List"
+msgstr "List"
+
+msgid "Loading time slots..."
+msgstr "Loading time slots..."
+
+msgid "Loading..."
+msgstr "Loading..."
+
+msgid "Make New Booking"
+msgstr "Make New Booking"
+
+msgid "Manage Customers"
+msgstr "Manage Customers"
+
+msgid "Manage Rooms"
+msgstr "Manage Rooms"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Need Help?"
+msgstr "Need Help?"
+
+msgid "Network error occurred. Please try again."
+msgstr "Network error occurred. Please try again."
+
+msgid "New Booking"
+msgstr "New Booking"
+
+msgid "New This Month"
+msgstr "New This Month"
+
+msgid "Next"
+msgstr "Next"
+
+msgid "Next &raquo;"
+msgstr "Next &raquo;"
+
+msgid "No amenities"
+msgstr "No amenities"
+
+msgid "No bookings found"
+msgstr "No bookings found"
+
+msgid "No recent bookings found."
+msgstr "No recent bookings found."
+
+msgid "No rooms configured yet."
+msgstr "No rooms configured yet."
+
+msgid "No rooms found"
+msgstr "No rooms found"
+
+msgid "Not Configured"
+msgstr "Not Configured"
+
+msgid "Note on anonymous booking"
+msgstr "Note on anonymous booking"
+
+msgid "Notification Settings"
+msgstr "Notification Settings"
+
+msgid ""
+"Number of additional people beyond the base (%s per extra person, max 10)"
+msgstr ""
+"Number of additional people beyond the base (%s per extra person, max 10)"
+
+msgid "Occupied"
+msgstr "Occupied"
+
+msgid "Old Bookings"
+msgstr "Old Bookings"
+
+msgid "PayPal Fee"
+msgstr "PayPal Fee"
+
+msgid "PayPal Fee (3%)"
+msgstr "PayPal Fee (3%)"
+
+msgid "PayPal Fee Percentage"
+msgstr "PayPal Fee Percentage"
+
+msgid "PayPal Integration"
+msgstr "PayPal Integration"
+
+msgid "PayPal payments include a 3% processing fee"
+msgstr "PayPal payments include a 3% processing fee"
+
+msgid "Payment"
+msgstr "Payment"
+
+msgid "Payment Information"
+msgstr "Payment Information"
+
+msgid "Payment Method"
+msgstr "Payment Method"
+
+msgid "Payment Policy:"
+msgstr "Payment Policy:"
+
+msgid "Payment Settings"
+msgstr "Payment Settings"
+
+msgid "Payment Status"
+msgstr "Payment Status"
+
+msgid "Payments"
+msgstr "Payments"
+
+msgid "Pending"
+msgstr "Pending"
+
+msgid "Pending Payments"
+msgstr "Pending Payments"
+
+msgid "People"
+msgstr "People"
+
+msgid "Phone"
+msgstr "Phone"
+
+msgid "Phone Number"
+msgstr "Phone Number"
+
+msgid "Phone number is required for SMS verification"
+msgstr "Phone number is required for SMS verification"
 
 msgid "Please arrive a few minutes before your booking time."
 msgstr "Please arrive a few minutes before your booking time."
 
-msgid "If you need to cancel or modify your booking, please contact us as soon as possible."
-msgstr "If you need to cancel or modify your booking, please contact us as soon as possible."
+msgid "Please bring payment (cash or card) when you arrive for your booking."
+msgstr "Please bring payment (cash or card) when you arrive for your booking."
+
+msgid "Please enter your first name"
+msgstr "Please enter your first name"
+
+msgid ""
+"Please fill in all required customer details before proceeding with payment."
+msgstr ""
+"Please fill in all required customer details before proceeding with payment."
+
+msgid ""
+"Please note, however: To successfully complete the booking, an email "
+"verification is required. We will send a confirmation code to the email "
+"address you provided, which you must enter in the next step."
+msgstr ""
+"Please note, however: To successfully complete the booking, an email "
+"verification is required. We will send a confirmation code to the email "
+"address you provided, which you must enter in the next step."
+
+msgid "Please select a payment method"
+msgstr "Please select a payment method"
+
+msgid "Please select a time slot"
+msgstr "Please select a time slot"
+
+msgid "Please verify your contact information to continue"
+msgstr "Please verify your contact information to continue"
+
+msgid "Previous"
+msgstr "Previous"
+
+msgid "Pricing Breakdown"
+msgstr "Pricing Breakdown"
+
+msgid "Processed: %s"
+msgstr "Processed: %s"
+
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+msgid "Recent Bookings"
+msgstr "Recent Bookings"
+
+msgid "Refunded"
+msgstr "Refunded"
+
+msgid "Reports"
+msgstr "Reports"
+
+msgid "Request Modification"
+msgstr "Request Modification"
+
+msgid "Resend Code"
+msgstr "Resend Code"
+
+msgid "Resend available in"
+msgstr "Resend available in"
+
+msgid "Revenue"
+msgstr "Revenue"
+
+msgid "Room"
+msgstr "Room"
+
+msgid "Room Amenities"
+msgstr "Room Amenities"
+
+msgid "Room Booking Dashboard"
+msgstr "Room Booking Dashboard"
+
+msgid "Room Capacity"
+msgstr "Room Capacity"
+
+msgid "Room Description"
+msgstr "Room Description"
+
+msgid "Room Images"
+msgstr "Room Images"
+
+msgid "Room Information"
+msgstr "Room Information"
+
+msgid "Room Name"
+msgstr "Room Name"
+
+msgid "Room Status"
+msgstr "Room Status"
+
+msgid "Rooms"
+msgstr "Rooms"
+
+msgid "SMS Notifications"
+msgstr "SMS Notifications"
+
+msgid "Save Changes"
+msgstr "Save Changes"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Search customers..."
+msgstr "Search customers..."
+
+msgid "Select a page..."
+msgstr "Select a page..."
+
+msgid ""
+"Selected time slot conflicts with an existing booking. Please choose a "
+"different time."
+msgstr ""
+"Selected time slot conflicts with an existing booking. Please choose a "
+"different time."
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Settings saved successfully."
+msgstr "Settings saved successfully."
+
+msgid "Since you selected on-site payment, no refund processing is required."
+msgstr "Since you selected on-site payment, no refund processing is required."
+
+msgid "Sorted by %s (%s)"
+msgstr "Sorted by %s (%s)"
+
+msgid "Special Requests"
+msgstr "Special Requests"
+
+msgid "Start Time"
+msgstr "Start Time"
+
+msgid "Start by adding your first room."
+msgstr "Start by adding your first room."
+
+msgid "Starting from"
+msgstr "Starting from"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Success!"
+msgstr "Success!"
+
+msgid "System Status"
+msgstr "System Status"
+
+msgid "Tax"
+msgstr "Tax"
+
+msgid "This Month Revenue"
+msgstr "This Month Revenue"
+
+msgid "This Month's Revenue"
+msgstr "This Month's Revenue"
+
+msgid "Time"
+msgstr "Time"
+
+msgid "Time Format"
+msgstr "Time Format"
+
+msgid "Timezone"
+msgstr "Timezone"
+
+msgid "Today's Bookings"
+msgstr "Today's Bookings"
+
+msgid "Total"
+msgstr "Total"
 
 msgid "Total Amount"
 msgstr "Total Amount"
 
-msgid "Payment Method"
-msgstr "Payment Method"
+msgid "Total Customers"
+msgstr "Total Customers"
+
+msgid "Total Rooms"
+msgstr "Total Rooms"
+
+msgid "Transaction ID"
+msgstr "Transaction ID"
+
+msgid "Unverified Only"
+msgstr "Unverified Only"
+
+msgid "Verification Code"
+msgstr "Verification Code"
+
+msgid ""
+"Verification Required Please verify your email address before proceeding. We "
+"will send you a verification code."
+msgstr ""
+"Verification Required Please verify your email address before proceeding. We "
+"will send you a verification code."
+
+msgid "Verification successful!"
+msgstr "Verification successful!"
+
+msgid "Verified Only"
+msgstr "Verified Only"
+
+msgid "View All"
+msgstr "View All"
+
+msgid "View All Bookings"
+msgstr "View All Bookings"
+
+msgid "View Calendar"
+msgstr "View Calendar"
+
+msgid "View Details"
+msgstr "View Details"
+
+msgid "View Payment"
+msgstr "View Payment"
+
+msgid "View Reports"
+msgstr "View Reports"
+
+msgid "View and manage all room bookings in a visual calendar format."
+msgstr "View and manage all room bookings in a visual calendar format."
+
+msgid "View and manage customer accounts and their booking history."
+msgstr "View and manage customer accounts and their booking history."
+
+msgid "Week"
+msgstr "Week"
+
+msgid ""
+"Welcome back! Your details have been pre-filled from your account. You can "
+"modify them if needed."
+msgstr ""
+"Welcome back! Your details have been pre-filled from your account. You can "
+"modify them if needed."
+
+msgid "What happens next?"
+msgstr "What happens next?"
+
+msgid "You are welcome to make a new booking at any time."
+msgstr "You are welcome to make a new booking at any time."
+
+msgid ""
+"You can complete this booking anonymously. The \"Last Name\" field is "
+"therefore not a mandatory field – it is sufficient if you enter a synonym or "
+"an abbreviation."
+msgstr ""
+"You can complete this booking anonymously. The \"Last Name\" field is "
+"therefore not a mandatory field – it is sufficient if you enter a synonym or "
+"an abbreviation."
+
+msgid ""
+"You will receive a cancellation confirmation email within a few minutes."
+msgstr ""
+"You will receive a cancellation confirmation email within a few minutes."
+
+msgid ""
+"You will receive a confirmation email shortly with all the booking details."
+msgstr ""
+"You will receive a confirmation email shortly with all the booking details."
+
+msgid "Your Details"
+msgstr "Your Details"
+
+msgid "Your PayPal payment was cancelled and booking has been cancelled."
+msgstr "Your PayPal payment was cancelled and booking has been cancelled."
+
+msgid ""
+"Your PayPal payment was cancelled and the booking has been automatically "
+"cancelled. No charges were made to your account."
+msgstr ""
+"Your PayPal payment was cancelled and the booking has been automatically "
+"cancelled. No charges were made to your account."
+
+msgid "extra"
+msgstr "extra"
+
+# Missing Reports Translations
+msgid "Reports & Analytics"
+msgstr "Reports & Analytics"
+
+msgid "Comprehensive analytics and reports for your room booking business."
+msgstr "Comprehensive analytics and reports for your room booking business."
+
+msgid "Export Report"
+msgstr "Export Report"
+
+msgid "Print Report"
+msgstr "Print Report"
+
+msgid "Date Range:"
+msgstr "Date Range:"
+
+msgid "This Month"
+msgstr "This Month"
+
+msgid "Last 7 Days"
+msgstr "Last 7 Days"
+
+msgid "Last 30 Days"
+msgstr "Last 30 Days"
+
+msgid "Last 90 Days"
+msgstr "Last 90 Days"
+
+msgid "Last Month"
+msgstr "Last Month"
+
+msgid "This Year"
+msgstr "This Year"
+
+msgid "Custom Range"
+msgstr "Custom Range"
+
+msgid "From:"
+msgstr "From:"
+
+msgid "To:"
+msgstr "To:"
+
+msgid "Apply Filter"
+msgstr "Apply Filter"
+
+msgid "Total Bookings"
+msgstr "Total Bookings"
+
+msgid "Total Revenue"
+msgstr "Total Revenue"
+
+msgid "Occupancy Rate"
+msgstr "Occupancy Rate"
+
+msgid "Unique Customers"
+msgstr "Unique Customers"
+
+msgid "Bookings Trend"
+msgstr "Bookings Trend"
+
+msgid "Daily"
+msgstr "Daily"
+
+msgid "Weekly"
+msgstr "Weekly"
+
+msgid "Monthly"
+msgstr "Monthly"
+
+msgid "Revenue Analysis"
+msgstr "Revenue Analysis"
+
+msgid "Room Performance"
+msgstr "Room Performance"
+
+msgid "Booking Status Distribution"
+msgstr "Booking Status Distribution"
+
+msgid "Top Performing Rooms"
+msgstr "Top Performing Rooms"
+
+msgid "Occupancy"
+msgstr "Occupancy"
+
+msgid "No data available for selected period."
+msgstr "No data available for selected period."
+
+msgid "Peak Booking Hours"
+msgstr "Peak Booking Hours"
+
+msgid "Time Slot"
+msgstr "Time Slot"
+
+msgid "Percentage"
+msgstr "Percentage"
+
+msgid "Customer Analytics"
+msgstr "Customer Analytics"
+
+msgid "Average Booking Value"
+msgstr "Average Booking Value"
+
+msgid "Repeat Customer Rate"
+msgstr "Repeat Customer Rate"
+
+msgid "Average Booking Duration"
+msgstr "Average Booking Duration"
+
+msgid "Cancellation Rate"
+msgstr "Cancellation Rate"
+
+# Missing System Messages
+msgid "Unknown Room"
+msgstr "Unknown Room"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Room name is required"
+msgstr "Room name is required"
+
+msgid "Room capacity must be at least 1"
+msgstr "Room capacity must be at least 1"
+
+msgid "Failed to create room: %s"
+msgstr "Failed to create room: %s"
+
+msgid "Room not found"
+msgstr "Room not found"
+
+msgid "Failed to update room"
+msgstr "Failed to update room"
+
+msgid "Cannot delete room with existing bookings"
+msgstr "Cannot delete room with existing bookings"
+
+msgid "Failed to delete room: %s"
+msgstr "Failed to delete room: %s"
+
+msgid "Permission denied"
+msgstr "Permission denied"
+
+msgid "Failed to update room status"
+msgstr "Failed to update room status"
+
+msgid "Security check failed"
+msgstr "Security check failed"
+
+msgid "Missing required parameters"
+msgstr "Missing required parameters"
+
+msgid "Time slot is available"
+msgstr "Time slot is available"
+
+msgid "Selected time slot is not available"
+msgstr "Selected time slot is not available"
+
+# Additional Missing Translations
+msgid "Date From"
+msgstr "Date From"
+
+msgid "Date To"
+msgstr "Date To"
+
+msgid "Clear"
+msgstr "Clear"
+
+msgid "View Recent Bookings"
+msgstr "View Recent Bookings"
+
+msgid "Payment Management"
+msgstr "Payment Management"
+
+msgid "Manage payment transactions, process refunds, and view payment analytics."
+msgstr "Manage payment transactions, process refunds, and view payment analytics."
+
+msgid "Export Payments"
+msgstr "Export Payments"
+
+msgid "Pending Refunds"
+msgstr "Pending Refunds"
+
+# More Missing Translations
+msgid "Total Transactions"
+msgstr "Total Transactions"
+
+msgid "Manage Extras"
+msgstr "Manage Extras"
+
+msgid "Add, edit, and manage booking extras. Extras are optional items customers can add to their bookings."
+msgstr "Add, edit, and manage booking extras. Extras are optional items customers can add to their bookings."
+
+msgid "Add New Extra"
+msgstr "Add New Extra"
+
+msgid "Active Extras"
+msgstr "Active Extras"
+
+msgid "Inactive Extras"
+msgstr "Inactive Extras"
+
+msgid "Monthly Revenue"
+msgstr "Monthly Revenue"
+
+msgid "Booked Today"
+msgstr "Booked Today"
+
+msgid "hours"
+msgstr "hours"
+
+msgid "per additional person"
+msgstr "per additional person"
+
+msgid "seconds"
+msgstr "seconds"
+
+msgid "Room ID:"
+msgstr "Room ID:"
+
+msgid "Click to copy"
+msgstr "Click to copy"
+
+msgid "Room ID copied to clipboard!"
+msgstr "Room ID copied to clipboard!"
+
+msgid "Failed to copy. Please select and copy manually."
+msgstr "Failed to copy. Please select and copy manually."
+
+msgid "Room ID"
+msgstr "Room ID"
+
+msgid "copied to clipboard!"
+msgstr "copied to clipboard!"
+
+msgid "Book"
+msgstr "Book"
+
+msgid "Loading booking form..."
+msgstr "Loading booking form..."
+
+msgid "Booking cleanup completed successfully"
+msgstr "Booking cleanup completed successfully"
+
+msgid "You do not have permission to manage bookings."
+msgstr "You do not have permission to manage bookings."
+
+msgid "You do not have permission to manage rooms."
+msgstr "You do not have permission to manage rooms."
+
+msgid "You do not have permission to manage payments."
+msgstr "You do not have permission to manage payments."
+
+msgid "You do not have permission to manage extras."
+msgstr "You do not have permission to manage extras."
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "You do not have sufficient permissions to access this page."
+
+msgid "Room Booking Staff"
+msgstr "Room Booking Staff"
+
+msgid "Booking status updated successfully!"
+msgstr "Booking status updated successfully!"
+
+msgid "Room created successfully!"
+msgstr "Room created successfully!"
+
+msgid "Room updated successfully!"
+msgstr "Room updated successfully!"
+
+msgid "Room deleted successfully!"
+msgstr "Room deleted successfully!"
+
+msgid "Room status updated successfully!"
+msgstr "Room status updated successfully!"
+
+msgid "Payment marked as completed!"
+msgstr "Payment marked as completed!"
+
+msgid "Refund processed successfully!"
+msgstr "Refund processed successfully!"
+
+msgid "Extra created successfully!"
+msgstr "Extra created successfully!"
+
+msgid "Failed to create extra."
+msgstr "Failed to create extra."
+
+msgid "Extra updated successfully!"
+msgstr "Extra updated successfully!"
+
+msgid "Failed to update extra."
+msgstr "Failed to update extra."
+
+msgid "Extra deleted successfully!"
+msgstr "Extra deleted successfully!"
+
+msgid "Failed to delete extra."
+msgstr "Failed to delete extra."
+
+msgid "Extra status updated successfully!"
+msgstr "Extra status updated successfully!"
+
+msgid "Failed to update extra status."
+msgstr "Failed to update extra status."
+
+msgid "Sort order updated successfully!"
+msgstr "Sort order updated successfully!"
+
+msgid "Failed to update sort order."
+msgstr "Failed to update sort order."
+
+msgid "Template updated successfully."
+msgstr "Template updated successfully."
+
+msgid "Failed to update template."
+msgstr "Failed to update template."
+
+msgid "Template %s successfully."
+msgstr "Template %s successfully."
+
+msgid "Failed to update template status."
+msgstr "Failed to update template status."
+
+msgid "Invalid action"
+msgstr "Invalid action"
+
+msgid "Status updated successfully"
+msgstr "Status updated successfully"
+
+msgid "Mark this payment as completed? This should only be done after receiving the cash payment."
+msgstr "Mark this payment as completed? This should only be done after receiving the cash payment."
+
+msgid "Are you sure you want to delete this booking?"
+msgstr "Are you sure you want to delete this booking?"
+
+msgid "Are you sure you want to delete this extra?"
+msgstr "Are you sure you want to delete this extra?"
+
+msgid "Are you sure you want to delete this customer?"
+msgstr "Are you sure you want to delete this customer?"
+
+msgid "This will also delete all their bookings and cannot be undone."
+msgstr "This will also delete all their bookings and cannot be undone."
+
+msgid "Are you sure you want to cancel this payment?"
+msgstr "Are you sure you want to cancel this payment?"
+
+msgid "Failed to mark payment as completed"
+msgstr "Failed to mark payment as completed"
+
+msgid "Failed to cancel payment"
+msgstr "Failed to cancel payment"
+
+msgid "Failed to process refund"
+msgstr "Failed to process refund"
+
+msgid "Failed to process refund. Please try again."
+msgstr "Failed to process refund. Please try again."
+
+msgid "Update Booking"
+msgstr "Update Booking"
+
+msgid "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
+msgstr "Please note: Available times are shown in Berlin timezone."

@@ -1,11 +1,7 @@
-# German translation for Hourly Room Booking Plugin
-# Copyright (C) 2024
-# This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
 "Project-Id-Version: Hourly Room Booking 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-18 10:00+0000\n"
 "PO-Revision-Date: 2024-09-18 10:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -15,15 +11,317 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-# General
-msgid "Loading..."
-msgstr "Wird geladen..."
+msgid "%d Hours"
+msgstr "%d Stunden"
+
+msgid "%s per additional person (max 10)"
+msgstr "%s pro weitere Person (max 10)"
+
+msgid "A 6-digit code will be sent to your email address"
+msgstr "Ein 6-stelliger Code wird an Ihre E-Mail-Adresse gesendet"
+
+msgid "API Endpoints & Webhooks"
+msgstr "API-Endpunkte & Webhooks"
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "Active Bookings"
+msgstr "Aktive Buchungen"
+
+msgid "Add New Room"
+msgstr "Neuen Raum hinzufügen"
+
+msgid "Additional People"
+msgstr "Zusätzliche Personen"
+
+msgid "All Bookings"
+msgstr "Alle Buchungen"
+
+msgid "Always Available"
+msgstr "Immer verfügbar"
+
+msgid "Amount"
+msgstr "Betrag"
 
 msgid "An error occurred"
 msgstr "Ein Fehler ist aufgetreten"
 
-msgid "Success!"
-msgstr "Erfolgreich!"
+msgid "An error occurred. Please try again."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+
+msgid "Any duration"
+msgstr "Beliebige Dauer"
+
+msgid "Any special requirements or requests..."
+msgstr "Besondere Anforderungen oder Wünsche..."
+
+msgid "Any time"
+msgstr "Beliebige Zeit"
+
+msgid "Available"
+msgstr "Verfügbar"
+
+msgid "Available Extras"
+msgstr "Verfügbare Extras"
+
+msgid "Available Rooms (%d)"
+msgstr "Verfügbare Räume (%d)"
+
+msgid "Available Time Slots"
+msgstr "Verfügbare Zeitslots"
+
+msgid "Back to Bookings"
+msgstr "Zurück zu Buchungen"
+
+msgid "Back to Home"
+msgstr "Zurück zur Startseite"
+
+msgid "Back to Old Bookings"
+msgstr "Zurück zu alten Buchungen"
+
+msgid "Base Price"
+msgstr "Grundpreis"
+
+msgid "Book Now"
+msgstr "Jetzt buchen"
+
+msgid "Book This Room"
+msgstr "Diesen Raum buchen"
+
+msgid "Booking Actions"
+msgstr "Buchungsaktionen"
+
+msgid "Booking Cancelled"
+msgstr "Buchung storniert"
+
+msgid "Booking Confirmation"
+msgstr "Buchungsbestätigung"
+
+msgid "Booking Confirmed"
+msgstr "Buchung bestätigt"
+
+msgid "Booking Confirmed!"
+msgstr "Buchung bestätigt!"
+
+msgid "Booking Date"
+msgstr "Buchungsdatum"
+
+msgid "Booking Details"
+msgstr "Buchungsdetails"
+
+msgid "Booking Information"
+msgstr "Buchungsinformationen"
+
+msgid "Booking Summary"
+msgstr "Buchungsübersicht"
+
+msgid "Booking cancelled successfully."
+msgstr "Buchung erfolgreich storniert."
+
+msgid "Booking confirmed successfully."
+msgstr "Buchung erfolgreich bestätigt."
+
+msgid "Booking created successfully."
+msgstr "Buchung erfolgreich erstellt."
+
+msgid "Booking deleted successfully."
+msgstr "Buchung erfolgreich gelöscht."
+
+msgid "Booking not found."
+msgstr "Buchung nicht gefunden."
+
+msgid "Booking reference:"
+msgstr "Buchungsnummer"
+
+msgid "Booking submission failed"
+msgstr "Buchungseingabe fehlgeschlagen"
+
+msgid "Booking updated successfully."
+msgstr "Buchung erfolgreich aktualisiert."
+
+msgid ""
+"Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds"
+msgstr ""
+"Buchungen 4+ Stunden: PayPal-Zahlung erforderlich, vollständiger Betrag im "
+"Voraus, keine Rückerstattungen"
+
+msgid "Bookings must be between %s and %s"
+msgstr "Buchungen müssen zwischen %s und %s liegen"
+
+msgid "Bookings under 4 hours: PayPal or on-site payment available"
+msgstr "Buchungen unter 4 Stunden: PayPal oder Zahlung vor Ort verfügbar"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "Cancel Booking"
+msgstr "Buchung stornieren"
+
+msgid "Cancellation Confirmed"
+msgstr "Stornierung bestätigt"
+
+msgid "Cancelled"
+msgstr "Storniert"
+
+msgid "Cannot book more than %d days in advance"
+msgstr "Buchungen sind nur bis zu %d Tage im Voraus möglich"
+
+msgid "Change E-Mail"
+msgstr "E-Mail ändern"
+
+msgid "Change Email"
+msgstr "E-Mail ändern"
+
+msgid "Choose Verification Method:"
+msgstr "Verifizierungsmethode wählen:"
+
+msgid "Clear All"
+msgstr "Alle löschen"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid ""
+"Code expires in 15 minutes. Check your spam folder if you don't see the "
+"email."
+msgstr ""
+"Code läuft in 15 Minuten ab. Überprüfen Sie Ihren Spam-Ordner, falls Sie die "
+"E-Mail nicht sehen."
+
+msgid "Company (Optional)"
+msgstr "Unternehmen (Optional)"
+
+msgid "Complete Booking"
+msgstr "Buchung abschließen"
+
+msgid "Complete information about your room booking"
+msgstr "Vollständige Informationen zu Ihrer Raumbuchung"
+
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+msgid "Confirm"
+msgstr "Bestätigen"
+
+msgid "Confirm Booking"
+msgstr "Buchung bestätigen"
+
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+msgid "Confirmed Booking"
+msgstr "Bestätigte Buchung"
+
+msgid "Contact Support"
+msgstr "Support kontaktieren"
+
+msgid "Contact Verification"
+msgstr "Kontaktverifizierung"
+
+msgid "Continue"
+msgstr "Weiter"
+
+msgid "Created"
+msgstr "Erstellt"
+
+msgid "Cron Jobs & Scheduled Tasks"
+msgstr "Cron-Jobs & Geplante Aufgaben"
+
+msgid "Customer"
+msgstr "Kunde"
+
+msgid "Customer Details"
+msgstr "Kundendetails"
+
+msgid "Customer Information"
+msgstr "Kundeninformationen"
+
+msgid ""
+"Customer with this email already exists. Using existing customer record."
+msgstr ""
+"Kunde mit dieser E-Mail existiert bereits. Verwende bestehenden Kunden-"
+"Datensatz."
+
+msgid "Customers"
+msgstr "Kunden"
+
+msgid "Database Management Commands"
+msgstr "Datenbank-Management-Befehle"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Date & Time"
+msgstr "Datum & Zeit"
+
+msgid "Date, start time, and end time are required."
+msgstr "Datum, Startzeit und Endzeit sind erforderlich."
+
+msgid "Date:"
+msgstr "Datum:"
+
+msgid "Delete Booking"
+msgstr "Buchung löschen"
+
+msgid "Delete Room"
+msgstr "Raum löschen"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Didn't receive the code?"
+msgstr "Code nicht erhalten?"
+
+msgid "Duration"
+msgstr "Dauer"
+
+msgid "Duration:"
+msgstr "Dauer:"
+
+msgid "Edit Booking"
+msgstr "Buchung bearbeiten"
+
+msgid "Edit Room"
+msgstr "Raum bearbeiten"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Email Address"
+msgstr "E-Mail-Adresse"
+
+msgid "Email Templates"
+msgstr "E-Mail-Vorlagen"
+
+msgid "Email Verification"
+msgstr "E-Mail-Verifizierung"
+
+msgid "Email address is required"
+msgstr "E-Mail-Adresse ist erforderlich"
+
+msgid "Email is required"
+msgstr "E-Mail ist erforderlich"
+
+msgid "Email is verified for this session! You can proceed with booking."
+msgstr ""
+"Die E-Mail-Adresse für diese Sitzung ist bestätigt! Sie können mit der "
+"Buchung fortfahren."
+
+msgid "Email to verify:"
+msgstr "E-Mail zur Verifizierung:"
+
+msgid "Email verification code sent! Please check your email."
+msgstr "E-Mail-Verifizierungscode gesendet! Bitte überprüfen Sie Ihre E-Mail."
+
+msgid "Email:"
+msgstr "E-Mail:"
+
+msgid "End time must be after start time."
+msgstr "Endzeit muss nach der Startzeit liegen."
+
+msgid "Enter 6-digit code"
+msgstr "6-stelligen Code eingeben"
 
 msgid "Error: Room ID is required"
 msgstr "Fehler: Raum-ID ist erforderlich"
@@ -31,188 +329,244 @@ msgstr "Fehler: Raum-ID ist erforderlich"
 msgid "Error: Room not available"
 msgstr "Fehler: Raum nicht verfügbar"
 
-msgid "Room not found or inactive"
-msgstr "Raum nicht gefunden oder inaktiv"
-
-# Frontend Form Labels
-msgid "Date & Time"
-msgstr "Datum & Zeit"
+msgid "Extra People"
+msgstr "Zusätzliche Personen"
 
 msgid "Extras"
 msgstr "Extras"
 
-msgid "Details"
-msgstr "Details"
-
-msgid "Payment"
-msgstr "Zahlung"
-
-msgid "Confirm"
-msgstr "Bestätigen"
-
-msgid "Select Date & Time"
-msgstr "Datum & Zeit auswählen"
-
-msgid "Available Time Slots"
-msgstr "Verfügbare Zeitslots"
-
-msgid "Please select a date and duration first"
-msgstr "Bitte wählen Sie zuerst ein Datum und eine Dauer aus"
-
 msgid "Extras & Additional People"
 msgstr "Extras & Zusätzliche Personen"
 
-msgid "Available Extras"
-msgstr "Verfügbare Extras"
+msgid "Failed to calculate price"
+msgstr "Preisberechnung fehlgeschlagen"
 
-msgid "No extras available at this time."
-msgstr "Derzeit sind keine Extras verfügbar."
+msgid "Failed to cancel booking."
+msgstr "Buchungsstornierung fehlgeschlagen."
 
-msgid "Additional People"
-msgstr "Zusätzliche Personen"
+msgid "Failed to confirm booking."
+msgstr "Buchungsbestätigung fehlgeschlagen."
 
-msgid "Special Requests"
-msgstr "Besondere Wünsche"
+msgid "Failed to create PayPal order"
+msgstr "PayPal-Bestellung konnte nicht erstellt werden"
 
-msgid "Any special requirements or requests..."
-msgstr "Besondere Anforderungen oder Wünsche..."
-
-msgid "Your Details"
-msgstr "Ihre Details"
-
-msgid "Welcome back!"
-msgstr "Willkommen zurück!"
-
-msgid "Your details have been pre-filled from your account. You can modify them if needed."
-msgstr "Ihre Daten wurden aus Ihrem Konto vorausgefüllt. Sie können sie bei Bedarf ändern."
-
-msgid "First Name"
-msgstr "Vorname"
-
-msgid "Last Name"
-msgstr "Nachname"
-
-msgid "Email Address"
-msgstr "E-Mail-Adresse"
-
-msgid "Phone Number"
-msgstr "Telefonnummer"
-
-msgid "Company (Optional)"
-msgstr "Unternehmen (Optional)"
-
-msgid "Contact Verification"
-msgstr "Kontaktverifizierung"
-
-msgid "Verification Required"
-msgstr "Verifizierung erforderlich"
-
-msgid "Please verify your contact information before proceeding. Choose your preferred verification method."
-msgstr "Bitte verifizieren Sie Ihre Kontaktinformationen, bevor Sie fortfahren. Wählen Sie Ihre bevorzugte Verifizierungsmethode."
-
-msgid "Please verify your phone number before proceeding. We will send you a verification code via SMS."
-msgstr "Bitte verifizieren Sie Ihre Telefonnummer, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode per SMS."
-
-msgid "Please verify your email address before proceeding. We will send you a verification code."
-msgstr "Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie fortfahren. Wir senden Ihnen einen Verifizierungscode."
-
-msgid "Choose Verification Method:"
-msgstr "Verifizierungsmethode wählen:"
-
-msgid "Email Verification"
-msgstr "E-Mail-Verifizierung"
-
-msgid "Send verification code to your email address"
-msgstr "Verifizierungscode an Ihre E-Mail-Adresse senden"
-
-msgid "SMS Verification"
-msgstr "SMS-Verifizierung"
-
-msgid "Send verification code to your phone number"
-msgstr "Verifizierungscode an Ihre Telefonnummer senden"
-
-msgid "Email to verify:"
-msgstr "E-Mail zur Verifizierung:"
-
-msgid "Phone to verify:"
-msgstr "Telefon zur Verifizierung:"
-
-# Search Form
-msgid "Date"
-msgstr "Datum"
-
-msgid "Time"
-msgstr "Zeit"
-
-msgid "Select date"
-msgstr "Datum auswählen"
-
-msgid "Any time"
-msgstr "Beliebige Zeit"
-
-msgid "Duration"
-msgstr "Dauer"
-
-msgid "Any duration"
-msgstr "Beliebige Dauer"
-
-msgid "hour"
-msgstr "Stunde"
-
-msgid "hours"
-msgstr "Stunden"
-
-msgid "Search Results (%d rooms found)"
-msgstr "Suchergebnisse (%d Räume gefunden)"
-
-msgid "Available Rooms (%d)"
-msgstr "Verfügbare Räume (%d)"
-
-msgid "Sort by Name"
-msgstr "Nach Name sortieren"
-
-msgid "Sort by Price"
-msgstr "Nach Preis sortieren"
-
-msgid "No rooms available matching your criteria."
-msgstr "Keine Räume verfügbar, die Ihren Kriterien entsprechen."
-
-msgid "Up to %d people"
-msgstr "Bis zu %d Personen"
-
-msgid "more"
-msgstr "mehr"
-
-msgid "View Details"
-msgstr "Details anzeigen"
-
-msgid "Book Now"
-msgstr "Jetzt buchen"
-
-msgid "Load More Rooms"
-msgstr "Weitere Räume laden"
-
-msgid "No More Rooms"
-msgstr "Keine weiteren Räume"
-
-msgid "Book This Room"
-msgstr "Diesen Raum buchen"
+msgid "Failed to delete booking."
+msgstr "Buchungslöschung fehlgeschlagen."
 
 msgid "Failed to load booking form"
 msgstr "Buchungsformular konnte nicht geladen werden"
 
-msgid "Room Details"
-msgstr "Raumdetails"
-
 msgid "Failed to load room details"
 msgstr "Raumdetails konnten nicht geladen werden"
+
+msgid "Failed to send verification code"
+msgstr "Verifizierungscode konnte nicht gesendet werden"
+
+msgid "Failed to send verification code. Please try again."
+msgstr ""
+"Verifizierungscode konnte nicht gesendet werden. Bitte versuchen Sie es "
+"erneut."
+
+msgid "Failed to update booking."
+msgstr "Buchungsaktualisierung fehlgeschlagen."
+
+msgid "First Name"
+msgstr "Vorname oder Synonyme"
+
+msgid "First Name or Synonyms"
+msgstr "Vorname oder Synonyme"
+
+msgid "Hourly Room Booking - User Guide"
+msgstr "Stündliche Raumbuchung - Benutzerhandbuch"
+
+msgid "I accept the"
+msgstr "Hiermit bestätige ich die"
+
+msgid "I accept the Terms & Conditions and Privacy Policy"
+msgstr "Hiermit bestätige ich die AGB und die Datenschutzbestimmungen"
+
+msgid "I accept the Terms & Conditions and Privacy Policy."
+msgstr ""
+"Ich akzeptiere die Allgemeinen Geschäftsbedingungen und die "
+"Datenschutzrichtlinie."
+
+msgid ""
+"If you have already paid, refunds will be processed within 3-5 business days."
+msgstr ""
+"Falls Sie bereits bezahlt haben, werden Rückerstattungen innerhalb von 3-5 "
+"Werktagen bearbeitet."
+
+msgid "If you have any questions or need assistance, please contact us:"
+msgstr ""
+"Falls Sie Fragen haben oder Hilfe benötigen, kontaktieren Sie uns bitte:"
+
+msgid ""
+"If you have any questions, please contact us using the information below."
+msgstr ""
+"Falls Sie Fragen haben, kontaktieren Sie uns bitte über die unten "
+"angegebenen Informationen."
+
+msgid ""
+"If you need to cancel or modify your booking, please contact us as soon as "
+"possible."
+msgstr ""
+"Wenn Sie Ihre Buchung stornieren oder ändern müssen, kontaktieren Sie uns "
+"bitte so schnell wie möglich."
+
+msgid "Inactive"
+msgstr "Inaktiv"
+
+msgid "Invalid or expired verification code"
+msgstr "Ungültiger oder abgelaufener Verifizierungscode"
+
+msgid "Keyboard Shortcuts & Quick Access"
+msgstr "Tastenkürzel & Schnellzugriff"
+
+msgid "Last Name"
+msgstr "Nachname"
+
+msgid "Load More Rooms"
+msgstr "Weitere Räume laden"
+
+msgid "Loading time slots..."
+msgstr "Zeitslots werden geladen..."
+
+msgid "Loading..."
+msgstr "Wird geladen..."
+
+msgid "Make New Booking"
+msgstr "Neue Buchung"
+
+msgid "Name:"
+msgstr "Name:"
+
+msgid "Need Help?"
+msgstr "Hilfe benötigt?"
+
+msgid "Need to use a different email address?"
+msgstr "Ich möchte eine andere E-Mailadresse verwenden"
+
+msgid "Network error occurred"
+msgstr "Netzwerkfehler aufgetreten"
+
+msgid "Network error occurred. Please try again."
+msgstr "Netzwerkfehler aufgetreten. Bitte versuchen Sie es erneut."
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "No More Rooms"
+msgstr "Keine weiteren Räume"
+
+msgid "No Show"
+msgstr "Nicht erschienen"
+
+msgid "No amenities"
+msgstr "Keine Ausstattung"
+
+msgid "No bookings found"
+msgstr "Keine Buchungen gefunden"
+
+msgid "No extras available at this time."
+msgstr "Derzeit sind keine Extras verfügbar."
 
 msgid "No rooms available for the selected criteria."
 msgstr "Keine Räume für die ausgewählten Kriterien verfügbar."
 
-# JavaScript Error Messages
-msgid "This field is required"
-msgstr "Dieses Feld ist erforderlich"
+msgid "No rooms available matching your criteria."
+msgstr "Keine Räume verfügbar, die Ihren Kriterien entsprechen."
+
+msgid "No time slots available for the selected date and duration."
+msgstr "Keine Zeitslots für das ausgewählte Datum und die Dauer verfügbar."
+
+msgid "Note on anonymous booking"
+msgstr "Hinweis zur anonymen Buchung"
+
+msgid ""
+"Number of additional people beyond the base (%s per extra person, max 10)"
+msgstr ""
+"Anzahl zusätzlicher Personen über die Basis hinaus (%s pro zusätzliche "
+"Person, max 10)"
+
+msgid "Old Bookings"
+msgstr "Alte Buchungen"
+
+msgid "On-site Payment"
+msgstr "Zahlung vor Ort"
+
+msgid "On-site Payment Pay cash or card at the location"
+msgstr "Zahlung vor Ort in Bar oder EC-Karte"
+
+msgid "Pay cash or card at the location"
+msgstr "Zahlung vor Ort in Bar oder EC-Karte"
+
+msgid "PayPal Fee"
+msgstr "Paypal Gebühren"
+
+msgid "PayPal Fee (3%)"
+msgstr "Paypal Gebühren (3%)"
+
+msgid "PayPal Fee Percentage"
+msgstr "PayPal Gebührenprozentsatz"
+
+msgid "PayPal payments include a 3% processing fee"
+msgstr "PayPal-Zahlungen beinhalten eine 3% Bearbeitungsgebühr"
+
+msgid "Payment"
+msgstr "Zahlung"
+
+msgid "Payment Information"
+msgstr "Zahlungsinformationen"
+
+msgid "Payment Method"
+msgstr "Zahlungsmethode"
+
+msgid "Payment Policy:"
+msgstr "Zahlungsrichtlinie:"
+
+msgid "Payment Status"
+msgstr "Zahlungsstatus"
+
+msgid "Payment:"
+msgstr "Zahlung:"
+
+msgid "Payments"
+msgstr "Zahlungen"
+
+msgid "Pending"
+msgstr "Ausstehend"
+
+msgid "Pending Booking"
+msgstr "Ausstehende Buchung"
+
+msgid "Performance Optimization"
+msgstr "Leistungsoptimierung"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Phone Number"
+msgstr "Telefonnummer"
+
+msgid "Phone number is required for SMS verification"
+msgstr "Telefonnummer ist für SMS-Verifizierung erforderlich"
+
+msgid "Phone to verify:"
+msgstr "Telefon zur Verifizierung:"
+
+msgid "Phone:"
+msgstr "Telefon:"
+
+msgid "Please arrive a few minutes before your booking time."
+msgstr "Bitte kommen Sie ein paar Minuten vor Ihrer Buchungszeit an."
+
+msgid "Please bring payment (cash or card) when you arrive for your booking."
+msgstr ""
+"Bitte bringen Sie die Zahlung (Bargeld oder Karte) mit, wenn Sie zu Ihrer "
+"Buchung kommen."
+
+msgid "Please complete the form to see pricing details"
+msgstr "Bitte wählen Sie die Anzahl Ihrer Stunden aus."
 
 msgid "Please enter a valid email address"
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
@@ -220,177 +574,1964 @@ msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
 msgid "Please enter a valid phone number"
 msgstr "Bitte geben Sie eine gültige Telefonnummer ein"
 
-msgid "An error occurred. Please try again."
-msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+msgid "Please enter your first name"
+msgstr "Bitte geben Sie Ihren Vornamen ein"
 
-msgid "Failed to calculate price"
-msgstr "Preisberechnung fehlgeschlagen"
+msgid ""
+"Please fill in all required customer details before proceeding with payment."
+msgstr ""
+"Bitte füllen Sie alle erforderlichen Kundendaten aus, bevor Sie mit der "
+"Zahlung fortfahren."
 
-msgid "Search failed"
-msgstr "Suche fehlgeschlagen"
+msgid ""
+"Please note, however: To successfully complete the booking, an email "
+"verification is required. We will send a confirmation code to the email "
+"address you provided, which you must enter in the next step."
+msgstr ""
+"Bitte beachten Sie jedoch: Um die Buchung erfolgreich abschließen zu können, "
+"ist eine E-Mail-Verifizierung erforderlich. An die von Ihnen angegebene E-"
+"Mail-Adresse senden wir einen Bestätigungscode, den Sie im nächsten Schritt "
+"eingeben müssen."
 
-msgid "Booking submission failed"
-msgstr "Buchungseingabe fehlgeschlagen"
+msgid "Please select a booking date"
+msgstr "Bitte wählen Sie ein Buchungsdatum"
 
-msgid "Network error occurred"
-msgstr "Netzwerkfehler aufgetreten"
+msgid "Please select a date and duration first"
+msgstr "Bitte wählen Sie zuerst ein Datum und eine Dauer aus"
 
-# Calendar
-msgid "Booking Details"
-msgstr "Buchungsdetails"
+msgid "Please select a duration"
+msgstr "Bitte wählen Sie eine Dauer aus"
 
-msgid "Room"
-msgstr "Raum"
+msgid "Please select a payment method"
+msgstr "Bitte wählen Sie eine Zahlungsmethode aus"
 
-msgid "Customer"
-msgstr "Kunde"
+msgid "Please select a time slot"
+msgstr "Bitte wählen Sie einen Zeitslot aus"
 
-msgid "Email"
-msgstr "E-Mail"
+msgid ""
+"Please verify your contact information before proceeding. Choose your "
+"preferred verification method."
+msgstr ""
+"Bitte verifizieren Sie Ihre Kontaktinformationen, bevor Sie fortfahren. "
+"Wählen Sie Ihre bevorzugte Verifizierungsmethode."
 
-msgid "Phone"
-msgstr "Telefon"
+msgid "Please verify your contact information to continue"
+msgstr "Bitte verifizieren Sie Ihre Kontaktinformationen, um fortzufahren"
 
-msgid "Status"
-msgstr "Status"
+msgid ""
+"Please verify your email address before proceeding. We will send you a "
+"verification code."
+msgstr ""
+"Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie fortfahren. Wir senden "
+"Ihnen einen Verifizierungscode."
 
-msgid "Amount"
-msgstr "Betrag"
-
-msgid "Extra People"
-msgstr "Zusätzliche Personen"
-
-msgid "Close"
-msgstr "Schließen"
-
-msgid "Pending"
-msgstr "Ausstehend"
-
-msgid "Confirmed"
-msgstr "Bestätigt"
-
-msgid "Completed"
-msgstr "Abgeschlossen"
-
-msgid "Cancelled"
-msgstr "Storniert"
-
-msgid "No Show"
-msgstr "Nicht erschienen"
-
-# Booking Form Steps
-msgid "Next"
-msgstr "Weiter"
+msgid ""
+"Please verify your phone number before proceeding. We will send you a "
+"verification code via SMS."
+msgstr ""
+"Bitte verifizieren Sie Ihre Telefonnummer, bevor Sie fortfahren. Wir senden "
+"Ihnen einen Verifizierungscode per SMS."
 
 msgid "Previous"
 msgstr "Zurück"
 
-# Customizable Labels
-msgid "Booking Date"
-msgstr "Buchungsdatum"
+msgid "Privacy Policy"
+msgstr "Datenschutzbestimmungen"
 
-msgid "Start Time"
-msgstr "Startzeit"
+msgid "Quick Start Guide"
+msgstr "Schnellstart-Anleitung"
 
-msgid "Search Rooms"
-msgstr "Räume suchen"
+msgid "Recent Bookings"
+msgstr "Letzte Buchungen"
 
-msgid "Clear All"
-msgstr "Alle löschen"
+msgid "Reports"
+msgstr "Berichte"
 
-msgid "Select duration"
-msgstr "Dauer auswählen"
+msgid "Request Modification"
+msgstr "Änderung anfordern"
 
-msgid "No time slots available for the selected date and duration."
-msgstr "Keine Zeitslots für das ausgewählte Datum und die Dauer verfügbar."
+msgid "Resend Code"
+msgstr "Code erneut senden"
 
-# Booking Confirmation Page
-msgid "Booking Confirmation"
-msgstr "Buchungsbestätigung"
+msgid "Resend available in"
+msgstr "Erneut senden verfügbar in"
+
+msgid "Room"
+msgstr "Raum"
+
+msgid "Room Amenities"
+msgstr "Raumausstattung"
+
+msgid "Room Booking Dashboard"
+msgstr "Raumbuchungs-Dashboard"
+
+msgid "Room Bookings"
+msgstr "Raumbuchungen"
+
+msgid "Room Capacity"
+msgstr "Raumkapazität"
+
+msgid "Room Description"
+msgstr "Raumbeschreibung"
+
+msgid "Room Details"
+msgstr "Raumdetails"
+
+msgid "Room Images"
+msgstr "Raumbilder"
+
+msgid "Room Information"
+msgstr "Rauminformationen"
+
+msgid "Room Name"
+msgstr "Raumname"
+
+msgid "Room Status"
+msgstr "Raumstatus"
+
+msgid "Room not found or inactive"
+msgstr "Raum nicht gefunden oder inaktiv"
 
 msgid "Room:"
 msgstr "Raum:"
 
-msgid "Date:"
-msgstr "Datum:"
+msgid "Rooms"
+msgstr "Räume"
+
+msgid "SMS Verification"
+msgstr "SMS-Verifizierung"
+
+msgid "Search Results (%d rooms found)"
+msgstr "Suchergebnisse (%d Räume gefunden)"
+
+msgid "Search Rooms"
+msgstr "Räume suchen"
+
+msgid "Search failed"
+msgstr "Suche fehlgeschlagen"
+
+msgid "Secure online payment with PayPal (+3% fee)"
+msgstr "Sichere Online-Zahlung mit PayPal (+3 % Gebühr)"
+
+msgid "Select Date & Time"
+msgstr "Datum & Zeit auswählen"
+
+msgid "Select date"
+msgstr "Datum auswählen"
+
+msgid "Select duration"
+msgstr "Dauer auswählen"
+
+msgid ""
+"Selected time slot conflicts with an existing booking. Please choose a "
+"different time."
+msgstr ""
+"Der gewählte Zeitslot kollidiert mit einer bestehenden Buchung. Bitte wählen "
+"Sie eine andere Zeit."
+
+msgid "Send Email Code"
+msgstr "E-Mail-Code senden"
+
+msgid "Send verification code to your email address"
+msgstr "Verifizierungscode an Ihre E-Mail-Adresse senden"
+
+msgid "Send verification code to your phone number"
+msgstr "Verifizierungscode an Ihre Telefonnummer senden"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Since you selected on-site payment, no refund processing is required."
+msgstr ""
+"Da Sie eine Zahlung vor Ort gewählt haben, ist keine Rückerstattung "
+"erforderlich."
+
+msgid "Sort by Name"
+msgstr "Nach Name sortieren"
+
+msgid "Sort by Price"
+msgstr "Nach Preis sortieren"
+
+msgid "Special Requests"
+msgstr "Besondere Wünsche"
+
+msgid "Start Time"
+msgstr "Startzeit"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Success!"
+msgstr "Erfolgreich!"
+
+msgid "Support & Resources"
+msgstr "Support & Ressourcen"
+
+msgid "Tax"
+msgstr "MwSt."
+
+msgid "Terms & Conditions"
+msgstr "AGB"
+
+msgid "This Month's Revenue"
+msgstr "Umsatz diesen Monat"
+
+msgid "This field is required"
+msgstr "Dieses Feld ist erforderlich"
+
+msgid "Time"
+msgstr "Zeit"
 
 msgid "Time:"
 msgstr "Zeit:"
 
-msgid "Duration:"
-msgstr "Dauer:"
+msgid "Today's Bookings"
+msgstr "Heutige Buchungen"
 
-msgid "Customer Details"
-msgstr "Kundendetails"
-
-msgid "Name:"
-msgstr "Name:"
-
-msgid "Email:"
-msgstr "E-Mail:"
-
-msgid "Phone:"
-msgstr "Telefon:"
-
-msgid "Payment:"
-msgstr "Zahlung:"
-
-msgid "I accept the Terms & Conditions and Privacy Policy."
-msgstr "Ich akzeptiere die Allgemeinen Geschäftsbedingungen und die Datenschutzrichtlinie."
-
-msgid "Complete Booking"
-msgstr "Buchung abschließen"
-
-msgid "What happens next?"
-msgstr "Was passiert als nächstes?"
-
-msgid "You will receive a confirmation email shortly with all the booking details."
-msgstr "Sie erhalten in Kürze eine Bestätigungs-E-Mail mit allen Buchungsdetails."
-
-msgid "Please bring payment (cash or card) when you arrive for your booking."
-msgstr "Bitte bringen Sie die Zahlung (Bargeld oder Karte) mit, wenn Sie zu Ihrer Buchung kommen."
-
-msgid "Please arrive a few minutes before your booking time."
-msgstr "Bitte kommen Sie ein paar Minuten vor Ihrer Buchungszeit an."
-
-msgid "If you need to cancel or modify your booking, please contact us as soon as possible."
-msgstr "Wenn Sie Ihre Buchung stornieren oder ändern müssen, kontaktieren Sie uns bitte so schnell wie möglich."
+msgid "Total"
+msgstr "Gesamt"
 
 msgid "Total Amount"
 msgstr "Gesamtbetrag"
 
-msgid "Booking Confirmed!"
-msgstr "Buchung bestätigt!"
+msgid "Total Rooms"
+msgstr "Gesamte Räume"
 
-msgid "Your room booking has been successfully created."
-msgstr "Ihre Raumbuchung wurde erfolgreich erstellt."
+msgid "Troubleshooting & Debug Commands"
+msgstr "Fehlerbehebung & Debug-Befehle"
 
-msgid "Booking Information"
-msgstr "Buchungsinformationen"
+msgid "Unavailable"
+msgstr "Nicht verfügbar"
 
-msgid "Your booking has been confirmed. You should receive a confirmation email shortly."
-msgstr "Ihre Buchung wurde bestätigt. Sie sollten in Kürze eine Bestätigungs-E-Mail erhalten."
+msgid "Up to %d people"
+msgstr "Bis zu %d Personen"
+
+msgid "User Guide"
+msgstr "Benutzerhandbuch"
+
+msgid "Verification Code"
+msgstr "Verifizierungscode"
+
+msgid "Verification Required"
+msgstr "Verifizierung erforderlich"
+
+msgid "Verification code sent successfully"
+msgstr "Verifizierungscode erfolgreich gesendet"
+
+msgid "Verification successful!"
+msgstr "Verifizierung erfolgreich!"
+
+msgid "Verify & Continue"
+msgstr "Überprüfen und fortfahren"
+
+msgid "View All Bookings"
+msgstr "Alle Buchungen anzeigen"
+
+msgid "View Details"
+msgstr "Details anzeigen"
 
 msgid "View Full Details"
 msgstr "Vollständige Details anzeigen"
 
-msgid "Back to Home"
-msgstr "Zurück zur Startseite"
+msgid "Welcome back!"
+msgstr "Willkommen zurück!"
 
-msgid "Booking Actions"
-msgstr "Buchungsaktionen"
+msgid "What happens next?"
+msgstr "Was passiert als nächstes?"
 
-msgid "Pending Booking"
-msgstr "Ausstehende Buchung"
+msgid "You are welcome to make a new booking at any time."
+msgstr "Sie können jederzeit eine neue Buchung vornehmen."
 
-msgid "Your booking is currently pending confirmation. You will receive an email once it is confirmed."
-msgstr "Ihre Buchung steht derzeit zur Bestätigung aus. Sie erhalten eine E-Mail, sobald sie bestätigt wurde."
+msgid ""
+"You can complete this booking anonymously. The \"Last Name\" field is "
+"therefore not a mandatory field – it is sufficient if you enter a synonym or "
+"an abbreviation."
+msgstr ""
+"Sie können diese Buchung anonym durchführen. Das Feld \"Nachname\" ist daher "
+"kein Pflichtfeld – es genügt, wenn Sie ein Synonym oder ein Kürzel eintragen."
 
-msgid "Confirmed Booking"
-msgstr "Bestätigte Buchung"
+msgid ""
+"You will receive a cancellation confirmation email within a few minutes."
+msgstr ""
+"Sie erhalten innerhalb weniger Minuten eine Stornierungsbestätigung per E-"
+"Mail."
+
+msgid ""
+"You will receive a confirmation email shortly with all the booking details."
+msgstr ""
+"Sie erhalten in Kürze eine Bestätigungs-E-Mail mit allen Buchungsdetails."
+
+msgid "Your Details"
+msgstr "Ihre Details"
+
+msgid "Your PayPal payment was cancelled and booking has been cancelled."
+msgstr "Ihre PayPal-Zahlung wurde storniert und die Buchung wurde storniert."
+
+msgid ""
+"Your PayPal payment was cancelled and the booking has been automatically "
+"cancelled. No charges were made to your account."
+msgstr ""
+"Ihre PayPal-Zahlung wurde storniert und die Buchung wurde automatisch "
+"storniert. Ihrem Konto wurden keine Gebühren belastet."
+
+msgid ""
+"Your booking has been confirmed. You should receive a confirmation email "
+"shortly."
+msgstr ""
+"Ihre Buchung wurde bestätigt. Sie sollten in Kürze eine Bestätigungs-E-Mail "
+"erhalten."
 
 msgid "Your booking is confirmed. Please bring payment when you arrive."
-msgstr "Ihre Buchung ist bestätigt. Bitte bringen Sie die Zahlung mit, wenn Sie ankommen."
+msgstr ""
+"Ihre Buchung ist bestätigt. Bitte bringen Sie die Zahlung mit, wenn Sie "
+"ankommen."
 
 msgid "Your booking is confirmed. We look forward to seeing you!"
 msgstr "Ihre Buchung ist bestätigt. Wir freuen uns auf Ihren Besuch!"
+
+msgid ""
+"Your booking is currently pending confirmation. You will receive an email "
+"once it is confirmed."
+msgstr ""
+"Ihre Buchung steht derzeit zur Bestätigung aus. Sie erhalten eine E-Mail, "
+"sobald sie bestätigt wurde."
+
+msgid ""
+"Your details have been pre-filled from your account. You can modify them if "
+"needed."
+msgstr ""
+"Ihre Daten wurden aus Ihrem Konto vorausgefüllt. Sie können sie bei Bedarf "
+"ändern."
+
+msgid "Your email address has been successfully verified – you can proceed."
+msgstr ""
+"Ihre E-Mailadresse wurde erfolgreich verifiziert – Sie können fortfahren."
+
+msgid "Your room booking has been successfully created."
+msgstr "Ihre Raumbuchung wurde erfolgreich erstellt."
+
+msgid "and"
+msgstr "und die"
+
+msgid "for %d hours"
+msgstr "für %d Stunden"
+
+msgid "hour"
+msgstr "Stunde"
+
+msgid "hours"
+msgstr "Stunden"
+
+msgid "more"
+msgstr "mehr"
+
+# Missing Admin Dashboard Translations
+msgid "Active Rooms"
+msgstr "Aktive Räume"
+
+msgid "Actions"
+msgstr "Aktionen"
+
+msgid "Activate Room"
+msgstr "Raum aktivieren"
+
+msgid "Active Only"
+msgstr "Nur aktive"
+
+msgid "Add Customer"
+msgstr "Kunde hinzufügen"
+
+msgid "Add First Room"
+msgstr "Ersten Raum hinzufügen"
+
+msgid "Add New Booking"
+msgstr "Neue Buchung hinzufügen"
+
+msgid "Add Room"
+msgstr "Raum hinzufügen"
+
+msgid "Add, edit, and manage your bookable rooms and meeting spaces."
+msgstr "Hinzufügen, bearbeiten und verwalten Sie Ihre buchbaren Räume und Besprechungsräume."
+
+msgid "All Customers"
+msgstr "Alle Kunden"
+
+msgid "All Rooms"
+msgstr "Alle Räume"
+
+msgid "America/Chicago"
+msgstr "Amerika/Chicago"
+
+msgid "America/Los_Angeles"
+msgstr "Amerika/Los_Angeles"
+
+msgid "America/New_York"
+msgstr "Amerika/New_York"
+
+msgid "Ascending"
+msgstr "Aufsteigend"
+
+msgid "Asia/Tokyo"
+msgstr "Asien/Tokio"
+
+msgid "Australia/Sydney"
+msgstr "Australien/Sydney"
+
+msgid "Avg Bookings"
+msgstr "Durchschn. Buchungen"
+
+msgid "Booking Advance Days"
+msgstr "Buchungsvorlauf Tage"
+
+msgid "Booking Details - #%s"
+msgstr "Buchungsdetails - #%s"
+
+msgid "Booking End Time"
+msgstr "Buchungsendzeit"
+
+msgid "Booking ID"
+msgstr "Buchungs-ID"
+
+msgid "Booking Reference"
+msgstr "Buchungsreferenz"
+
+msgid "Booking Start Time"
+msgstr "Buchungsstartzeit"
+
+msgid "Booking Trends (Last 30 Days)"
+msgstr "Buchungstrends (Letzte 30 Tage)"
+
+msgid "Bookings"
+msgstr "Buchungen"
+
+msgid "Calendar View"
+msgstr "Kalenderansicht"
+
+msgid "Cancellation Hours"
+msgstr "Stornierungsstunden"
+
+msgid "Capacity"
+msgstr "Kapazität"
+
+msgid "Clear Filters"
+msgstr "Filter löschen"
+
+msgid "Company"
+msgstr "Unternehmen"
+
+msgid "Contact Info"
+msgstr "Kontaktinformationen"
+
+msgid "Created Date"
+msgstr "Erstellungsdatum"
+
+msgid "Currency"
+msgstr "Währung"
+
+msgid "Database"
+msgstr "Datenbank"
+
+msgid "Date Format"
+msgstr "Datumsformat"
+
+msgid "Day"
+msgstr "Tag"
+
+msgid "Deactivate Room"
+msgstr "Raum deaktivieren"
+
+msgid "Default Booking Duration"
+msgstr "Standard-Buchungsdauer"
+
+msgid "Descending"
+msgstr "Absteigend"
+
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+msgid "Edit Booking - #%s"
+msgstr "Buchung bearbeiten - #%s"
+
+msgid "Email Notifications"
+msgstr "E-Mail-Benachrichtigungen"
+
+msgid "Email Settings"
+msgstr "E-Mail-Einstellungen"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Enter the name of the room or meeting space."
+msgstr "Geben Sie den Namen des Raums oder Besprechungsraums ein."
+
+msgid "Europe/Berlin"
+msgstr "Europa/Berlin"
+
+msgid "Europe/London"
+msgstr "Europa/London"
+
+msgid "Europe/Paris"
+msgstr "Europa/Paris"
+
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+msgid "Filter by Room:"
+msgstr "Nach Raum filtern:"
+
+msgid "Filter"
+msgstr "Filtern"
+
+msgid "General Settings"
+msgstr "Allgemeine Einstellungen"
+
+msgid "Guest Customers Only"
+msgstr "Nur Gastkunden"
+
+msgid "Guest Customers"
+msgstr "Gastkunden"
+
+msgid "Hourly Price"
+msgstr "Stundenpreis"
+
+msgid "Image"
+msgstr "Bild"
+
+msgid "Inactive Only"
+msgstr "Nur inaktive"
+
+msgid "Inactive Rooms"
+msgstr "Inaktive Räume"
+
+msgid "Linked Users Only"
+msgstr "Nur verknüpfte Benutzer"
+
+msgid "Linked Users"
+msgstr "Verknüpfte Benutzer"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "Manage Customers"
+msgstr "Kunden verwalten"
+
+msgid "Manage Rooms"
+msgstr "Räume verwalten"
+
+msgid "Month"
+msgstr "Monat"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "New Booking"
+msgstr "Neue Buchung"
+
+msgid "New This Month"
+msgstr "Neu diesen Monat"
+
+msgid "Next &raquo;"
+msgstr "Weiter &raquo;"
+
+msgid "No recent bookings found."
+msgstr "Keine aktuellen Buchungen gefunden."
+
+msgid "No rooms configured yet."
+msgstr "Noch keine Räume konfiguriert."
+
+msgid "No rooms found"
+msgstr "Keine Räume gefunden"
+
+msgid "Not Configured"
+msgstr "Nicht konfiguriert"
+
+msgid "Notification Settings"
+msgstr "Benachrichtigungseinstellungen"
+
+msgid "Occupied"
+msgstr "Belegt"
+
+msgid "PayPal Integration"
+msgstr "PayPal-Integration"
+
+msgid "Payment Settings"
+msgstr "Zahlungseinstellungen"
+
+msgid "Pending Payments"
+msgstr "Ausstehende Zahlungen"
+
+msgid "People"
+msgstr "Personen"
+
+msgid "Pricing Breakdown"
+msgstr "Preisaufschlüsselung"
+
+msgid "Processed: %s"
+msgstr "Verarbeitet: %s"
+
+msgid "Quick Actions"
+msgstr "Schnellaktionen"
+
+msgid "Refunded"
+msgstr "Erstattet"
+
+msgid "Revenue"
+msgstr "Umsatz"
+
+msgid "SMS Notifications"
+msgstr "SMS-Benachrichtigungen"
+
+msgid "Save Changes"
+msgstr "Änderungen speichern"
+
+msgid "Search customers..."
+msgstr "Kunden suchen..."
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Select a page..."
+msgstr "Seite auswählen..."
+
+msgid "Settings saved successfully."
+msgstr "Einstellungen erfolgreich gespeichert."
+
+msgid "Sorted by %s (%s)"
+msgstr "Sortiert nach %s (%s)"
+
+msgid "Start by adding your first room."
+msgstr "Beginnen Sie mit dem Hinzufügen Ihres ersten Raums."
+
+msgid "Starting from"
+msgstr "Ab"
+
+msgid "System Status"
+msgstr "Systemstatus"
+
+msgid "This Month Revenue"
+msgstr "Umsatz diesen Monat"
+
+msgid "Time Format"
+msgstr "Zeitformat"
+
+msgid "Timezone"
+msgstr "Zeitzone"
+
+msgid "Total Customers"
+msgstr "Gesamtkunden"
+
+msgid "Transaction ID"
+msgstr "Transaktions-ID"
+
+msgid "Unverified Only"
+msgstr "Nur unverifizierte"
+
+msgid "View All"
+msgstr "Alle anzeigen"
+
+msgid "View Calendar"
+msgstr "Kalender anzeigen"
+
+msgid "View Payment"
+msgstr "Zahlung anzeigen"
+
+msgid "View Reports"
+msgstr "Berichte anzeigen"
+
+msgid "View and manage all room bookings in a visual calendar format."
+msgstr "Alle Raumbuchungen in einem visuellen Kalenderformat anzeigen und verwalten."
+
+msgid "View and manage customer accounts and their booking history."
+msgstr "Kundenkonten und deren Buchungshistorie anzeigen und verwalten."
+
+msgid "Week"
+msgstr "Woche"
+
+msgid "extra"
+msgstr "zusätzlich"
+
+# Missing Reports Translations
+msgid "Reports & Analytics"
+msgstr "Berichte & Analysen"
+
+msgid "Comprehensive analytics and reports for your room booking business."
+msgstr "Umfassende Analysen und Berichte für Ihr Raumbuchungsgeschäft."
+
+msgid "Export Report"
+msgstr "Bericht exportieren"
+
+msgid "Print Report"
+msgstr "Bericht drucken"
+
+msgid "Date Range:"
+msgstr "Zeitraum:"
+
+msgid "This Month"
+msgstr "Dieser Monat"
+
+msgid "Last 7 Days"
+msgstr "Letzte 7 Tage"
+
+msgid "Last 30 Days"
+msgstr "Letzte 30 Tage"
+
+msgid "Last 90 Days"
+msgstr "Letzte 90 Tage"
+
+msgid "Last Month"
+msgstr "Letzter Monat"
+
+msgid "This Year"
+msgstr "Dieses Jahr"
+
+msgid "Custom Range"
+msgstr "Benutzerdefinierter Bereich"
+
+msgid "From:"
+msgstr "Von:"
+
+msgid "To:"
+msgstr "Bis:"
+
+msgid "Apply Filter"
+msgstr "Filter anwenden"
+
+msgid "Total Bookings"
+msgstr "Gesamtbuchungen"
+
+msgid "Total Revenue"
+msgstr "Gesamtumsatz"
+
+msgid "Occupancy Rate"
+msgstr "Auslastungsrate"
+
+msgid "Unique Customers"
+msgstr "Einzelne Kunden"
+
+msgid "Bookings Trend"
+msgstr "Buchungstrend"
+
+msgid "Daily"
+msgstr "Täglich"
+
+msgid "Weekly"
+msgstr "Wöchentlich"
+
+msgid "Monthly"
+msgstr "Monatlich"
+
+msgid "Revenue Analysis"
+msgstr "Umsatzanalyse"
+
+msgid "Room Performance"
+msgstr "Raumleistung"
+
+msgid "Booking Status Distribution"
+msgstr "Buchungsstatus-Verteilung"
+
+msgid "Top Performing Rooms"
+msgstr "Top-Performance-Räume"
+
+msgid "Occupancy"
+msgstr "Auslastung"
+
+msgid "No data available for selected period."
+msgstr "Keine Daten für den ausgewählten Zeitraum verfügbar."
+
+msgid "Peak Booking Hours"
+msgstr "Hauptbuchungszeiten"
+
+msgid "Time Slot"
+msgstr "Zeitslot"
+
+msgid "Percentage"
+msgstr "Prozentsatz"
+
+msgid "Customer Analytics"
+msgstr "Kundenanalysen"
+
+msgid "Average Booking Value"
+msgstr "Durchschnittlicher Buchungswert"
+
+msgid "Repeat Customer Rate"
+msgstr "Wiederholungskundenrate"
+
+msgid "Average Booking Duration"
+msgstr "Durchschnittliche Buchungsdauer"
+
+msgid "Cancellation Rate"
+msgstr "Stornierungsrate"
+
+# Missing System Messages
+msgid "Unknown Room"
+msgstr "Unbekannter Raum"
+
+msgid "N/A"
+msgstr "N/V"
+
+msgid "Room name is required"
+msgstr "Raumname ist erforderlich"
+
+msgid "Room capacity must be at least 1"
+msgstr "Raumkapazität muss mindestens 1 sein"
+
+msgid "Failed to create room: %s"
+msgstr "Raum konnte nicht erstellt werden: %s"
+
+msgid "Room not found"
+msgstr "Raum nicht gefunden"
+
+msgid "Failed to update room"
+msgstr "Raum konnte nicht aktualisiert werden"
+
+msgid "Cannot delete room with existing bookings"
+msgstr "Raum mit bestehenden Buchungen kann nicht gelöscht werden"
+
+msgid "Failed to delete room: %s"
+msgstr "Raum konnte nicht gelöscht werden: %s"
+
+msgid "Permission denied"
+msgstr "Zugriff verweigert"
+
+msgid "Failed to update room status"
+msgstr "Raumstatus konnte nicht aktualisiert werden"
+
+msgid "Security check failed"
+msgstr "Sicherheitsprüfung fehlgeschlagen"
+
+msgid "Missing required parameters"
+msgstr "Erforderliche Parameter fehlen"
+
+msgid "Time slot is available"
+msgstr "Zeitslot ist verfügbar"
+
+msgid "Selected time slot is not available"
+msgstr "Ausgewählter Zeitslot ist nicht verfügbar"
+
+# Additional Missing Translations
+msgid "Date From"
+msgstr "Datum Von"
+
+msgid "Date To"
+msgstr "Datum Bis"
+
+msgid "Clear"
+msgstr "Löschen"
+
+msgid "View Recent Bookings"
+msgstr "Aktuelle Buchungen anzeigen"
+
+msgid "Payment Management"
+msgstr "Zahlungsverwaltung"
+
+msgid "Manage payment transactions, process refunds, and view payment analytics."
+msgstr "Zahlungstransaktionen verwalten, Rückerstattungen bearbeiten und Zahlungsanalysen anzeigen."
+
+msgid "Export Payments"
+msgstr "Zahlungen exportieren"
+
+msgid "Pending Refunds"
+msgstr "Ausstehende Rückerstattungen"
+
+# More Missing Translations
+msgid "Total Transactions"
+msgstr "Gesamttransaktionen"
+
+msgid "Manage Extras"
+msgstr "Extras verwalten"
+
+msgid "Add, edit, and manage booking extras. Extras are optional items customers can add to their bookings."
+msgstr "Buchungsextras hinzufügen, bearbeiten und verwalten. Extras sind optionale Artikel, die Kunden zu ihren Buchungen hinzufügen können."
+
+msgid "Add New Extra"
+msgstr "Neues Extra hinzufügen"
+
+msgid "Active Extras"
+msgstr "Aktive Extras"
+
+msgid "Inactive Extras"
+msgstr "Inaktive Extras"
+
+msgid "Monthly Revenue"
+msgstr "Monatlicher Umsatz"
+
+msgid "Booked Today"
+msgstr "Heute gebucht"
+
+msgid "per additional person"
+msgstr "Pro weitere Person"
+
+msgid "seconds"
+msgstr "Sekunden"
+
+msgid "Room ID:"
+msgstr "Raum-ID:"
+
+msgid "Click to copy"
+msgstr "Zum Kopieren klicken"
+
+msgid "Room ID copied to clipboard!"
+msgstr "Raum-ID in die Zwischenablage kopiert!"
+
+msgid "Failed to copy. Please select and copy manually."
+msgstr "Kopieren fehlgeschlagen. Bitte manuell auswählen und kopieren."
+
+msgid "Room ID"
+msgstr "Raum-ID"
+
+msgid "copied to clipboard!"
+msgstr "in die Zwischenablage kopiert!"
+
+msgid "Book"
+msgstr "Buchen"
+
+msgid "Loading booking form..."
+msgstr "Buchungsformular wird geladen..."
+
+msgid "Booking cleanup completed successfully"
+msgstr "Buchungsbereinigung erfolgreich abgeschlossen"
+
+msgid "You do not have permission to manage bookings."
+msgstr "Sie haben keine Berechtigung, Buchungen zu verwalten."
+
+msgid "You do not have permission to manage rooms."
+msgstr "Sie haben keine Berechtigung, Räume zu verwalten."
+
+msgid "You do not have permission to manage payments."
+msgstr "Sie haben keine Berechtigung, Zahlungen zu verwalten."
+
+msgid "You do not have permission to manage extras."
+msgstr "Sie haben keine Berechtigung, Extras zu verwalten."
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "Sie haben keine ausreichenden Berechtigungen, um auf diese Seite zuzugreifen."
+
+msgid "Room Booking Staff"
+msgstr "Raumbuchungs-Mitarbeiter"
+
+msgid "Booking status updated successfully!"
+msgstr "Buchungsstatus erfolgreich aktualisiert!"
+
+msgid "Room created successfully!"
+msgstr "Raum erfolgreich erstellt!"
+
+msgid "Room updated successfully!"
+msgstr "Raum erfolgreich aktualisiert!"
+
+msgid "Room deleted successfully!"
+msgstr "Raum erfolgreich gelöscht!"
+
+msgid "Room status updated successfully!"
+msgstr "Raumstatus erfolgreich aktualisiert!"
+
+msgid "Payment marked as completed!"
+msgstr "Zahlung als abgeschlossen markiert!"
+
+msgid "Refund processed successfully!"
+msgstr "Rückerstattung erfolgreich bearbeitet!"
+
+msgid "Extra created successfully!"
+msgstr "Extra erfolgreich erstellt!"
+
+msgid "Failed to create extra."
+msgstr "Fehler beim Erstellen des Extras."
+
+msgid "Extra updated successfully!"
+msgstr "Extra erfolgreich aktualisiert!"
+
+msgid "Failed to update extra."
+msgstr "Fehler beim Aktualisieren des Extras."
+
+msgid "Extra deleted successfully!"
+msgstr "Extra erfolgreich gelöscht!"
+
+msgid "Failed to delete extra."
+msgstr "Fehler beim Löschen des Extras."
+
+msgid "Extra status updated successfully!"
+msgstr "Extra-Status erfolgreich aktualisiert!"
+
+msgid "Failed to update extra status."
+msgstr "Fehler beim Aktualisieren des Extra-Status."
+
+msgid "Sort order updated successfully!"
+msgstr "Sortierreihenfolge erfolgreich aktualisiert!"
+
+msgid "Failed to update sort order."
+msgstr "Fehler beim Aktualisieren der Sortierreihenfolge."
+
+msgid "Template updated successfully."
+msgstr "Vorlage erfolgreich aktualisiert."
+
+msgid "Failed to update template."
+msgstr "Fehler beim Aktualisieren der Vorlage."
+
+msgid "Template %s successfully."
+msgstr "Vorlage %s erfolgreich."
+
+msgid "Failed to update template status."
+msgstr "Fehler beim Aktualisieren des Vorlagenstatus."
+
+msgid "Invalid action"
+msgstr "Ungültige Aktion"
+
+msgid "Status updated successfully"
+msgstr "Status erfolgreich aktualisiert"
+
+msgid "Mark this payment as completed? This should only be done after receiving the cash payment."
+msgstr "Diese Zahlung als abgeschlossen markieren? Dies sollte nur nach Erhalt der Barzahlung erfolgen."
+
+msgid "Are you sure you want to delete this booking?"
+msgstr "Sind Sie sicher, dass Sie diese Buchung löschen möchten?"
+
+msgid "Are you sure you want to delete this extra?"
+msgstr "Sind Sie sicher, dass Sie dieses Extra löschen möchten?"
+
+msgid "Are you sure you want to delete this customer?"
+msgstr "Sind Sie sicher, dass Sie diesen Kunden löschen möchten?"
+
+msgid "This will also delete all their bookings and cannot be undone."
+msgstr "Dies wird auch alle ihre Buchungen löschen und kann nicht rückgängig gemacht werden."
+
+msgid "Are you sure you want to cancel this payment?"
+msgstr "Sind Sie sicher, dass Sie diese Zahlung stornieren möchten?"
+
+msgid "Failed to mark payment as completed"
+msgstr "Fehler beim Markieren der Zahlung als abgeschlossen"
+
+msgid "Failed to cancel payment"
+msgstr "Fehler beim Stornieren der Zahlung"
+
+msgid "Failed to process refund"
+msgstr "Fehler beim Bearbeiten der Rückerstattung"
+
+msgid "Failed to process refund. Please try again."
+msgstr "Fehler beim Bearbeiten der Rückerstattung. Bitte versuchen Sie es erneut."
+
+msgid "Insufficient permissions"
+msgstr "Unzureichende Berechtigungen"
+
+msgid "Are you sure you want to delete this item?"
+msgstr "Sind Sie sicher, dass Sie dieses Element löschen möchten?"
+
+msgid "Are you sure you want to cancel this booking?"
+msgstr "Sind Sie sicher, dass Sie diese Buchung stornieren möchten?"
+
+msgid "Changes saved successfully"
+msgstr "Änderungen erfolgreich gespeichert"
+
+msgid "activated"
+msgstr "aktiviert"
+
+msgid "deactivated"
+msgstr "deaktiviert"
+
+msgid "Plugin Settings"
+msgstr "Plugin-Einstellungen"
+
+msgid "PayPal configuration is missing"
+msgstr "PayPal-Konfiguration fehlt"
+
+msgid "Failed to get PayPal access token"
+msgstr "Fehler beim Abrufen des PayPal-Zugriffstokens"
+
+msgid "Invalid booking data"
+msgstr "Ungültige Buchungsdaten"
+
+msgid "Room booking: %s on %s"
+msgstr "Raumbuchung: %s am %s"
+
+msgid "Failed to create customer record"
+msgstr "Fehler beim Erstellen des Kundenrecords"
+
+msgid "Payment already completed"
+msgstr "Zahlung bereits abgeschlossen"
+
+msgid "Payment completed successfully"
+msgstr "Zahlung erfolgreich abgeschlossen"
+
+msgid "Payment capture failed"
+msgstr "Zahlungserfassung fehlgeschlagen"
+
+msgid "Failed to record payment"
+msgstr "Fehler beim Aufzeichnen der Zahlung"
+
+msgid "For bookings 4+ hours, only PayPal payment is allowed"
+msgstr "Für Buchungen über 4 Stunden ist nur PayPal-Zahlung erlaubt"
+
+msgid "On-site payment record not found"
+msgstr "Vor-Ort-Zahlungsrecord nicht gefunden"
+
+msgid "No completed payment found for refund"
+msgstr "Keine abgeschlossene Zahlung für Rückerstattung gefunden"
+
+msgid "No refunds allowed for bookings 4+ hours"
+msgstr "Keine Rückerstattungen für Buchungen über 4 Stunden erlaubt"
+
+msgid "Room ID is required"
+msgstr "Raum-ID ist erforderlich"
+
+msgid "Invalid room ID"
+msgstr "Ungültige Raum-ID"
+
+msgid "Booking date is required"
+msgstr "Buchungsdatum ist erforderlich"
+
+msgid "Invalid booking date format"
+msgstr "Ungültiges Buchungsdatum-Format"
+
+msgid "Start time is required"
+msgstr "Startzeit ist erforderlich"
+
+msgid "Invalid start time format"
+msgstr "Ungültiges Startzeit-Format"
+
+msgid "End time is required"
+msgstr "Endzeit ist erforderlich"
+
+msgid "Invalid end time format"
+msgstr "Ungültiges Endzeit-Format"
+
+msgid "End time must be after start time"
+msgstr "Endzeit muss nach der Startzeit liegen"
+
+msgid "Maximum 10 extra people allowed"
+msgstr "Maximal 10 zusätzliche Personen erlaubt"
+
+msgid "Payment method is required"
+msgstr "Zahlungsmethode ist erforderlich"
+
+msgid "Invalid payment method"
+msgstr "Ungültige Zahlungsmethode"
+
+msgid "First name is required"
+msgstr "Vorname ist erforderlich"
+
+msgid "First name must be at least 2 characters"
+msgstr "Vorname muss mindestens 2 Zeichen haben"
+
+msgid "First name must be less than 50 characters"
+msgstr "Vorname muss weniger als 50 Zeichen haben"
+
+msgid "Last name must be at least 2 characters"
+msgstr "Nachname muss mindestens 2 Zeichen haben"
+
+msgid "Last name must be less than 50 characters"
+msgstr "Nachname muss weniger als 50 Zeichen haben"
+
+msgid "Invalid email address"
+msgstr "Ungültige E-Mail-Adresse"
+
+msgid "No rooms available at this time."
+msgstr "Derzeit sind keine Räume verfügbar."
+
+msgid "Find Your Perfect Room"
+msgstr "Finden Sie Ihren perfekten Raum"
+
+msgid "Search and book rooms by date, time, and duration"
+msgstr "Suchen und buchen Sie Räume nach Datum, Zeit und Dauer"
+
+msgid "Rooms Management"
+msgstr "Raumverwaltung"
+
+msgid "Booking Calendar"
+msgstr "Buchungskalender"
+
+msgid "No bookings match your current filters. Try adjusting your search criteria."
+msgstr "Keine Buchungen entsprechen Ihren aktuellen Filtern. Versuchen Sie, Ihre Suchkriterien anzupassen."
+
+msgid "All Statuses"
+msgstr "Alle Status"
+
+msgid "Search bookings..."
+msgstr "Buchungen suchen..."
+
+msgid "View Old Bookings"
+msgstr "Alte Buchungen anzeigen"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Optional description of the room and its features."
+msgstr "Optionale Beschreibung des Raums und seiner Ausstattung."
+
+msgid "Maximum number of people this room can accommodate."
+msgstr "Maximale Anzahl der Personen, die dieser Raum aufnehmen kann."
+
+msgid "2 Hours Price (%s)"
+msgstr "2-Stunden-Preis (%s)"
+
+msgid "3 Hours Price (%s)"
+msgstr "3-Stunden-Preis (%s)"
+
+msgid "Optional 2-hour rate. Leave 0 to use global default."
+msgstr "Optionale 2-Stunden-Rate. Lassen Sie 0 für globale Standardeinstellung."
+
+msgid "Optional 3-hour rate. Leave 0 to use global default."
+msgstr "Optionale 3-Stunden-Rate. Lassen Sie 0 für globale Standardeinstellung."
+
+msgid "Save Room"
+msgstr "Raum speichern"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "No extras found"
+msgstr "Keine Extras gefunden"
+
+msgid "Start by adding your first extra item."
+msgstr "Beginnen Sie mit dem Hinzufügen Ihres ersten Extra-Artikels."
+
+msgid "Add First Extra"
+msgstr "Erstes Extra hinzufügen"
+
+msgid "Out of Stock"
+msgstr "Nicht auf Lager"
+
+msgid "Low Stock"
+msgstr "Wenig auf Lager"
+
+msgid "In Stock"
+msgstr "Auf Lager"
+
+msgid "Unlimited"
+msgstr "Unbegrenzt"
+
+msgid "Current Availability"
+msgstr "Aktuelle Verfügbarkeit"
+
+msgid "Sort Order"
+msgstr "Sortierreihenfolge"
+
+msgid "Most Popular"
+msgstr "Beliebteste"
+
+msgid "Payment Details"
+msgstr "Zahlungsdetails"
+
+msgid "View Payment Details"
+msgstr "Zahlungsdetails anzeigen"
+
+msgid "Processed"
+msgstr "Verarbeitet"
+
+msgid "Registration Date"
+msgstr "Registrierungsdatum"
+
+msgid "Customer ID: %d"
+msgstr "Kunden-ID: %d"
+
+msgid "4 Hours Price (%s)"
+msgstr "4-Stunden-Preis (%s)"
+
+msgid "Optional 4-hour rate. Leave 0 to use global default."
+msgstr "Optionale 4-Stunden-Rate. Lassen Sie 0 für globale Standardeinstellung."
+
+msgid "Extra Hour Price (%s)"
+msgstr "Zusatzstunden-Preis (%s)"
+
+msgid "Optional extra hour rate. Leave 0 to use global default."
+msgstr "Optionale Zusatzstunden-Rate. Lassen Sie 0 für globale Standardeinstellung."
+
+msgid "Amenities"
+msgstr "Ausstattung"
+
+msgid "Comma-separated list of amenities (e.g., WiFi, Projector, Whiteboard)."
+msgstr "Kommagetrennte Liste der Ausstattung (z.B. WiFi, Beamer, Whiteboard)."
+
+msgid "External Link"
+msgstr "Externer Link"
+
+msgid "Optional external link for room details. When provided, \"View Details\" button will redirect to this link instead of showing popup."
+msgstr "Optionaler externer Link für Raumdetails. Wenn angegeben, wird der \"Details anzeigen\"-Button zu diesem Link weiterleiten anstatt ein Popup zu zeigen."
+
+msgid "Images"
+msgstr "Bilder"
+
+msgid "Select Images"
+msgstr "Bilder auswählen"
+
+msgid "Select images from media library to showcase this room."
+msgstr "Wählen Sie Bilder aus der Mediathek aus, um diesen Raum zu präsentieren."
+
+msgid "Active (available for booking)"
+msgstr "Aktiv (für Buchungen verfügbar)"
+
+msgid "Booking Reference:"
+msgstr "Buchungsreferenz:"
+
+msgid "Customer:"
+msgstr "Kunde:"
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Payment Status:"
+msgstr "Zahlungsstatus:"
+
+msgid "Total Amount:"
+msgstr "Gesamtbetrag:"
+
+msgid "Extra People:"
+msgstr "Zusätzliche Personen:"
+
+msgid "Update Room"
+msgstr "Raum aktualisieren"
+
+msgid "Enter the name of the extra item."
+msgstr "Geben Sie den Namen des Extra-Artikels ein."
+
+msgid "Optional description of the extra item."
+msgstr "Optionale Beschreibung des Extra-Artikels."
+
+msgid "Price (%s)"
+msgstr "Preis (%s)"
+
+msgid "Stock Management"
+msgstr "Lagerverwaltung"
+
+msgid "Enable stock management for this extra"
+msgstr "Lagerverwaltung für dieses Extra aktivieren"
+
+msgid "When enabled, you can set a limited quantity. When disabled, unlimited quantity is available."
+msgstr "Wenn aktiviert, können Sie eine begrenzte Menge festlegen. Wenn deaktiviert, ist eine unbegrenzte Menge verfügbar."
+
+msgid "Stock Quantity"
+msgstr "Lagerbestand"
+
+msgid "Total available quantity for this extra (e.g., 3 for 3 projectors)."
+msgstr "Gesamtverfügbare Menge für dieses Extra (z.B. 3 für 3 Beamer)."
+
+msgid "Image URL"
+msgstr "Bild-URL"
+
+msgid "Upload Image"
+msgstr "Bild hochladen"
+
+msgid "Clear Image"
+msgstr "Bild löschen"
+
+msgid "Optional image URL for this extra item."
+msgstr "Optionale Bild-URL für diesen Extra-Artikel."
+
+msgid "Lower numbers appear first. Leave 0 for automatic ordering."
+msgstr "Niedrigere Zahlen erscheinen zuerst. Lassen Sie 0 für automatische Sortierung."
+
+msgid "Active (visible to customers)"
+msgstr "Aktiv (für Kunden sichtbar)"
+
+msgid "Add Extra"
+msgstr "Extra hinzufügen"
+
+msgid "Update Extra"
+msgstr "Extra aktualisieren"
+
+msgid "Edit Extra"
+msgstr "Extra bearbeiten"
+
+msgid "Price"
+msgstr "Preis"
+
+msgid "Stock"
+msgstr "Lager"
+
+msgid "All Methods"
+msgstr "Alle Methoden"
+
+msgid "Search transactions..."
+msgstr "Transaktionen suchen..."
+
+msgid "Partially Refunded"
+msgstr "Teilweise erstattet"
+
+msgid "Stripe"
+msgstr "Stripe"
+
+msgid "Bank Transfer"
+msgstr "Banküberweisung"
+
+msgid "Cash"
+msgstr "Bargeld"
+
+msgid "Registration Date:"
+msgstr "Registrierungsdatum:"
+
+msgid "Edit Customer Information"
+msgstr "Kundeninformationen bearbeiten"
+
+msgid "First Name:"
+msgstr "Vorname:"
+
+msgid "Last Name:"
+msgstr "Nachname:"
+
+msgid "Address:"
+msgstr "Adresse:"
+
+msgid "Edit Customer"
+msgstr "Kunde bearbeiten"
+
+msgid "Total Spent"
+msgstr "Gesamtausgaben"
+
+msgid "Are you sure you want to permanently delete this room?"
+msgstr "Sind Sie sicher, dass Sie diesen Raum dauerhaft löschen möchten?"
+
+msgid "This action cannot be undone!"
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden!"
+
+msgid "Month Revenue"
+msgstr "Monatsumsatz"
+
+msgid "This Week"
+msgstr "Diese Woche"
+
+msgid "VAT ID"
+msgstr "Umsatzsteuer ID"
+
+msgid "Enter company VAT ID (Umsatzsteuer ID)"
+msgstr "Geben Sie die Umsatzsteuer ID des Unternehmens ein"
+
+msgid "Booking Settings"
+msgstr "Buchungseinstellungen"
+
+msgid "Pricing Settings"
+msgstr "Preiseinstellungen"
+
+msgid "PayPal Settings"
+msgstr "PayPal-Einstellungen"
+
+msgid "Company Information"
+msgstr "Unternehmensinformationen"
+
+msgid "Legal & Invoice Settings"
+msgstr "Rechtliche & Rechnungseinstellungen"
+
+msgid "Customizable Labels & Texts"
+msgstr "Anpassbare Beschriftungen & Texte"
+
+msgid "Cooldown Minutes"
+msgstr "Abkühlzeit in Minuten"
+
+msgid "Enable Guest Booking"
+msgstr "Gastbuchung aktivieren"
+
+msgid "Require OTP Verification"
+msgstr "OTP-Verifizierung erforderlich"
+
+msgid "Max Concurrent Bookings"
+msgstr "Maximale gleichzeitige Buchungen"
+
+msgid "2 Hours Price"
+msgstr "2-Stunden-Preis"
+
+msgid "3 Hours Price"
+msgstr "3-Stunden-Preis"
+
+msgid "4 Hours Price"
+msgstr "4-Stunden-Preis"
+
+msgid "Extra Hour Price"
+msgstr "Zusatzstunden-Preis"
+
+msgid "Extra Person Price"
+msgstr "Zusatzperson-Preis"
+
+msgid "Max Extra People"
+msgstr "Maximale Zusatzpersonen"
+
+msgid "PayPal Sandbox Mode"
+msgstr "PayPal-Sandbox-Modus"
+
+msgid "PayPal Client ID"
+msgstr "PayPal-Client-ID"
+
+msgid "PayPal Client Secret"
+msgstr "PayPal-Client-Geheimnis"
+
+msgid "WhatsApp Notifications"
+msgstr "WhatsApp-Benachrichtigungen"
+
+msgid "Twilio Account SID"
+msgstr "Twilio-Konto-SID"
+
+msgid "Twilio Auth Token"
+msgstr "Twilio-Auth-Token"
+
+msgid "Twilio Phone Number"
+msgstr "Twilio-Telefonnummer"
+
+msgid "WhatsApp Access Token"
+msgstr "WhatsApp-Zugriffstoken"
+
+msgid "WhatsApp Phone Number ID"
+msgstr "WhatsApp-Telefonnummer-ID"
+
+msgid "Company Name"
+msgstr "Unternehmensname"
+
+msgid "Company Address"
+msgstr "Unternehmensadresse"
+
+msgid "Company Phone"
+msgstr "Unternehmens-Telefon"
+
+msgid "Company Email"
+msgstr "Unternehmens-E-Mail"
+
+msgid "Company Logo"
+msgstr "Unternehmens-Logo"
+
+msgid "Admin Email"
+msgstr "Admin-E-Mail"
+
+msgid "Admin Email Notifications"
+msgstr "Admin-E-Mail-Benachrichtigungen"
+
+msgid "Staff Email"
+msgstr "Mitarbeiter-E-Mail"
+
+msgid "Staff Email Notifications"
+msgstr "Mitarbeiter-E-Mail-Benachrichtigungen"
+
+msgid "Terms & Conditions Page"
+msgstr "Seite für Allgemeine Geschäftsbedingungen"
+
+msgid "Privacy Policy Page"
+msgstr "Datenschutzrichtlinien-Seite"
+
+msgid "Invoice Counter"
+msgstr "Rechnungszähler"
+
+msgid "Tax Rate (%)"
+msgstr "Steuersatz (%)"
+
+msgid "Plugin Language"
+msgstr "Plugin-Sprache"
+
+msgid "Pricing Label"
+msgstr "Preis-Label"
+
+# Field Descriptions
+msgid "Timezone for booking calculations"
+msgstr "Zeitzone für Buchungsberechnungen"
+
+msgid "How many days in advance can bookings be made"
+msgstr "Wie viele Tage im Voraus können Buchungen getätigt werden"
+
+msgid "Hours before booking when cancellation is allowed"
+msgstr "Stunden vor der Buchung, wenn eine Stornierung erlaubt ist"
+
+msgid "Earliest time when bookings can start (24-hour format, e.g., 08:00)"
+msgstr "Früheste Zeit, zu der Buchungen beginnen können (24-Stunden-Format, z.B. 08:00)"
+
+msgid "Latest time when bookings can end (24-hour format, e.g., 20:00)"
+msgstr "Späteste Zeit, zu der Buchungen enden können (24-Stunden-Format, z.B. 20:00)"
+
+msgid "Default booking duration in hours"
+msgstr "Standard-Buchungsdauer in Stunden"
+
+msgid "Minutes between bookings for room preparation"
+msgstr "Minuten zwischen Buchungen für Raumbereitung"
+
+msgid "Allow non-registered users to make bookings"
+msgstr "Nicht registrierten Benutzern erlauben, Buchungen zu tätigen"
+
+msgid "Require phone verification for new customers"
+msgstr "Telefonverifizierung für neue Kunden erforderlich"
+
+msgid "Maximum concurrent bookings per customer"
+msgstr "Maximale gleichzeitige Buchungen pro Kunde"
+
+msgid "Use PayPal sandbox for testing"
+msgstr "PayPal-Sandbox für Tests verwenden"
+
+msgid "PayPal transaction fee percentage"
+msgstr "PayPal-Transaktionsgebührenprozentsatz"
+
+msgid "Send email notifications for bookings"
+msgstr "E-Mail-Benachrichtigungen für Buchungen senden"
+
+msgid "Send SMS notifications via Twilio"
+msgstr "SMS-Benachrichtigungen über Twilio senden"
+
+msgid "Send WhatsApp notifications"
+msgstr "WhatsApp-Benachrichtigungen senden"
+
+msgid "Starting number for invoice numbering"
+msgstr "Startnummer für Rechnungsnummerierung"
+
+msgid "Tax rate percentage for invoices"
+msgstr "Steuersatz-Prozentsatz für Rechnungen"
+
+msgid "Company logo that will appear on invoices (recommended size: 200x100px)"
+msgstr "Unternehmenslogo, das auf Rechnungen erscheint (empfohlene Größe: 200x100px)"
+
+msgid "Custom label to display with pricing (e.g., \"Starting from\", \"From\", etc.)"
+msgstr "Benutzerdefiniertes Label zur Anzeige mit Preisen (z.B. \"Ab\", \"Von\", etc.)"
+
+msgid "Send booking notifications to admin email"
+msgstr "Buchungsbenachrichtigungen an Admin-E-Mail senden"
+
+msgid "Staff email address for notifications"
+msgstr "Mitarbeiter-E-Mail-Adresse für Benachrichtigungen"
+
+msgid "Send booking notifications to staff email"
+msgstr "Buchungsbenachrichtigungen an Mitarbeiter-E-Mail senden"
+
+msgid "Select the language for the plugin interface. This overrides the WordPress site language for this plugin only."
+msgstr "Wählen Sie die Sprache für die Plugin-Oberfläche. Dies überschreibt die WordPress-Site-Sprache nur für dieses Plugin."
+
+# Placeholders
+msgid "Enter PayPal Client ID"
+msgstr "PayPal-Client-ID eingeben"
+
+msgid "Enter PayPal Client Secret"
+msgstr "PayPal-Client-Geheimnis eingeben"
+
+msgid "Enter Twilio Account SID"
+msgstr "Twilio-Konto-SID eingeben"
+
+msgid "Enter Twilio Auth Token"
+msgstr "Twilio-Auth-Token eingeben"
+
+msgid "Enter Twilio Phone Number"
+msgstr "Twilio-Telefonnummer eingeben"
+
+msgid "Enter WhatsApp Access Token"
+msgstr "WhatsApp-Zugriffstoken eingeben"
+
+msgid "Enter WhatsApp Phone Number ID"
+msgstr "WhatsApp-Telefonnummer-ID eingeben"
+
+msgid "Enter company name"
+msgstr "Unternehmensname eingeben"
+
+msgid "Enter company address"
+msgstr "Unternehmensadresse eingeben"
+
+msgid "Enter company phone number"
+msgstr "Unternehmens-Telefonnummer eingeben"
+
+msgid "Enter company email"
+msgstr "Unternehmens-E-Mail eingeben"
+
+msgid "Upload company logo for invoices"
+msgstr "Unternehmenslogo für Rechnungen hochladen"
+
+msgid "Enter admin email"
+msgstr "Admin-E-Mail eingeben"
+
+msgid "Enter staff email"
+msgstr "Mitarbeiter-E-Mail eingeben"
+
+msgid "Enter pricing label (e.g., \"Starting from\")"
+msgstr "Preis-Label eingeben (z.B. \"Ab\")"
+
+msgid "Select the currency for all payments and pricing"
+msgstr "Währung für alle Zahlungen und Preise auswählen"
+
+msgid "PHP date format for displaying dates"
+msgstr "PHP-Datumsformat für die Anzeige von Daten"
+
+msgid "PHP time format for displaying times"
+msgstr "PHP-Zeitformat für die Anzeige von Zeiten"
+
+msgid "Select an image from your media library. Recommended size: 200x100px"
+msgstr "Wählen Sie ein Bild aus Ihrer Mediathek aus. Empfohlene Größe: 200x100px"
+
+# Customizable Labels & Texts - Labels
+msgid "Use Custom Labels"
+msgstr "Benutzerdefinierte Beschriftungen verwenden"
+
+msgid "Booking Date Label"
+msgstr "Buchungsdatum-Beschriftung"
+
+msgid "Duration Label"
+msgstr "Dauer-Beschriftung"
+
+msgid "Start Time Label"
+msgstr "Startzeit-Beschriftung"
+
+msgid "Extra People Label"
+msgstr "Zusatzpersonen-Beschriftung"
+
+msgid "Special Requests Label"
+msgstr "Besondere Wünsche-Beschriftung"
+
+msgid "Next Button Text"
+msgstr "Weiter-Button-Text"
+
+msgid "Previous Button Text"
+msgstr "Zurück-Button-Text"
+
+msgid "Book Now Button Text"
+msgstr "Jetzt buchen-Button-Text"
+
+msgid "Search Button Text"
+msgstr "Suchen-Button-Text"
+
+msgid "Clear All Button Text"
+msgstr "Alles löschen-Button-Text"
+
+msgid "Select Duration Text"
+msgstr "Dauer auswählen-Text"
+
+msgid "Select Date Text"
+msgstr "Datum auswählen-Text"
+
+msgid "Loading Message"
+msgstr "Lade-Nachricht"
+
+msgid "No Time Slots Message"
+msgstr "Keine Zeitslots-Nachricht"
+
+msgid "Your Details Label"
+msgstr "Ihre Details-Beschriftung"
+
+msgid "Welcome Back Message"
+msgstr "Willkommen zurück-Nachricht"
+
+msgid "First Name Label"
+msgstr "Vorname-Beschriftung"
+
+msgid "Last Name Label"
+msgstr "Nachname-Beschriftung"
+
+msgid "Email Address Label"
+msgstr "E-Mail-Adresse-Beschriftung"
+
+msgid "Phone Number Label"
+msgstr "Telefonnummer-Beschriftung"
+
+msgid "Company Label"
+msgstr "Unternehmen-Beschriftung"
+
+msgid "Company Optional Label"
+msgstr "Unternehmen optional-Beschriftung"
+
+msgid "Contact Verification Label"
+msgstr "Kontaktverifizierung-Beschriftung"
+
+msgid "Verification Required Message"
+msgstr "Verifizierung erforderlich-Nachricht"
+
+msgid "Email to Verify Label"
+msgstr "E-Mail zur Verifizierung-Beschriftung"
+
+msgid "Booking Confirmation Label"
+msgstr "Buchungsbestätigung-Beschriftung"
+
+msgid "Booking Details Label"
+msgstr "Buchungsdetails-Beschriftung"
+
+msgid "Room Label"
+msgstr "Raum-Beschriftung"
+
+msgid "Date Label"
+msgstr "Datum-Beschriftung"
+
+msgid "Time Label"
+msgstr "Zeit-Beschriftung"
+
+msgid "Duration Hours Label"
+msgstr "Dauer Stunden-Beschriftung"
+
+msgid "Additional People Label"
+msgstr "Zusätzliche Personen-Beschriftung"
+
+msgid "Extras Label"
+msgstr "Extras-Beschriftung"
+
+msgid "Customer Details Label"
+msgstr "Kundendetails-Beschriftung"
+
+msgid "Name Label"
+msgstr "Name-Beschriftung"
+
+msgid "Email Label"
+msgstr "E-Mail-Beschriftung"
+
+msgid "Phone Label"
+msgstr "Telefon-Beschriftung"
+
+msgid "Payment Label"
+msgstr "Zahlung-Beschriftung"
+
+msgid "Terms & Conditions Text"
+msgstr "Allgemeine Geschäftsbedingungen-Text"
+
+msgid "Complete Booking Button"
+msgstr "Buchung abschließen-Button"
+
+msgid "What Happens Next Label"
+msgstr "Was passiert als nächstes-Beschriftung"
+
+msgid "Confirmation Email Message"
+msgstr "Bestätigungs-E-Mail-Nachricht"
+
+msgid "Payment Onsite Message"
+msgstr "Zahlung vor Ort-Nachricht"
+
+msgid "Arrive Early Message"
+msgstr "Früh ankommen-Nachricht"
+
+msgid "Contact Modify Message"
+msgstr "Kontakt für Änderungen-Nachricht"
+
+msgid "Total Amount Label"
+msgstr "Gesamtbetrag-Beschriftung"
+
+msgid "Payment Method Label"
+msgstr "Zahlungsmethode-Beschriftung"
+
+# Customizable Labels & Texts - Descriptions
+msgid "Enable to use custom labels instead of translated text. When disabled, labels will be automatically translated based on the selected language."
+msgstr "Aktivieren, um benutzerdefinierte Beschriftungen anstelle von übersetztem Text zu verwenden. Wenn deaktiviert, werden Beschriftungen automatisch basierend auf der ausgewählten Sprache übersetzt."
+
+msgid "Custom label for booking date field"
+msgstr "Benutzerdefinierte Beschriftung für Buchungsdatum-Feld"
+
+msgid "Custom label for duration field"
+msgstr "Benutzerdefinierte Beschriftung für Dauer-Feld"
+
+msgid "Custom label for start time field"
+msgstr "Benutzerdefinierte Beschriftung für Startzeit-Feld"
+
+msgid "Custom label for extra people field"
+msgstr "Benutzerdefinierte Beschriftung für Zusatzpersonen-Feld"
+
+msgid "Custom label for special requests field"
+msgstr "Benutzerdefinierte Beschriftung für besondere Wünsche-Feld"
+
+msgid "Custom text for next button"
+msgstr "Benutzerdefinierter Text für Weiter-Button"
+
+msgid "Custom text for previous button"
+msgstr "Benutzerdefinierter Text für Zurück-Button"
+
+msgid "Custom text for book now button"
+msgstr "Benutzerdefinierter Text für Jetzt buchen-Button"
+
+msgid "Custom text for search button"
+msgstr "Benutzerdefinierter Text für Suchen-Button"
+
+msgid "Custom text for clear all button"
+msgstr "Benutzerdefinierter Text für Alles löschen-Button"
+
+msgid "Custom text for select duration placeholder"
+msgstr "Benutzerdefinierter Text für Dauer auswählen-Platzhalter"
+
+msgid "Custom text for select date placeholder"
+msgstr "Benutzerdefinierter Text für Datum auswählen-Platzhalter"
+
+msgid "Custom loading message text"
+msgstr "Benutzerdefinierter Lade-Nachricht-Text"
+
+msgid "Custom message when no time slots available"
+msgstr "Benutzerdefinierte Nachricht, wenn keine Zeitslots verfügbar"
+
+msgid "Custom label for your details section"
+msgstr "Benutzerdefinierte Beschriftung für Ihre Details-Bereich"
+
+msgid "Custom welcome back message for returning users"
+msgstr "Benutzerdefinierte Willkommen zurück-Nachricht für zurückkehrende Benutzer"
+
+msgid "Custom label for first name field"
+msgstr "Benutzerdefinierte Beschriftung für Vorname-Feld"
+
+msgid "Custom label for last name field"
+msgstr "Benutzerdefinierte Beschriftung für Nachname-Feld"
+
+msgid "Custom label for email address field"
+msgstr "Benutzerdefinierte Beschriftung für E-Mail-Adresse-Feld"
+
+msgid "Custom label for phone number field"
+msgstr "Benutzerdefinierte Beschriftung für Telefonnummer-Feld"
+
+msgid "Custom label for company field"
+msgstr "Benutzerdefinierte Beschriftung für Unternehmen-Feld"
+
+msgid "Custom label for optional company field"
+msgstr "Benutzerdefinierte Beschriftung für optionales Unternehmen-Feld"
+
+msgid "Custom label for contact verification section"
+msgstr "Benutzerdefinierte Beschriftung für Kontaktverifizierung-Bereich"
+
+msgid "Custom message for verification requirement"
+msgstr "Benutzerdefinierte Nachricht für Verifizierungsanforderung"
+
+msgid "Custom label for email verification field"
+msgstr "Benutzerdefinierte Beschriftung für E-Mail-Verifizierung-Feld"
+
+msgid "Custom label for booking confirmation title"
+msgstr "Benutzerdefinierte Beschriftung für Buchungsbestätigung-Titel"
+
+msgid "Custom label for booking details section"
+msgstr "Benutzerdefinierte Beschriftung für Buchungsdetails-Bereich"
+
+msgid "Custom label for room field"
+msgstr "Benutzerdefinierte Beschriftung für Raum-Feld"
+
+msgid "Custom label for date field"
+msgstr "Benutzerdefinierte Beschriftung für Datum-Feld"
+
+msgid "Custom label for time field"
+msgstr "Benutzerdefinierte Beschriftung für Zeit-Feld"
+
+msgid "Custom label for duration field in confirmation"
+msgstr "Benutzerdefinierte Beschriftung für Dauer-Feld in Bestätigung"
+
+msgid "Custom label for additional people field"
+msgstr "Benutzerdefinierte Beschriftung für zusätzliche Personen-Feld"
+
+msgid "Custom label for extras field"
+msgstr "Benutzerdefinierte Beschriftung für Extras-Feld"
+
+msgid "Custom label for customer details section"
+msgstr "Benutzerdefinierte Beschriftung für Kundendetails-Bereich"
+
+msgid "Custom label for name field"
+msgstr "Benutzerdefinierte Beschriftung für Name-Feld"
+
+msgid "Custom label for email field"
+msgstr "Benutzerdefinierte Beschriftung für E-Mail-Feld"
+
+msgid "Custom label for phone field"
+msgstr "Benutzerdefinierte Beschriftung für Telefon-Feld"
+
+msgid "Custom label for payment field"
+msgstr "Benutzerdefinierte Beschriftung für Zahlung-Feld"
+
+msgid "Custom text for terms and conditions checkbox"
+msgstr "Benutzerdefinierter Text für Allgemeine Geschäftsbedingungen-Checkbox"
+
+msgid "Custom text for complete booking button"
+msgstr "Benutzerdefinierter Text für Buchung abschließen-Button"
+
+msgid "Custom label for what happens next section"
+msgstr "Benutzerdefinierte Beschriftung für Was passiert als nächstes-Bereich"
+
+msgid "Custom message about confirmation email"
+msgstr "Benutzerdefinierte Nachricht über Bestätigungs-E-Mail"
+
+msgid "Custom message about onsite payment"
+msgstr "Benutzerdefinierte Nachricht über Zahlung vor Ort"
+
+msgid "Custom message about arriving early"
+msgstr "Benutzerdefinierte Nachricht über frühes Ankommen"
+
+msgid "Custom message about contacting for modifications"
+msgstr "Benutzerdefinierte Nachricht über Kontakt für Änderungen"
+
+msgid "Custom label for total amount field"
+msgstr "Benutzerdefinierte Beschriftung für Gesamtbetrag-Feld"
+
+msgid "Custom label for payment method field"
+msgstr "Benutzerdefinierte Beschriftung für Zahlungsmethode-Feld"
+
+msgid "Update Booking"
+msgstr "Buchung aktualisieren"
+
+msgid "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
+msgstr "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
