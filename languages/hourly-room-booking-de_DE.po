@@ -2533,5 +2533,122 @@ msgstr "Benutzerdefinierte Beschriftung für Zahlungsmethode-Feld"
 msgid "Update Booking"
 msgstr "Buchung aktualisieren"
 
+msgid "View"
+msgstr "Anzeigen"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Deactivate"
+msgstr "Deaktivieren"
+
+msgid "Activate"
+msgstr "Aktivieren"
+
+msgid "Update Template"
+msgstr "Vorlage aktualisieren"
+
 msgid "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
 msgstr "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
+
+msgid "Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen, um fortzufahren."
+msgstr "Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen, um fortzufahren."
+
+msgid "Are you sure you want to"
+msgstr "Sind Sie sicher, dass Sie"
+
+msgid "activate"
+msgstr "aktivieren"
+
+msgid "deactivate"
+msgstr "deaktivieren"
+
+msgid "this template?"
+msgstr "diese Vorlage"
+
+msgid "Edit Email Template"
+msgstr "E-Mail-Vorlage bearbeiten"
+
+msgid "Template Name"
+msgstr "Vorlagenname"
+
+msgid "Template Type"
+msgstr "Vorlagentyp"
+
+msgid "User Template"
+msgstr "Benutzer-Vorlage"
+
+msgid "Admin Template"
+msgstr "Admin-Vorlage"
+
+msgid "User templates are sent to customers, admin templates are sent to administrators."
+msgstr "Benutzer-Vorlagen werden an Kunden gesendet, Admin-Vorlagen werden an Administratoren gesendet."
+
+msgid "Email Subject"
+msgstr "E-Mail-Betreff"
+
+msgid "Use variables like {booking_reference}, {customer_name}, etc."
+msgstr "Verwenden Sie Variablen wie {booking_reference}, {customer_name}, etc."
+
+msgid "Email Heading"
+msgstr "E-Mail-Überschrift"
+
+msgid "Message Content"
+msgstr "Nachrichteninhalt"
+
+msgid "This is the main message content that will appear in the email."
+msgstr "Dies ist der Hauptnachrichteninhalt, der in der E-Mail erscheint."
+
+msgid "HTML Content"
+msgstr "HTML-Inhalt"
+
+msgid "Full HTML template. Available variables:"
+msgstr "Vollständige HTML-Vorlage. Verfügbare Variablen:"
+
+msgid "Active Template"
+msgstr "Aktive Vorlage"
+
+msgid "Only active templates will be used for sending emails."
+msgstr "Nur aktive Vorlagen werden zum Senden von E-Mails verwendet."
+
+msgid "Email Template Preview"
+msgstr "E-Mail-Vorlagen-Vorschau"
+
+msgid "Template Name:"
+msgstr "Vorlagenname:"
+
+msgid "Subject:"
+msgstr "Betreff:"
+
+msgid "Heading:"
+msgstr "Überschrift:"
+
+msgid "Message Content:"
+msgstr "Nachrichteninhalt:"
+
+msgid "HTML Email Preview:"
+msgstr "HTML-E-Mail-Vorschau:"
+
+msgid "User Templates"
+msgstr "Benutzer-Vorlagen"
+
+msgid "Admin Templates"
+msgstr "Admin-Vorlagen"
+
+msgid "people"
+msgstr "Personen"
+
+msgid "%d extra people"
+msgstr "%d zusätzliche Personen"
+
+msgid "h"
+msgstr "h"
+
+msgid "m"
+msgstr "m"
+
+msgid "Today"
+msgstr "Heute"
+
+msgid "PayPal Fees"
+msgstr "PayPal-Gebühren"

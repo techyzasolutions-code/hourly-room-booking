@@ -588,8 +588,8 @@ jQuery(document).ready(function($) {
                     $('#view_subject').text(template.subject);
                     $('#view_heading').text(template.heading);
                     $('#view_status').html(template.is_active == 1 ? 
-                        '<span class="hrb-status-badge active">Active</span>' : 
-                        '<span class="hrb-status-badge inactive">Inactive</span>');
+                        '<span class="hrb-status-badge active"><?php _e('Active', 'hourly-room-booking'); ?></span>' : 
+                        '<span class="hrb-status-badge inactive"><?php _e('Inactive', 'hourly-room-booking'); ?></span>');
                     $('#view_message').html(template.message);
                     
                     // Load HTML content in iframe
@@ -651,7 +651,7 @@ jQuery(document).ready(function($) {
         var isActive = $(this).data('is-active');
         var newStatus = isActive ? 0 : 1;
         
-        if (confirm('Are you sure you want to ' + (newStatus ? 'activate' : 'deactivate') + ' this template?')) {
+        if (confirm('<?php _e('Are you sure you want to', 'hourly-room-booking'); ?> ' + (newStatus ? '<?php _e('activate', 'hourly-room-booking'); ?>' : '<?php _e('deactivate', 'hourly-room-booking'); ?>') + ' <?php _e('this template?', 'hourly-room-booking'); ?>')) {
             $('#toggle_template_id').val(templateId);
             $('#toggle_is_active').val(newStatus);
             $('#hrb-toggle-form').submit();

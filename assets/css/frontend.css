@@ -6,7 +6,58 @@
 /* ==========================================================================
    Base Styles
    ========================================================================== */
-
+   :root {
+    /* Primary Brand Colors */
+    --hrb-primary: #7a1618;
+    --hrb-primary-dark: #5a1012;
+    --hrb-primary-light: #9a3a3c;
+    --hrb-secondary: #c4622d;
+    --hrb-accent: #7a1618;
+    
+    /* Status Colors */
+    --hrb-success: #10b981;
+    --hrb-success-dark: #059669;
+    --hrb-success-light: #d1fae5;
+    --hrb-warning: #f59e0b;
+    --hrb-warning-light: #fef3c7;
+    --hrb-error: #ef4444;
+    --hrb-error-dark: #dc2626;
+    --hrb-error-light: #fef2f2;
+    
+    /* Text Colors */
+    --hrb-text: #1f2937;
+    --hrb-text-light: #6b7280;
+    --hrb-text-muted: #9ca3af;
+    
+    /* Background Colors */
+    --hrb-background: #ffffff;
+    --hrb-background-light: #f8fafc;
+    --hrb-background-dark: #f1f5f9;
+    
+    /* Border Colors */
+    --hrb-border: #e5e7eb;
+    --hrb-border-light: #f3f4f6;
+    
+    /* Box Shadows */
+    --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    
+    /* Border Radius */
+    --hrb-radius: 8px;
+    --hrb-radius-lg: 12px;
+    --hrb-radius-xl: 16px;
+    
+    /* Transitions */
+    --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hrb-payment-method label {
+    display: block !important;
+}
+.hrb-payment-notice.hrb-alert.hrb-alert-info {
+    display: block !important;
+}
 .hrb-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -571,6 +622,27 @@
     color: #004085;
 }
 
+.hrb-info-box {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.hrb-info-box h4 {
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.hrb-info-box p {
+    margin: 0 0 10px 0;
+}
+
+.hrb-info-box p:last-child {
+    margin-bottom: 0;
+}
+
 /* ==========================================================================
    Loading & Spinners
    ========================================================================== */
@@ -763,4 +835,63 @@
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(1px);
     z-index: 10;
+}
+
+@media screen and (max-width: 768px) {
+    .hrb-modal-overlay .hrb-modal-body{
+        padding: 0px;
+    }
+    .hrb-modal-overlay {
+      padding: 0px ;
+    }
+    .hrb-modal-content .hrb-booking-form-wrapper{
+        margin: 0px 
+    }
+  }
+
+/* Static information boxes - always visible */
+.hrb-static-info {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-left: 4px solid var(--hrb-primary);
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--hrb-primary-dark);
+    border-color: var(--hrb-primary);
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.hrb-static-info h4 {
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.hrb-static-info p {
+    margin: 0 0 10px 0;
+}
+
+.hrb-static-info p:last-child {
+    margin-bottom: 0;
+}
+
+.hrb-static-info strong {
+    font-weight: 600;
+}
+
+/* Verification alert - can be hidden when verified */
+.hrb-verification-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-left: 4px solid #007cba; /* Blue border */
+    background-color: #cce7ff; /* Light blue background */
+    color: #004085; /* Dark blue text */
+}
+
+.hrb-verification-alert strong {
+    font-weight: 600;
 }

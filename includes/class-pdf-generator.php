@@ -113,14 +113,14 @@ class HRB_PDF_Generator {
      */
     private function create_invoice_html($booking, $customer, $room, $extras, $company_logo) {
         $invoice_number = 'INV-' . date('Y') . '-' . str_pad($booking->id, 4, '0', STR_PAD_LEFT);
-        $booking_date = date('F j, Y', strtotime($booking->booking_date));
-        $due_date = date('F j, Y', strtotime($booking->booking_date . ' +30 days'));
+        $booking_date = date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date));
+        $due_date = date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date . ' +30 days'));
         
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice</title>
+    <title>Rechnung</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -231,26 +231,27 @@ class HRB_PDF_Generator {
             ' . ($company_logo ? '<img src="' . esc_url($company_logo) . '" alt="Company Logo">' : '<div>LOGO</div>') . '
         </div>
         <div class="invoice-title">
-            <h1>INVOICE</h1>
+            <h1>RECHNUNG</h1>
             <div class="invoice-details">
-                <p><strong>Invoice #:</strong> ' . esc_html($invoice_number) . '</p>
-                <p><strong>Date:</strong> ' . esc_html($booking_date) . '</p>
-                <p><strong>Due Date:</strong> ' . esc_html($due_date) . '</p>
-                <p><strong>Booking Ref:</strong> ' . esc_html($booking->booking_reference) . '</p>
+                <p><strong>Rechnungsnummer:</strong> ' . esc_html($invoice_number) . '</p>
+                <p><strong>Datum:</strong> ' . esc_html($booking_date) . '</p>
+                <p><strong>Fälligkeitsdatum:</strong> ' . esc_html($due_date) . '</p>
+                <p><strong>Buchungsnummer:</strong> ' . esc_html($booking->booking_reference) . '</p>
             </div>
         </div>
     </div>
 
     <div class="billing">
         <div class="bill-from">
-            <h3>Bill From:</h3>
+            <h3>Absender:</h3>
             <p><strong>' . esc_html(get_option('hrb_company_name', get_bloginfo('name'))) . '</strong></p>
-            <p>' . esc_html(get_option('hrb_company_address', '')) . '</p>
+            <p>' . nl2br(esc_html(get_option('hrb_company_address', ''))) . '</p>
             <p>Tel: ' . esc_html(get_option('hrb_company_phone', '')) . '</p>
-            <p>Email: ' . esc_html(get_option('hrb_company_email', get_option('admin_email'))) . '</p>
+            <p>E-Mail: ' . esc_html(get_option('hrb_company_email', get_option('admin_email'))) . '</p>
+            ' . (get_option('hrb_company_vat_id', '') ? '<p>Umsatzsteuer ID: ' . esc_html(get_option('hrb_company_vat_id', '')) . '</p>' : '') . '
         </div>
         <div class="bill-to">
-            <h3>Bill To:</h3>
+            <h3>Rechnungsempfänger:</h3>
             <p><strong>' . esc_html($customer->first_name ?? '') . ' ' . esc_html($customer->last_name ?? '') . '</strong></p>
             <p>' . esc_html($customer->email ?? '') . '</p>
             <p>Tel: ' . esc_html($customer->phone ?? '') . '</p>
@@ -261,19 +262,19 @@ class HRB_PDF_Generator {
     <table>
         <thead>
             <tr>
-                <th>Description</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Duration</th>
-                <th>Amount</th>
+                <th>Beschreibung</th>
+                <th>Datum</th>
+                <th>Gebuchte Uhrzeit</th>
+                <th>Anzahl der Std.</th>
+                <th>Kosten</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>' . esc_html($room->name . ' - Room Booking') . '</td>
+                <td>' . esc_html($room->name . ' gebuchtes Zimmer') . '</td>
                 <td>' . esc_html($booking_date) . '</td>
-                <td>' . esc_html($booking->start_time . ' - ' . $booking->end_time) . '</td>
-                <td>' . esc_html($booking->total_hours . ' hours') . '</td>
+                <td>' . esc_html(date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time))) . '</td>
+                <td>' . esc_html($booking->total_hours . ' Std.') . '</td>
                 <td>' . esc_html(hrb_format_amount($booking->base_price)) . '</td>
             </tr>';
 
@@ -293,7 +294,7 @@ class HRB_PDF_Generator {
         // Add additional people if any
         if ($booking->extra_people > 0) {
             $html .= '<tr>
-                <td>Additional People</td>
+                <td>Zusätzliche Person</td>
                 <td>-</td>
                 <td>-</td>
                 <td>' . esc_html($booking->extra_people) . '</td>
@@ -301,22 +302,39 @@ class HRB_PDF_Generator {
             </tr>';
         }
 
+        // Add PayPal fee as separate line item if payment method is PayPal
+        if ($booking->payment_method === 'paypal' && $booking->paypal_fee > 0) {
+            $html .= '<tr>
+                <td>PayPal Gebühren (3%)</td>
+                <td>-</td>
+                <td>-</td>
+                <td>1x</td>
+                <td>' . esc_html(hrb_format_amount($booking->paypal_fee)) . '</td>
+            </tr>';
+        }
+
         $html .= '</tbody>
     </table>
 
     <div class="totals">
-        <p>Subtotal: ' . esc_html(hrb_format_amount($booking->base_price + $booking->extras_price + $booking->extra_people_price)) . '</p>';
+        <p>Netto: ' . esc_html(hrb_format_amount($booking->base_price + $booking->extras_price + $booking->extra_people_price)) . '</p>';
         
         if ($booking->tax_amount > 0) {
-            $html .= '<p>Tax: ' . esc_html(hrb_format_amount($booking->tax_amount)) . '</p>';
+            $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+            $html .= '<p>zzgl. ' . esc_html($tax_rate) . '% MwSt.: ' . esc_html(hrb_format_amount($booking->tax_amount)) . '</p>';
         }
         
-        $html .= '<p class="total-row">Total: ' . esc_html(hrb_format_amount($booking->total_amount)) . '</p>
+        $html .= '<p class="total-row">Gesamt: ' . esc_html(hrb_format_amount($booking->total_amount)) . '</p>
+        <p class="total-row"><strong>Gesamtbetrag: ' . esc_html(hrb_format_amount($booking->total_amount)) . '</strong></p>
     </div>
 
     <div class="footer">
-        <p>Thank you for your business!</p>
-        <p>For questions about this invoice, please contact us.</p>
+        <p>Vielen Dank für Ihr Vertrauen! Bei Fragen zu dieser Rechnung kontaktieren Sie uns bitte</p>
+        <p>Telefon: ' . esc_html(get_option('hrb_company_phone', '')) . '</p>
+        <p>E-Mail: ' . esc_html(get_option('hrb_company_email', get_option('admin_email'))) . '</p>
+        <p><strong>Hinweis:</strong> ' . ($booking->payment_method === 'paypal' ? 
+            'Die Zahlung ist bereits bei der Online-Buchung mit Paypal von Ihnen beglichen worden' : 
+            'Der Rechnungsbetrag wird wunschgemäß vor Ort von Ihnen bezahlt') . '</p>
     </div>
 </body>
 </html>';

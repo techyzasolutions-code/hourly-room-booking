@@ -8,6 +8,29 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Set page title using JavaScript since this is a template fragment
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set title based on current language
+    <?php if (get_locale() === 'de_DE'): ?>
+    document.title = 'Buchungsdetails - <?php echo esc_js(get_bloginfo('name')); ?>';
+    <?php else: ?>
+    document.title = 'Booking Details - <?php echo esc_js(get_bloginfo('name')); ?>';
+    <?php endif; ?>
+});
+
+// Also try setting it immediately and with a timeout
+<?php if (get_locale() === 'de_DE'): ?>
+document.title = 'Buchungsdetails - <?php echo esc_js(get_bloginfo('name')); ?>';
+setTimeout(function() { document.title = 'Buchungsdetails - <?php echo esc_js(get_bloginfo('name')); ?>'; }, 100);
+<?php else: ?>
+document.title = 'Booking Details - <?php echo esc_js(get_bloginfo('name')); ?>';
+setTimeout(function() { document.title = 'Booking Details - <?php echo esc_js(get_bloginfo('name')); ?>'; }, 100);
+<?php endif; ?>
+</script>
+<?php
+
 // Get booking reference from URL
 $booking_ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
 
@@ -56,7 +79,7 @@ if ($booking_ref) {
     }
 
     .hrb-booking-details-container {
-        max-width: 1100px;
+        width: 100%;
         margin: 60px auto;
         padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -276,6 +299,43 @@ if ($booking_ref) {
         border-color: var(--hrb-success);
     }
 
+    /* Payment Status Badge Styles */
+    .hrb-payment-status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+    }
+
+    .hrb-payment-status-pending {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .hrb-payment-status-completed {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .hrb-payment-status-failed {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .hrb-payment-status-refunded {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+    }
+
+    .hrb-payment-status-partially_refunded {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
     .hrb-full-width-card {
         grid-column: 1 / -1;
     }
@@ -468,24 +528,33 @@ if ($booking_ref) {
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Status', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value">
-                        <span class="hrb-status-badge hrb-status-<?php echo esc_attr($booking->status); ?>">
-                            <?php echo esc_html(ucfirst($booking->status)); ?>
-                        </span>
+                        <?php 
+                        // Get admin instance to use status badge method
+                        $admin = HRB_Admin::getInstance();
+                        echo $admin->get_status_badge($booking->status);
+                        ?>
                     </span>
                 </div>
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Payment Status', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value">
-                        <span class="hrb-status-badge hrb-payment-<?php echo esc_attr($booking->payment_status); ?>">
-                            <?php echo esc_html(ucfirst(str_replace('_', ' ', $booking->payment_status))); ?>
-                        </span>
+                        <?php 
+                        // Get admin instance to use payment status badge method
+                        $admin = HRB_Admin::getInstance();
+                        echo $admin->get_payment_status_badge($booking->payment_status);
+                        ?>
                     </span>
                 </div>
 
                 <div class="hrb-detail-row">
+                    <span class="hrb-detail-label"><?php _e('Payment Method', 'hourly-room-booking'); ?>:</span>
+                    <span class="hrb-detail-value"><?php echo esc_html(hrb_get_payment_method_label($booking->payment_method ?? 'N/A')); ?></span>
+                </div>
+
+                <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Created', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html(date('F j, Y \a\t g:i A', strtotime($booking->created_at))); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html(date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($booking->created_at))); ?></span>
                 </div>
             </div>
 
@@ -500,17 +569,17 @@ if ($booking_ref) {
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Date', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html(date('F j, Y', strtotime($booking->booking_date))); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html(date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date))); ?></span>
                 </div>
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Time', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html($booking->start_time . ' - ' . $booking->end_time); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html(date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time))); ?></span>
                 </div>
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Duration', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours . ' hours'); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours . ' ' . __('hours', 'hourly-room-booking')); ?></span>
                 </div>
             </div>
 
@@ -547,7 +616,7 @@ if ($booking_ref) {
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Payment Method', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html(ucfirst(str_replace('_', ' ', $booking->payment_method))); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html(hrb_get_payment_method_label($booking->payment_method ?? 'N/A')); ?></span>
                 </div>
 
                 <div class="hrb-detail-row">
@@ -593,6 +662,13 @@ if ($booking_ref) {
                     <span class="hrb-detail-label"><?php _e('Tax', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->tax_amount); ?></span>
                 </div>
+
+                <?php if ($booking->paypal_fee > 0): ?>
+                <div class="hrb-detail-row">
+                    <span class="hrb-detail-label"><?php _e('PayPal Fees', 'hourly-room-booking'); ?>:</span>
+                    <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->paypal_fee); ?></span>
+                </div>
+                <?php endif; ?>
 
                 <div class="hrb-detail-row hrb-total-amount">
                     <span class="hrb-detail-label"><?php _e('Total Amount', 'hourly-room-booking'); ?>:</span>

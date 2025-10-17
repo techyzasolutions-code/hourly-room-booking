@@ -1258,5 +1258,113 @@ msgstr "Failed to process refund. Please try again."
 msgid "Update Booking"
 msgstr "Update Booking"
 
+msgid "View"
+msgstr "View"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "Deactivate"
+msgstr "Deactivate"
+
+msgid "Activate"
+msgstr "Activate"
+
+msgid "Update Template"
+msgstr "Update Template"
+
 msgid "Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben."
 msgstr "Please note: Available times are shown in Berlin timezone."
+
+msgid "Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen, um fortzufahren."
+msgstr "Please accept the terms and conditions and privacy policy to proceed."
+
+msgid "Are you sure you want to"
+msgstr "Are you sure you want to"
+
+msgid "activate"
+msgstr "activate"
+
+msgid "deactivate"
+msgstr "deactivate"
+
+msgid "this template?"
+msgstr "this template?"
+
+msgid "Edit Email Template"
+msgstr "Edit Email Template"
+
+msgid "Template Name"
+msgstr "Template Name"
+
+msgid "Template Type"
+msgstr "Template Type"
+
+msgid "User Template"
+msgstr "User Template"
+
+msgid "Admin Template"
+msgstr "Admin Template"
+
+msgid "User templates are sent to customers, admin templates are sent to administrators."
+msgstr "User templates are sent to customers, admin templates are sent to administrators."
+
+msgid "Email Subject"
+msgstr "Email Subject"
+
+msgid "Use variables like {booking_reference}, {customer_name}, etc."
+msgstr "Use variables like {booking_reference}, {customer_name}, etc."
+
+msgid "Email Heading"
+msgstr "Email Heading"
+
+msgid "Message Content"
+msgstr "Message Content"
+
+msgid "This is the main message content that will appear in the email."
+msgstr "This is the main message content that will appear in the email."
+
+msgid "HTML Content"
+msgstr "HTML Content"
+
+msgid "Full HTML template. Available variables:"
+msgstr "Full HTML template. Available variables:"
+
+msgid "Active Template"
+msgstr "Active Template"
+
+msgid "Only active templates will be used for sending emails."
+msgstr "Only active templates will be used for sending emails."
+
+msgid "Email Template Preview"
+msgstr "Email Template Preview"
+
+msgid "Template Name:"
+msgstr "Template Name:"
+
+msgid "Subject:"
+msgstr "Subject:"
+
+msgid "Heading:"
+msgstr "Heading:"
+
+msgid "Message Content:"
+msgstr "Message Content:"
+
+msgid "HTML Email Preview:"
+msgstr "HTML Email Preview:"
+
+msgid "User Templates"
+msgstr "User Templates"
+
+msgid "Admin Templates"
+msgstr "Admin Templates"
+
+msgid "people"
+msgstr "people"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "PayPal Fees"
+msgstr "PayPal Fees"

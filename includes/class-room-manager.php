@@ -420,21 +420,27 @@ class HRB_Room_Manager {
         $where_conditions = array('is_active = 1');
         $params = array();
         
-        // Date and time filter
+        // Date and time filter - use proper availability checking with cooldown
         if (!empty($filters['date']) && !empty($filters['start_time'])) {
             $end_time = !empty($filters['end_time']) ? $filters['end_time'] : date('H:i', strtotime($filters['start_time'] . ' +1 hour'));
-
-            // More comprehensive overlap check: two time ranges overlap if one starts before the other ends
-            $where_conditions[] = "id NOT IN (
-                SELECT DISTINCT room_id FROM {$wpdb->prefix}hrb_bookings
-                WHERE booking_date = %s
-                AND status NOT IN ('cancelled', 'rejected')
-                AND NOT (end_time <= %s OR start_time >= %s)
-            )";
-
-            $params[] = $filters['date'];
-            $params[] = $filters['start_time'];
-            $params[] = $end_time;
+            
+            // Get all rooms first, then filter by availability using the same logic as search-form.php
+            $all_rooms = $this->get_all_rooms();
+            $available_rooms = array();
+            
+            foreach ($all_rooms as $room) {
+                if ($this->is_room_available($room->id, $filters['date'], $filters['start_time'], $end_time)) {
+                    $available_rooms[] = $room->id;
+                }
+            }
+            
+            if (!empty($available_rooms)) {
+                $room_ids = implode(',', array_map('intval', $available_rooms));
+                $where_conditions[] = "id IN ($room_ids)";
+            } else {
+                // No rooms available, return empty result
+                $where_conditions[] = "1 = 0";
+            }
         }
         
         // Capacity filter
@@ -470,6 +476,80 @@ class HRB_Room_Manager {
         } else {
             return $wpdb->get_results($sql);
         }
+    }
+    
+    /**
+     * Get room price for specific duration
+     */
+    public function get_room_price_for_duration($room, $duration_hours) {
+        if (is_numeric($room)) {
+            $room = $this->get_room($room);
+        }
+        
+        if (!$room) {
+            return 0;
+        }
+        
+        // Check if room has specific pricing for this duration
+        $room_price = 0;
+        $use_room_price = false;
+        
+        if ($duration_hours == 2 && $room->price_2_hours > 0) {
+            $room_price = floatval($room->price_2_hours);
+            $use_room_price = true;
+        } elseif ($duration_hours == 3 && $room->price_3_hours > 0) {
+            $room_price = floatval($room->price_3_hours);
+            $use_room_price = true;
+        } elseif ($duration_hours == 4 && $room->price_4_hours > 0) {
+            $room_price = floatval($room->price_4_hours);
+            $use_room_price = true;
+        } elseif ($duration_hours > 4) {
+            // For durations > 4 hours, use 4-hour price + extra hours
+            if ($room->price_4_hours > 0) {
+                $room_price = floatval($room->price_4_hours);
+                $use_room_price = true;
+                
+                // Add extra hours using room-specific or global extra hour price
+                $extra_hours = $duration_hours - 4;
+                $extra_hour_price = $room->price_extra_hour > 0 ? 
+                    floatval($room->price_extra_hour) : 
+                    floatval(get_option('hrb_price_extra_hour', 0));
+                
+                if ($extra_hour_price > 0) {
+                    $room_price += $extra_hours * $extra_hour_price;
+                }
+            }
+        }
+        
+        // If room has specific pricing, use it
+        if ($use_room_price) {
+            return $room_price;
+        }
+        
+        // Fallback to global pricing
+        $global_price = 0;
+        if ($duration_hours == 2) {
+            $global_price = floatval(get_option('hrb_price_2_hours', 0));
+        } elseif ($duration_hours == 3) {
+            $global_price = floatval(get_option('hrb_price_3_hours', 0));
+        } elseif ($duration_hours == 4) {
+            $global_price = floatval(get_option('hrb_price_4_hours', 0));
+        } elseif ($duration_hours > 4) {
+            $global_price = floatval(get_option('hrb_price_4_hours', 0));
+            $extra_hours = $duration_hours - 4;
+            $extra_hour_price = floatval(get_option('hrb_price_extra_hour', 0));
+            if ($extra_hour_price > 0) {
+                $global_price += $extra_hours * $extra_hour_price;
+            }
+        }
+        
+        // If global pricing is available, use it
+        if ($global_price > 0) {
+            return $global_price;
+        }
+        
+        // No pricing found - return 0
+        return 0;
     }
     
     /**

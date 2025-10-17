@@ -60,12 +60,22 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
 
         case 'update_booking':
             if ($post_booking_id) {
+                // Process extras
+                $extras = [];
+                if (isset($_POST['extras']) && is_array($_POST['extras'])) {
+                    foreach ($_POST['extras'] as $extra_id) {
+                        $extras[] = intval($extra_id);
+                    }
+                }
+                
                 $update_data = [
                     'status' => sanitize_text_field($_POST['booking_status'] ?? ''),
                     'booking_date' => sanitize_text_field($_POST['booking_date'] ?? ''),
                     'start_time' => sanitize_text_field($_POST['start_time'] ?? ''),
                     'end_time' => sanitize_text_field($_POST['end_time'] ?? ''),
                     'extra_people' => intval($_POST['extra_people'] ?? 0),
+                    'extras' => $extras,
+                    'payment_method' => sanitize_text_field($_POST['payment_method'] ?? ''),
                     'special_requests' => sanitize_textarea_field($_POST['special_requests'] ?? ''),
                 ];
 
@@ -77,7 +87,31 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                     'company' => sanitize_text_field($_POST['company'] ?? ''),
                 ];
 
+                // Remove extras from update_data since it's handled separately
+                $extras_data = $update_data['extras'];
+                unset($update_data['extras']);
+                
                 $result = $booking_manager->update_booking($post_booking_id, $update_data);
+                
+                // Update extras if any are selected
+                if (!empty($extras_data)) {
+                    $extras_result = $booking_manager->save_booking_extras(
+                        $post_booking_id,
+                        $extras_data,
+                        $update_data['booking_date'],
+                        $update_data['start_time'],
+                        $update_data['end_time']
+                    );
+                    
+                    if (is_wp_error($extras_result)) {
+                        echo '<div class="notice notice-error"><p>' . $extras_result->get_error_message() . '</p></div>';
+                        break;
+                    }
+                } else {
+                    // Only remove extras if we're sure none should be selected
+                    // For now, let's not automatically remove extras to prevent data loss
+                    // $booking_manager->remove_booking_extras($post_booking_id);
+                }
 
                 // Update customer data using customer manager
                 $customer_result = $customer_manager->update_customer($booking->customer_id, $customer_data);
@@ -184,7 +218,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         </tr>
                         <tr>
                             <th><?php _e('Status', 'hourly-room-booking'); ?></th>
-                            <td><span class="hrb-status-<?php echo esc_attr($booking->status); ?>"><?php echo esc_html(ucfirst($booking->status)); ?></span></td>
+                            <td><?php echo $admin->get_status_badge($booking->status); ?></td>
                         </tr>
                         <tr>
                             <th><?php _e('Room', 'hourly-room-booking'); ?></th>
@@ -192,11 +226,11 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         </tr>
                         <tr>
                             <th><?php _e('Date', 'hourly-room-booking'); ?></th>
-                            <td><?php echo esc_html(date('F j, Y', strtotime($booking->booking_date))); ?></td>
+                            <td><?php echo esc_html(date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date))); ?></td>
                         </tr>
                         <tr>
                             <th><?php _e('Time', 'hourly-room-booking'); ?></th>
-                            <td><?php echo esc_html(date('g:i A', strtotime($booking->start_time)) . ' - ' . date('g:i A', strtotime($booking->end_time))); ?></td>
+                            <td><?php echo esc_html(date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time))); ?></td>
                         </tr>
                         <tr>
                             <th><?php _e('Duration', 'hourly-room-booking'); ?></th>
@@ -271,15 +305,15 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                                 $payment_status = $booking->actual_payment_status ?: $booking->payment_status;
                                 $status_class = 'hrb-payment-' . esc_attr($payment_status);
                                 ?>
-                                <span class="<?php echo esc_attr($status_class); ?>"><?php echo esc_html(ucfirst($payment_status)); ?></span>
+                                <?php echo $admin->get_payment_status_badge($payment_status); ?>
                                 <?php if ($booking->actual_payment_status && $booking->processed_at): ?>
-                                    <br><small><?php printf(__('Processed: %s', 'hourly-room-booking'), date('M j, Y g:i A', strtotime($booking->processed_at))); ?></small>
+                                    <br><small><?php printf(__('Processed: %s', 'hourly-room-booking'), date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($booking->processed_at))); ?></small>
                                 <?php endif; ?>
                             </td>
                         </tr>
                         <tr>
                             <th><?php _e('Payment Method', 'hourly-room-booking'); ?></th>
-                            <td><?php echo esc_html(ucfirst($booking->payment_method ?? 'N/A')); ?></td>
+                            <td><?php echo esc_html(hrb_get_payment_method_label($booking->payment_method ?? 'N/A')); ?></td>
                         </tr>
                         <?php if ($booking->transaction_id): ?>
                             <tr>
@@ -292,7 +326,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         <?php endif; ?>
                         <tr>
                             <th><?php _e('Created', 'hourly-room-booking'); ?></th>
-                            <td><?php echo esc_html(date('F j, Y g:i A', strtotime($booking->created_at))); ?></td>
+                            <td><?php echo esc_html(date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($booking->created_at))); ?></td>
                         </tr>
                     </table>
                 </div>
@@ -313,24 +347,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         </tr>
                         <?php endif; ?>
                         
-                        <?php
-                        // Check if there are any extras for this booking
-                        $extras_manager = HRB_Extras::getInstance();
-                        $booking_extras = $extras_manager->get_booking_extras($booking->id);
-                        if (!empty($booking_extras)): ?>
-                        <tr>
-                            <th><?php _e('Extras', 'hourly-room-booking'); ?></th>
-                            <td>
-                                <?php
-                                $extras_list = [];
-                                foreach ($booking_extras as $extra) {
-                                    $extras_list[] = $extra->name . ' (' . hrb_format_amount($extra->total_price) . ')';
-                                }
-                                echo implode('<br>', $extras_list);
-                                ?>
-                            </td>
-                        </tr>
-                        <?php elseif ($booking->extras_price > 0): ?>
+                        <?php if ($booking->extras_price > 0): ?>
                         <tr>
                             <th><?php _e('Extras', 'hourly-room-booking'); ?></th>
                             <td><?php echo hrb_format_amount($booking->extras_price); ?></td>
@@ -370,10 +387,12 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
             </div>
 
             <div class="hrb-booking-actions">
+                <?php if (current_user_can('hrb_manage_bookings')): ?>
                 <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=edit&id=' . $booking->id); ?>" class="button button-primary">
                     <?php _e('Edit Booking', 'hourly-room-booking'); ?>
                 </a>
-                <?php if ($booking->status === 'pending'): ?>
+                <?php endif; ?>
+                <?php if ($booking->status === 'pending' && current_user_can('hrb_manage_bookings')): ?>
                     <form method="POST" style="display: inline;">
                         <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
                         <input type="hidden" name="action" value="confirm">
@@ -458,7 +477,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         </tr>
                         <tr>
                             <th><label for="last_name"><?php _e('Last Name', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="text" name="last_name" id="last_name" value="<?php echo esc_attr($booking->last_name); ?>" class="regular-text" required></td>
+                            <td><input type="text" name="last_name" id="last_name" value="<?php echo esc_attr($booking->last_name); ?>" class="regular-text"></td>
                         </tr>
                         <tr>
                             <th><label for="email"><?php _e('Email', 'hourly-room-booking'); ?></label></th>
@@ -635,8 +654,8 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                                 </td>
                                 <td class="column-datetime">
                                     <div class="hrb-datetime">
-                                        <strong><?php echo date('d.m.Y', strtotime($booking['booking_date'])); ?></strong><br>
-                                        <small><?php echo date('H:i', strtotime($booking['start_time'])) . ' - ' . date('H:i', strtotime($booking['end_time'])); ?></small>
+                                        <strong><?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking['booking_date'])); ?></strong><br>
+                                        <small><?php echo date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking['start_time'])) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking['end_time'])); ?></small>
                                     </div>
                                 </td>
                                 <td class="column-duration">
@@ -658,16 +677,10 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                                         <?php $actual_payment_status = $booking['actual_payment_status'] ?: $booking['payment_status']; ?>
                                         <span class="hrb-payment-status hrb-payment-<?php echo esc_attr($actual_payment_status); ?>">
                                             <?php
-                                            $payment_statuses = [
-                                                'pending' => __('Pending', 'hourly-room-booking'),
-                                                'completed' => __('Completed', 'hourly-room-booking'),
-                                                'failed' => __('Failed', 'hourly-room-booking'),
-                                                'refunded' => __('Refunded', 'hourly-room-booking')
-                                            ];
-                                            echo esc_html($payment_statuses[$actual_payment_status] ?? $actual_payment_status);
+                                            echo esc_html(hrb_get_payment_status_label($actual_payment_status));
                                             ?>
                                         </span>
-                                        <br><small><?php echo esc_html(ucfirst($booking['payment_method'])); ?></small>
+                                        <br><small><?php echo esc_html(hrb_get_payment_method_label($booking['payment_method'])); ?></small>
                                     </div>
                                 </td>
                                 <td class="column-amount">
@@ -696,10 +709,12 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
 
                                         <?php // Cancel booking button removed - cancellations should only be handled via phone or email ?>
 
+                                        <?php if (current_user_can('hrb_manage_bookings')): ?>
                                         <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=edit&id=' . $booking['id']); ?>"
                                             class="button button-secondary button-small" title="<?php _e('Edit', 'hourly-room-booking'); ?>">
                                             <span class="dashicons dashicons-edit"></span>
                                         </a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -1210,6 +1225,43 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
         color: #6b7280;
         font-size: 10px;
         font-weight: 500;
+    }
+
+    /* Payment Status Badge Styles */
+    .hrb-payment-status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+    }
+
+    .hrb-payment-status-pending {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .hrb-payment-status-completed {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .hrb-payment-status-failed {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .hrb-payment-status-refunded {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+    }
+
+    .hrb-payment-status-partially_refunded {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
     }
 
     /* Enhanced Actions */

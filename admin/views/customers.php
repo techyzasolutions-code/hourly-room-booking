@@ -248,7 +248,7 @@ $stats = [
                                         <div class="last-booking">
                                             <?php printf(
                                                 __('Last: %s', 'hourly-room-booking'),
-                                                wp_date(get_option('date_format'), strtotime($customer->last_booking_date))
+                                                date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($customer->last_booking_date))
                                             ); ?>
                                         </div>
                                     <?php endif; ?>
@@ -263,7 +263,7 @@ $stats = [
                                 </span>
                             </td>
                             <td class="column-registered">
-                                <?php echo wp_date(get_option('date_format'), strtotime($customer->created_at)); ?>
+                                <?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($customer->created_at)); ?>
                             </td>
                             <td class="column-actions">
                                 <div class="hrb-actions">
@@ -271,9 +271,11 @@ $stats = [
                                         <span class="dashicons dashicons-visibility"></span>
                                     </button>
 
+                                    <?php if (current_user_can('hrb_manage_customers')): ?>
                                     <button type="button" class="button button-small" onclick="editCustomer(<?php echo $customer->id; ?>)" title="<?php _e('Edit Customer', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-edit"></span>
                                     </button>
+                                    <?php endif; ?>
 
                                     <?php if (!$customer->is_verified): ?>
                                         <form method="post" style="display: inline;">
@@ -290,9 +292,11 @@ $stats = [
                                         <span class="dashicons dashicons-download"></span>
                                     </button>
 
+                                    <?php if (current_user_can('hrb_manage_customers')): ?>
                                     <button type="button" class="button button-small hrb-delete-btn" onclick="deleteCustomer(<?php echo $customer->id; ?>, '<?php echo esc_js($customer->first_name . ' ' . $customer->last_name); ?>')" title="<?php _e('Delete Customer', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-trash"></span>
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

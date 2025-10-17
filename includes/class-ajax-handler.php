@@ -79,6 +79,12 @@ class HRB_Ajax_Handler {
 
         add_action('wp_ajax_hrb_get_calendar_events', array($this, 'get_calendar_events'));
         add_action('wp_ajax_nopriv_hrb_get_calendar_events', array($this, 'get_calendar_events'));
+        
+        add_action('wp_ajax_hrb_get_room_price_for_duration', array($this, 'get_room_price_for_duration'));
+        add_action('wp_ajax_nopriv_hrb_get_room_price_for_duration', array($this, 'get_room_price_for_duration'));
+        
+        add_action('wp_ajax_hrb_get_room_price_range', array($this, 'get_room_price_range'));
+        add_action('wp_ajax_nopriv_hrb_get_room_price_range', array($this, 'get_room_price_range'));
     }
     
     /**
@@ -162,17 +168,30 @@ class HRB_Ajax_Handler {
 
         $results = array();
         foreach ($rooms as $room) {
-            // Get price range using the new system
-            $price_range = $room_manager->get_room_price_range($room);
             $amenities = $room_manager->get_room_amenities($room->id);
+            
+            // Check if we have duration filter
+            $duration = isset($filters['duration']) ? intval($filters['duration']) : 0;
+            
+            if ($duration > 0) {
+                // Show specific price for selected duration
+                $specific_price = $room_manager->get_room_price_for_duration($room, $duration);
+                $formatted_price = $specific_price > 0 ? hrb_format_amount($specific_price) . ' ' . sprintf(__('for %d hours', 'hourly-room-booking'), $duration) : 'N/A';
+                $price_for_sorting = $specific_price;
+            } else {
+                // Show price range (default)
+                $price_range = $room_manager->get_room_price_range($room);
+                $formatted_price = $price_range['formatted'];
+                $price_for_sorting = $price_range['min'];
+            }
 
             $results[] = array(
                 'id' => $room->id,
                 'name' => $room->name,
                 'description' => $room->description,
                 'capacity' => $room->capacity,
-                'price' => $price_range['min'], // Use min price for sorting
-                'formatted_price' => $price_range['formatted'], // Use formatted price range
+                'price' => $price_for_sorting, // Use for sorting
+                'formatted_price' => $formatted_price, // Use formatted price
                 'amenities' => $amenities,
                 'images' => $room_manager->get_room_images($room->id),
                 'external_link' => $room->external_link ?? ''
@@ -181,7 +200,71 @@ class HRB_Ajax_Handler {
         
         wp_send_json_success($results);
     }
-
+    
+    /**
+     * Get room price for specific duration
+     */
+    public function get_room_price_for_duration() {
+        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        $room_id = intval($_POST['room_id']);
+        $duration = intval($_POST['duration']);
+        
+        $room_manager = HRB_Room_Manager::getInstance();
+        $room = $room_manager->get_room($room_id);
+        
+        if (!$room) {
+            wp_send_json_error(__('Room not found', 'hourly-room-booking'));
+        }
+        
+        $specific_price = $room_manager->get_room_price_for_duration($room, $duration);
+        
+        if ($specific_price > 0) {
+            $formatted_price = hrb_format_amount($specific_price);
+            $pricing_label = get_option('hrb_pricing_label', '');
+            
+            if (!empty($pricing_label)) {
+                $formatted_price = $pricing_label . ' ' . $formatted_price;
+            }
+            
+            $formatted_price_with_duration = $formatted_price . ' ' . sprintf(__('for %d hours', 'hourly-room-booking'), $duration);
+            
+            wp_send_json_success(array(
+                'formatted_price' => $formatted_price_with_duration
+            ));
+        } else {
+            wp_send_json_success(array(
+                'formatted_price' => 'N/A'
+            ));
+        }
+    }
+    
+    /**
+     * Get room price range
+     */
+    public function get_room_price_range() {
+        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        $room_id = intval($_POST['room_id']);
+        
+        $room_manager = HRB_Room_Manager::getInstance();
+        $room = $room_manager->get_room($room_id);
+        
+        if (!$room) {
+            wp_send_json_error(__('Room not found', 'hourly-room-booking'));
+        }
+        
+        $price_range = $room_manager->get_room_price_range($room);
+        
+        wp_send_json_success(array(
+            'formatted_price' => $price_range['formatted']
+        ));
+    }
+    
     /**
      * Load more rooms for pagination
      */
@@ -192,6 +275,12 @@ class HRB_Ajax_Handler {
 
         $page = intval($_POST['page']) ?: 1;
         $per_page = intval($_POST['per_page']) ?: 6;
+        $duration = isset($_POST['duration']) ? intval($_POST['duration']) : 0;
+        $columns = isset($_POST['columns']) ? intval($_POST['columns']) : 3;
+        $show_price = isset($_POST['show_price']) ? $_POST['show_price'] === 'true' : true;
+        $show_capacity = isset($_POST['show_capacity']) ? $_POST['show_capacity'] === 'true' : true;
+        $show_amenities = isset($_POST['show_amenities']) ? $_POST['show_amenities'] === 'true' : true;
+        $show_view_button = isset($_POST['show_view_button']) ? $_POST['show_view_button'] === 'true' : true;
         $offset = ($page - 1) * $per_page;
 
         // Get room manager
@@ -234,19 +323,42 @@ class HRB_Ajax_Handler {
                         </div>
                     <?php endif; ?>
 
-                    <div class="hrb-room-price">
-                        <?php 
-                        $room_manager = HRB_Room_Manager::getInstance();
-                        $price_range = $room_manager->get_room_price_range($room);
-                        ?>
-                        <span class="hrb-price">
-                            <?php echo $price_range['formatted']; ?>
-                        </span>
-                    </div>
                 </div>
 
-                <div class="hrb-room-content">
-                    <h3 class="hrb-room-title"><?php echo esc_html($room->name); ?></h3>
+                    <div class="hrb-room-content">
+                        <h3 class="hrb-room-title"><?php echo esc_html($room->name); ?></h3>
+
+                        <?php if ($show_price): ?>
+                            <div class="hrb-room-price" data-room-id="<?php echo $room->id; ?>">
+                                <?php 
+                                $room_manager = HRB_Room_Manager::getInstance();
+                                
+                                if ($duration > 0) {
+                                    // Show specific price for selected duration
+                                    $specific_price = $room_manager->get_room_price_for_duration($room, $duration);
+                                    
+                                    if ($specific_price > 0) {
+                                        $formatted_price = hrb_format_amount($specific_price);
+                                        $pricing_label = get_option('hrb_pricing_label', '');
+                                        
+                                        if (!empty($pricing_label)) {
+                                            $formatted_price = $pricing_label . ' ' . $formatted_price;
+                                        }
+                                        
+                                        // Include duration in the price text (same as regular search results)
+                                        $formatted_price_with_duration = $formatted_price . ' ' . sprintf(__('for %d hours', 'hourly-room-booking'), $duration);
+                                        echo '<span class="hrb-price">' . $formatted_price_with_duration . '</span>';
+                                    } else {
+                                        echo '<span class="hrb-price">N/A</span>';
+                                    }
+                                } else {
+                                    // Show price range (default)
+                                    $price_range = $room_manager->get_room_price_range($room);
+                                    echo '<span class="hrb-price">' . $price_range['formatted'] . '</span>';
+                                }
+                                ?>
+                            </div>
+                        <?php endif; ?>
 
                     <?php if (!empty($room->description)): ?>
                         <p class="hrb-room-description">
@@ -254,29 +366,35 @@ class HRB_Ajax_Handler {
                         </p>
                     <?php endif; ?>
 
-                    <div class="hrb-room-details">
-                        <div class="hrb-room-detail">
-                            <i class="hrb-icon-people"></i>
-                            <span><?php printf(__('Up to %d people', 'hourly-room-booking'), $room->capacity); ?></span>
+                        <div class="hrb-room-details">
+                            <?php if ($show_capacity): ?>
+                                <div class="hrb-room-detail">
+                                    <i class="hrb-icon-people"></i>
+                                    <span><?php printf(__('Up to %d people', 'hourly-room-booking'), $room->capacity); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($show_amenities): ?>
+                                <?php if (!empty($amenities)): ?>
+                                    <div class="hrb-room-detail">
+                                        <i class="hrb-icon-amenities"></i>
+                                        <span>
+                                            <?php echo implode(', ', array_slice($amenities, 0, 3)); ?>
+                                            <?php if (count($amenities) > 3): ?>
+                                                <span class="hrb-more-amenities">+<?php echo count($amenities) - 3; ?> <?php _e('more', 'hourly-room-booking'); ?></span>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
 
-                        <?php if (!empty($amenities)): ?>
-                            <div class="hrb-room-detail">
-                                <i class="hrb-icon-amenities"></i>
-                                <span>
-                                    <?php echo implode(', ', array_slice($amenities, 0, 3)); ?>
-                                    <?php if (count($amenities) > 3): ?>
-                                        <span class="hrb-more-amenities">+<?php echo count($amenities) - 3; ?> <?php _e('more', 'hourly-room-booking'); ?></span>
-                                    <?php endif; ?>
-                                </span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
                     <div class="hrb-room-actions">
-                        <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
-                            <?php _e('View Details', 'hourly-room-booking'); ?>
-                        </a>
+                        <?php if ($show_view_button): ?>
+                            <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
+                                <?php _e('View Details', 'hourly-room-booking'); ?>
+                            </a>
+                        <?php endif; ?>
                         <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
                             <?php _e('Book Now', 'hourly-room-booking'); ?>
                         </a>
@@ -539,7 +657,6 @@ class HRB_Ajax_Handler {
             
         } catch (Exception $e) {
             $wpdb->query('ROLLBACK');
-            error_log('HRB Booking Error: ' . $e->getMessage());
             wp_send_json_error('Booking failed: ' . $e->getMessage());
         }
     }
@@ -556,8 +673,8 @@ class HRB_Ajax_Handler {
         $phone = sanitize_text_field($_POST['phone']);
         $type = sanitize_text_field($_POST['type']); // email or sms
         
-        if (empty($email) || empty($phone)) {
-            wp_send_json_error(__('Email and phone are required', 'hourly-room-booking'));
+        if (empty($email)) {
+            wp_send_json_error(__('Email is required', 'hourly-room-booking'));
         }
         
         $notification_manager = HRB_Notification_Manager::getInstance();
@@ -646,8 +763,6 @@ class HRB_Ajax_Handler {
         $prefill_time = isset($_POST['time']) ? sanitize_text_field($_POST['time']) : '';
         $prefill_duration = isset($_POST['duration']) ? sanitize_text_field($_POST['duration']) : '';
 
-        // Debug logging
-        error_log('HRB AJAX: Received pre-fill values - Date: ' . $prefill_date . ', Time: ' . $prefill_time . ', Duration: ' . $prefill_duration);
 
         // Set up variables for the booking form template
         $atts = array(
@@ -974,25 +1089,60 @@ class HRB_Ajax_Handler {
         $start_hour = intval(substr($booking_start_time, 0, 2));
         $end_hour = intval(substr($booking_end_time, 0, 2));
 
+        // Parse end time properly to handle minutes
+        $end_hour = intval(substr($booking_end_time, 0, 2));
+        $end_minute = intval(substr($booking_end_time, 3, 2));
+        $booking_end_minutes = $end_hour * 60 + $end_minute;
+        
+        // Get plugin timezone setting
+        $plugin_timezone = get_option('hrb_timezone', 'Europe/Berlin');
+        
+        // Set timezone for calculations
+        $original_timezone = date_default_timezone_get();
+        date_default_timezone_set($plugin_timezone);
+        
+        // Check if the selected date is today (using plugin timezone)
+        $today = date('Y-m-d');
+        $current_time = date('H:i');
+        $is_today = ($date === $today);
+        
+        
         for ($hour = $start_hour; $hour <= $end_hour; $hour++) {
             // Check both :00 and :30 minute slots
             foreach (['00', '30'] as $minute) {
                 $start_time = sprintf('%02d:%s:00', $hour, $minute);
+                
+                // Check if this time slot has already passed (for today only)
+                $slot_time = sprintf('%02d:%s', $hour, $minute);
+                $is_past_time = $is_today && ($slot_time < $current_time);
+                
+                
                 $end_time_timestamp = strtotime($start_time) + ($duration * 3600);
                 $end_time = date('H:i:s', $end_time_timestamp);
 
                 // Check if booking ends within the allowed time range
                 $end_time_formatted = date('H:i', $end_time_timestamp);
-                $booking_end_hour = intval(substr($booking_end_time, 0, 2));
-                $booking_start_hour = intval(substr($booking_start_time, 0, 2));
+                $end_time_hour = intval(substr($end_time_formatted, 0, 2));
+                $end_time_minute = intval(substr($end_time_formatted, 3, 2));
+                $slot_end_minutes = $end_time_hour * 60 + $end_time_minute;
                 
-                // Check if end time is after booking end time or before booking start time
-                if ($end_time_formatted > $booking_end_time || $start_time < $booking_start_time . ':00') {
+                // Check if slot ends after the configured end time
+                if ($slot_end_minutes > $booking_end_minutes) {
+                    continue;
+                }
+                
+                // Check if slot crosses midnight (invalid)
+                if ($end_time_hour < $hour || ($end_time_hour == $hour && $end_time_minute < intval($minute))) {
                     continue;
                 }
 
                 // Check if this slot is available (including cooldown periods)
                 $is_available = $this->is_slot_available_with_cooldown($room_id, $date, $start_time, $end_time);
+                
+                // If it's a past time slot, mark it as unavailable
+                if ($is_past_time) {
+                    $is_available = false;
+                }
                 
                 $slot_data = array(
                     'start_time' => $start_time,
@@ -1010,6 +1160,9 @@ class HRB_Ajax_Handler {
                 $available_slots[] = $slot_data;
             }
         }
+
+        // Restore original timezone
+        date_default_timezone_set($original_timezone);
 
         return $available_slots;
     }
@@ -1064,10 +1217,6 @@ class HRB_Ajax_Handler {
             $room_id, $date, $end_time, $cooldown_minutes, $end_time
         ));
 
-        // Debug: Log cooldown conflicts
-        if ($cooldown_conflict_after > 0 || $cooldown_conflict_before > 0) {
-            error_log("COOLDOWN CONFLICT - Start: $start_time, After: $cooldown_conflict_after, Before: $cooldown_conflict_before");
-        }
 
         return ($cooldown_conflict_after == 0 && $cooldown_conflict_before == 0);
     }
@@ -1291,6 +1440,7 @@ class HRB_Ajax_Handler {
         $booking_date = sanitize_text_field($_POST['booking_date']);
         $start_time = sanitize_text_field($_POST['start_time']);
         $end_time = sanitize_text_field($_POST['end_time']);
+        $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;
 
         if (empty($booking_date) || empty($start_time) || empty($end_time)) {
             wp_send_json_error(__('Missing required parameters', 'hourly-room-booking'));
@@ -1299,6 +1449,18 @@ class HRB_Ajax_Handler {
         // Use the new stock management system
         $stock_manager = HRB_Extra_Stock_Manager::getInstance();
         $available_extras = $stock_manager->get_available_extras($booking_date, $start_time, $end_time);
+
+        // If we're editing a booking, mark which extras are already selected
+        if ($booking_id > 0) {
+            $extras_manager = HRB_Extras::getInstance();
+            $selected_extras = $extras_manager->get_booking_extras($booking_id);
+            $selected_extra_ids = array_column($selected_extras, 'extra_id');
+            
+            // Add is_selected flag to each extra
+            foreach ($available_extras as &$extra) {
+                $extra['is_selected'] = in_array($extra['id'], $selected_extra_ids);
+            }
+        }
 
         wp_send_json_success(array(
             'extras' => $available_extras,
@@ -1396,8 +1558,6 @@ class HRB_Ajax_Handler {
         // Get settings from POST data
         $settings = isset($_POST['settings']) ? $_POST['settings'] : array();
         
-        // Debug: Log received settings
-        error_log('HRB: Received settings: ' . print_r($settings, true));
         
         if (empty($settings)) {
             wp_send_json_error(__('No settings provided', 'hourly-room-booking'));
@@ -1408,9 +1568,11 @@ class HRB_Ajax_Handler {
         $settings_manager = HRB_Settings::getInstance();
         
         foreach ($settings as $key => $value) {
-            error_log('HRB: Saving setting ' . $key . ' = ' . $value);
             $settings_manager->set($key, $value);
         }
+        
+        // Clear settings cache to ensure fresh data on next load
+        $settings_manager->clear_cache();
         
         wp_send_json_success(__('Settings saved successfully', 'hourly-room-booking'));
     }

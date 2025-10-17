@@ -43,29 +43,7 @@ $price_range = $room_manager->get_room_price_range($room);
     <title><?php echo esc_html($room->name); ?> - <?php bloginfo('name'); ?></title>
     <style>
         /* Room Details Page Styles */
-        :root {
-            --hrb-primary: #6366f1;
-            --hrb-primary-dark: #4f46e5;
-            --hrb-secondary: #8b5cf6;
-            --hrb-accent: #06b6d4;
-            --hrb-success: #10b981;
-            --hrb-warning: #f59e0b;
-            --hrb-error: #ef4444;
-            --hrb-text: #1f2937;
-            --hrb-text-light: #6b7280;
-            --hrb-text-muted: #9ca3af;
-            --hrb-border: #e5e7eb;
-            --hrb-border-light: #f3f4f6;
-            --hrb-background: #ffffff;
-            --hrb-background-light: #f8fafc;
-            --hrb-background-dark: #f1f5f9;
-            --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-            --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-            --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-            --hrb-radius: 8px;
-            --hrb-radius-lg: 12px;
-            --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+       
 
         * {
             margin: 0;

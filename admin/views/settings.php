@@ -74,6 +74,7 @@ class HRB_Settings_Helper {
             'hrb_company_address' => __('Company Address', 'hourly-room-booking'),
             'hrb_company_phone' => __('Company Phone', 'hourly-room-booking'),
             'hrb_company_email' => __('Company Email', 'hourly-room-booking'),
+            'hrb_company_vat_id' => __('VAT ID', 'hourly-room-booking'),
             'hrb_company_logo' => __('Company Logo', 'hourly-room-booking'),
             'hrb_admin_email' => __('Admin Email', 'hourly-room-booking'),
             'hrb_admin_email_notifications' => __('Admin Email Notifications', 'hourly-room-booking'),
@@ -283,6 +284,7 @@ class HRB_Settings_Helper {
             'hrb_company_address' => __('Enter company address', 'hourly-room-booking'),
             'hrb_company_phone' => __('Enter company phone number', 'hourly-room-booking'),
             'hrb_company_email' => __('Enter company email', 'hourly-room-booking'),
+            'hrb_company_vat_id' => __('Enter company VAT ID (Umsatzsteuer ID)', 'hourly-room-booking'),
             'hrb_company_logo' => __('Upload company logo for invoices', 'hourly-room-booking'),
             'hrb_admin_email' => __('Enter admin email', 'hourly-room-booking'),
             'hrb_staff_email' => __('Enter staff email', 'hourly-room-booking'),
@@ -384,10 +386,7 @@ $helper = new HRB_Settings_Helper();
                                     $field_description = $helper->get_setting_description($setting_key);
                                     $field_type = $helper->get_setting_field_type($setting_key);
                                     
-                                    // Debug: Log logo field value
-                                    if ($setting_key === 'hrb_company_logo') {
-                                        error_log('HRB: Logo field value: ' . $field_value);
-                                    }
+                                    
                                     ?>
 
                                     <div class="hrb-setting-field" data-setting="<?php echo esc_attr($setting_key); ?>">
@@ -397,13 +396,16 @@ $helper = new HRB_Settings_Helper();
 
                                         <?php if ($field_type === 'checkbox'): ?>
                                             <div class="hrb-checkbox-wrapper">
-                                                <input type="hidden" name="settings[<?php echo esc_attr($setting_key); ?>]" value="0">
                                                 <input
                                                     type="checkbox"
                                                     id="<?php echo esc_attr($setting_key); ?>"
                                                     name="settings[<?php echo esc_attr($setting_key); ?>]"
                                                     value="1"
-                                                    <?php checked($field_value, 1); ?>
+                                                    <?php 
+                                                    // More robust check for boolean values
+                                                    $is_checked = ($field_value == 1 || $field_value === '1' || $field_value === true);
+                                                    if ($is_checked) echo 'checked="checked"';
+                                                    ?>
                                                 >
                                                 <label for="<?php echo esc_attr($setting_key); ?>" class="hrb-checkbox-label">
                                                     <?php echo esc_html($field_description); ?>
@@ -603,8 +605,6 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Debug: Log settings being saved
-        console.log('Settings being saved:', settings);
         
         // Add all settings to formData
         $.each(settings, function(key, value) {

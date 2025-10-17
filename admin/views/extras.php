@@ -95,7 +95,7 @@ $stats = $extras_manager->get_extras_stats();
                     <th scope="col" class="column-description"><?php _e('Description', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-price"><?php _e('Price', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-stock"><?php _e('Stock', 'hourly-room-booking'); ?></th>
-                    <th scope="col" class="column-availability"><?php _e('Current Availability', 'hourly-room-booking'); ?></th>
+                    <th style="display: none;" scope="col" class="column-availability"><?php _e('Current Availability', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-sort"><?php _e('Sort Order', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-status"><?php _e('Status', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-actions"><?php _e('Actions', 'hourly-room-booking'); ?></th>
@@ -155,7 +155,7 @@ $stats = $extras_manager->get_extras_stats();
                                     <span class="hrb-stock-unlimited"><?php _e('Unlimited', 'hourly-room-booking'); ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="column-availability">
+                            <td class="column-availability" style="display: none;">
                                 <?php
                                 $stock_manager = HRB_Extra_Stock_Manager::getInstance();
                                 $today = date('Y-m-d');
@@ -188,9 +188,11 @@ $stats = $extras_manager->get_extras_stats();
                             </td>
                             <td class="column-actions">
                                 <div class="hrb-actions">
+                                    <?php if (current_user_can('hrb_manage_bookings')): ?>
                                     <button type="button" class="button button-small" onclick="editExtra(<?php echo $extra->id; ?>)" title="<?php _e('Edit Extra', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-edit"></span>
                                     </button>
+                                    <?php endif; ?>
 
                                     <form method="post" style="display: inline;">
                                         <?php wp_nonce_field('hrb_admin_action', '_wpnonce'); ?>
@@ -205,9 +207,11 @@ $stats = $extras_manager->get_extras_stats();
                                         </button>
                                     </form>
 
+                                    <?php if (current_user_can('hrb_manage_bookings')): ?>
                                     <button type="button" class="button button-small hrb-delete-btn" onclick="deleteExtra(<?php echo $extra->id; ?>, '<?php echo esc_js($extra->name); ?>')" title="<?php _e('Delete Extra', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-trash"></span>
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -1240,7 +1244,7 @@ jQuery(document).ready(function($) {
                     nonce: '<?php echo wp_create_nonce('hrb_admin_action'); ?>'
                 }, function(response) {
                     if (response.success) {
-                        console.log('Sort order updated');
+                        // Sort order updated
                     }
                 });
             }

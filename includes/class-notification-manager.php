@@ -87,17 +87,10 @@ class HRB_Notification_Manager {
         // Attach invoice for booking confirmation and payment confirmation
         $attachments = array();
         if (in_array($event, array('booking_confirmation', 'payment_confirmation'))) {
-            error_log('HRB: Attempting to generate invoice for booking ' . $booking->id . ' with event: ' . $event);
             $invoice_path = $this->get_or_generate_invoice($booking->id);
-            error_log('HRB: Invoice path: ' . ($invoice_path ? $invoice_path : 'NULL'));
             if ($invoice_path && file_exists($invoice_path)) {
                 $attachments[] = $invoice_path;
-                error_log('HRB: Invoice attached: ' . $invoice_path);
-            } else {
-                error_log('HRB: Invoice file not found or path is invalid');
             }
-        } else {
-            error_log('HRB: Event is not booking_confirmation or payment_confirmation, it is: ' . $event);
         }
         
         // Send separate admin notifications
@@ -315,18 +308,18 @@ class HRB_Notification_Manager {
             'customer_first_name' => $booking->first_name,
             'booking_reference' => $booking->booking_reference,
             'room_name' => $room->name,
-            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
-            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
-            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'booking_date' => date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time)),
             'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
             'total_amount' => hrb_format_amount($booking->total_amount),
-            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'payment_method' => $this->get_payment_method_label($booking->payment_method),
             'company_name' => $company_name,
             'company_phone' => get_option('hrb_company_phone', ''),
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => ucfirst($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status)
         );
         
         // Now create the full data with template variables replaced
@@ -371,18 +364,18 @@ class HRB_Notification_Manager {
             'customer_phone' => $booking->phone,
             'booking_reference' => $booking->booking_reference,
             'room_name' => $room->name,
-            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
-            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
-            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'booking_date' => date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time)),
             'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
             'total_amount' => hrb_format_amount($booking->total_amount),
-            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'payment_method' => $this->get_payment_method_label($booking->payment_method),
             'company_name' => $company_name,
             'company_phone' => get_option('hrb_company_phone', ''),
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => ucfirst($booking->status),
+            'booking_status' => $this->get_booking_status_label($booking->status),
             'subject' => $template->subject,
             'heading' => $template->heading,
             'message' => $template->message,
@@ -419,17 +412,17 @@ class HRB_Notification_Manager {
                 '{customer_first_name}' => $booking->first_name,
                 '{booking_reference}' => $booking->booking_reference,
                 '{room_name}' => $room->name,
-                '{booking_date}' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
-                '{start_time}' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
-                '{end_time}' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+                '{booking_date}' => date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date)),
+                '{start_time}' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)),
+                '{end_time}' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time)),
                 '{duration}' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
                 '{total_amount}' => hrb_format_amount($booking->total_amount),
-                '{payment_method}' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+                '{payment_method}' => $this->get_payment_method_label($booking->payment_method),
                 '{company_email}' => get_option('hrb_company_email', get_option('admin_email')),
                 '{company_phone}' => get_option('hrb_company_phone', ''),
                 '{booking_url}' => $booking_url,
                 '{cancel_url}' => $booking_url . '&action=cancel',
-                '{booking_status}' => ucfirst($booking->status)
+                '{booking_status}' => $this->get_booking_status_label($booking->status)
             );
         }
         
@@ -450,18 +443,18 @@ class HRB_Notification_Manager {
             'customer_first_name' => $booking->first_name,
             'booking_reference' => $booking->booking_reference,
             'room_name' => $room->name,
-            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
-            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
-            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'booking_date' => date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time)),
             'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
             'total_amount' => hrb_format_amount($booking->total_amount),
-            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'payment_method' => $this->get_payment_method_label($booking->payment_method),
             'company_name' => $company_name,
             'company_phone' => get_option('hrb_company_phone', ''),
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => ucfirst($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status)
         );
         
         switch ($event) {
@@ -523,18 +516,18 @@ class HRB_Notification_Manager {
             'customer_phone' => $booking->phone,
             'booking_reference' => $booking->booking_reference,
             'room_name' => $room->name,
-            'booking_date' => date_i18n(get_option('date_format'), strtotime($booking->booking_date)),
-            'start_time' => date_i18n(get_option('time_format'), strtotime($booking->start_time)),
-            'end_time' => date_i18n(get_option('time_format'), strtotime($booking->end_time)),
+            'booking_date' => date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date)),
+            'start_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)),
+            'end_time' => date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time)),
             'duration' => $booking->total_hours . ' ' . _n('hour', 'hours', $booking->total_hours, 'hourly-room-booking'),
             'total_amount' => hrb_format_amount($booking->total_amount),
-            'payment_method' => $booking->payment_method === 'paypal' ? 'PayPal' : __('On-site payment', 'hourly-room-booking'),
+            'payment_method' => $this->get_payment_method_label($booking->payment_method),
             'company_name' => $company_name,
             'company_phone' => get_option('hrb_company_phone', ''),
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => ucfirst($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status)
         );
         
         switch ($event) {
@@ -1002,6 +995,28 @@ class HRB_Notification_Manager {
         }
         
         return $pdf_path;
+    }
+
+    /**
+     * Get payment method label with translation
+     *
+     * @since 1.0.0
+     * @param string $payment_method Payment method
+     * @return string Translated payment method label
+     */
+    private function get_payment_method_label($payment_method) {
+        return hrb_get_payment_method_label($payment_method);
+    }
+
+    /**
+     * Get booking status label with translation
+     *
+     * @since 1.0.0
+     * @param string $status Booking status
+     * @return string Translated booking status label
+     */
+    private function get_booking_status_label($status) {
+        return hrb_get_booking_status_label($status);
     }
 }
 ?>

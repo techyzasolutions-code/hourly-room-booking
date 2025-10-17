@@ -191,17 +191,21 @@ $month_end = date('Y-m-t');
             <div class="hrb-dashboard-section hrb-quick-actions">
                 <h3><?php _e('Quick Actions', 'hourly-room-booking'); ?></h3>
                 <div class="hrb-action-buttons">
+                    <?php if (current_user_can('hrb_manage_bookings')): ?>
                     <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=add'); ?>"
                        class="button button-primary button-large hrb-action-btn">
                         <span class="dashicons dashicons-plus-alt"></span>
                         <?php _e('New Booking', 'hourly-room-booking'); ?>
                     </a>
+                    <?php endif; ?>
 
+                    <?php if (current_user_can('hrb_manage_rooms')): ?>
                     <a href="<?php echo admin_url('admin.php?page=hrb-rooms&action=add'); ?>"
                        class="button button-secondary button-large hrb-action-btn">
                         <span class="dashicons dashicons-admin-home"></span>
                         <?php _e('Add Room', 'hourly-room-booking'); ?>
                     </a>
+                    <?php endif; ?>
 
                     <a href="<?php echo admin_url('admin.php?page=hrb-calendar'); ?>"
                        class="button button-secondary button-large hrb-action-btn">

@@ -147,10 +147,8 @@ class HRB_Input_Validator {
             }
         }
         
-        // Last name validation
-        if (empty($data['last_name'])) {
-            $errors->add('last_name_required', __('Last name is required', 'hourly-room-booking'));
-        } else {
+        // Last name validation (optional)
+        if (!empty($data['last_name'])) {
             $sanitized['last_name'] = sanitize_text_field($data['last_name']);
             if (strlen($sanitized['last_name']) < 2) {
                 $errors->add('last_name_too_short', __('Last name must be at least 2 characters', 'hourly-room-booking'));
@@ -158,6 +156,8 @@ class HRB_Input_Validator {
             if (strlen($sanitized['last_name']) > 50) {
                 $errors->add('last_name_too_long', __('Last name must be less than 50 characters', 'hourly-room-booking'));
             }
+        } else {
+            $sanitized['last_name'] = '';
         }
         
         // Email validation
@@ -170,14 +170,14 @@ class HRB_Input_Validator {
             }
         }
         
-        // Phone validation
-        if (empty($data['phone'])) {
-            $errors->add('phone_required', __('Phone number is required', 'hourly-room-booking'));
-        } else {
+        // Phone validation (optional)
+        if (!empty($data['phone'])) {
             $sanitized['phone'] = sanitize_text_field($data['phone']);
             if (!$this->is_valid_phone($sanitized['phone'])) {
                 $errors->add('phone_invalid', __('Invalid phone number format', 'hourly-room-booking'));
             }
+        } else {
+            $sanitized['phone'] = '';
         }
         
         // Company validation (optional)

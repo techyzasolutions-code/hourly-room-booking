@@ -47,21 +47,46 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
                             </div>
                         <?php endif; ?>
 
-                        <?php if ($show_price): ?>
-                            <div class="hrb-room-price">
-                                <?php 
-                                $room_manager = HRB_Room_Manager::getInstance();
-                                $price_range = $room_manager->get_room_price_range($room);
-                                ?>
-                                <span class="hrb-price">
-                                    <?php echo $price_range['formatted']; ?>
-                                </span>
-                            </div>
-                        <?php endif; ?>
                     </div>
 
                     <div class="hrb-room-content">
                         <h3 class="hrb-room-title"><?php echo esc_html($room->name); ?></h3>
+
+                        <?php if ($show_price): ?>
+                            <div class="hrb-room-price">
+                                <?php 
+                                $room_manager = HRB_Room_Manager::getInstance();
+                                
+                                // Check if we have filter parameters (from search form)
+                                $filter_duration = isset($_GET['duration']) ? sanitize_text_field($_GET['duration']) : '';
+                                
+                                if (!empty($filter_duration)) {
+                                    // Show specific price for selected duration
+                                    $duration_hours = intval($filter_duration);
+                                    $specific_price = $room_manager->get_room_price_for_duration($room, $duration_hours);
+                                    
+                                    if ($specific_price > 0) {
+                                        $currency_manager = HRB_Currency_Manager::getInstance();
+                                        $formatted_price = hrb_format_amount($specific_price);
+                                        $pricing_label = get_option('hrb_pricing_label', '');
+                                        
+                                        if (!empty($pricing_label)) {
+                                            $formatted_price = $pricing_label . ' ' . $formatted_price;
+                                        }
+                                        
+                                        echo '<span class="hrb-price">' . $formatted_price . '</span>';
+                                        echo '<span class="hrb-price-label">' . sprintf(__('for %d hours', 'hourly-room-booking'), $duration_hours) . '</span>';
+                                    } else {
+                                        echo '<span class="hrb-price">N/A</span>';
+                                    }
+                                } else {
+                                    // Show price range (default)
+                                    $price_range = $room_manager->get_room_price_range($room);
+                                    echo '<span class="hrb-price">' . $price_range['formatted'] . '</span>';
+                                }
+                                ?>
+                            </div>
+                        <?php endif; ?>
 
                         <?php if (!empty($room->description)): ?>
                             <p class="hrb-room-description">
@@ -110,20 +135,7 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 </div>
 
 <style>
-/* Professional Design Variables */
-:root {
-    --hrb-primary: #0073aa;
-    --hrb-secondary: #005a87;
-    --hrb-accent: #0078d4;
-    --hrb-success: #107c10;
-    --hrb-text: #333333;
-    --hrb-text-light: #666666;
-    --hrb-border: #e1e1e1;
-    --hrb-background: #ffffff;
-    --hrb-background-light: #f8f9fa;
-    --hrb-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --hrb-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
+
 
 .hrb-room-list {
     margin: 20px 0;
@@ -147,14 +159,27 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 .hrb-rooms-grid.hrb-columns-3 { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
 .hrb-rooms-grid.hrb-columns-4 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .hrb-rooms-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
         gap: 20px;
     }
     .hrb-room-list {
         padding: 20px;
         margin: 10px;
+    }
+    
+    
+    .hrb-room-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .hrb-btn {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        text-align: center;
     }
 }
 
@@ -202,16 +227,12 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 }
 
 .hrb-room-price {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: var(--hrb-background);
-    color: var(--hrb-text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-align: center;
+    margin: 10px 0 15px 0;
+    padding: 12px 16px;
+    background: var(--hrb-background-light);
     border: 1px solid var(--hrb-border);
-    box-shadow: var(--hrb-shadow);
+    border-radius: 8px;
+    text-align: center;
 }
 
 .hrb-price {
@@ -448,9 +469,9 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
 .hrb-loading-spinner {
     width: 35px;
     height: 35px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--hrb-border);
     border-radius: 50%;
-    border-top-color: #007cba;
+    border-top-color: var(--hrb-primary);
     animation: hrb-spin 1s linear infinite;
     margin: 0 auto 16px;
 }
@@ -464,16 +485,17 @@ $currency_symbol = $settings->get('hrb_currency_symbol', '�');
     to { transform: rotate(360deg); }
 }
 
+
 .hrb-error {
-    color: #dc2626;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    color: var(--hrb-error-dark);
+    background: var(--hrb-error-light);
+    border: 1px solid var(--hrb-error-light);
     padding: 16px;
     border-radius: 6px;
     text-align: center;
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .hrb-modal-content {
         margin: 10px;
         max-width: calc(100% - 20px);
@@ -516,7 +538,6 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
         const externalLink = $(this).data('external-link');
-        console.log('View room clicked:', roomId, 'External link:', externalLink);
 
         // Use external link if available, otherwise show modal
         if (externalLink && externalLink.trim() !== '') {

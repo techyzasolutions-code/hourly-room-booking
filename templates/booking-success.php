@@ -8,6 +8,29 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Set page title using JavaScript since this is a template fragment
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set title based on current language
+    <?php if (get_locale() === 'de_DE'): ?>
+    document.title = 'Buchung bestätigt - <?php echo esc_js(get_bloginfo('name')); ?>';
+    <?php else: ?>
+    document.title = 'Booking Confirmed - <?php echo esc_js(get_bloginfo('name')); ?>';
+    <?php endif; ?>
+});
+
+// Also try setting it immediately and with a timeout
+<?php if (get_locale() === 'de_DE'): ?>
+document.title = 'Buchung bestätigt - <?php echo esc_js(get_bloginfo('name')); ?>';
+setTimeout(function() { document.title = 'Buchung bestätigt - <?php echo esc_js(get_bloginfo('name')); ?>'; }, 100);
+<?php else: ?>
+document.title = 'Booking Confirmed - <?php echo esc_js(get_bloginfo('name')); ?>';
+setTimeout(function() { document.title = 'Booking Confirmed - <?php echo esc_js(get_bloginfo('name')); ?>'; }, 100);
+<?php endif; ?>
+</script>
+<?php
+
 // Handle PayPal return URL parameters
 $paypal_order_id = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
 $paypal_payer_id = isset($_GET['PayerID']) ? sanitize_text_field($_GET['PayerID']) : '';
@@ -447,12 +470,12 @@ if ($booking_ref) {
 
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Date', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html(date('F j, Y', strtotime($booking->booking_date))); ?></span>
+                <span class="hrb-detail-value"><?php echo esc_html(date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date))); ?></span>
             </div>
 
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Time', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html($booking->start_time . ' - ' . $booking->end_time); ?></span>
+                <span class="hrb-detail-value"><?php echo esc_html(date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time))); ?></span>
             </div>
 
             <div class="hrb-detail-row">
@@ -472,7 +495,7 @@ if ($booking_ref) {
 
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Payment Method', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html(ucfirst(str_replace('_', ' ', $booking->payment_method))); ?></span>
+                <span class="hrb-detail-value"><?php echo esc_html($booking->payment_method === 'paypal' ? 'PayPal' : __('On-site Payment', 'hourly-room-booking')); ?></span>
             </div>
 
             <?php

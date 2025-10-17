@@ -804,11 +804,17 @@ class HRB_Payment_Handler {
         $html .= '<tr><th>' . __('Customer', 'hourly-room-booking') . '</th><td>' . esc_html($payment->customer_name) . '</td></tr>';
         $html .= '<tr><th>' . __('Room', 'hourly-room-booking') . '</th><td>' . esc_html($payment->room_name) . '</td></tr>';
         $html .= '<tr><th>' . __('Amount', 'hourly-room-booking') . '</th><td>' . $currency_symbol . number_format($payment->amount, 2) . '</td></tr>';
-        $html .= '<tr><th>' . __('Payment Method', 'hourly-room-booking') . '</th><td>' . ucfirst($payment->payment_method) . '</td></tr>';
-        $html .= '<tr><th>' . __('Status', 'hourly-room-booking') . '</th><td>' . ucfirst($payment->status) . '</td></tr>';
-        $html .= '<tr><th>' . __('Created', 'hourly-room-booking') . '</th><td>' . date('M j, Y g:i A', strtotime($payment->created_at)) . '</td></tr>';
+        // Get admin instance for translation methods
+        $admin = HRB_Admin::getInstance();
+        
+        // Translate payment method using global function
+        $payment_method_text = hrb_get_payment_method_label($payment->payment_method);
+        
+        $html .= '<tr><th>' . __('Payment Method', 'hourly-room-booking') . '</th><td>' . $payment_method_text . '</td></tr>';
+        $html .= '<tr><th>' . __('Status', 'hourly-room-booking') . '</th><td>' . $admin->get_payment_status_badge($payment->status) . '</td></tr>';
+        $html .= '<tr><th>' . __('Created', 'hourly-room-booking') . '</th><td>' . date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($payment->created_at)) . '</td></tr>';
         if ($payment->processed_at) {
-            $html .= '<tr><th>' . __('Processed', 'hourly-room-booking') . '</th><td>' . date('M j, Y g:i A', strtotime($payment->processed_at)) . '</td></tr>';
+            $html .= '<tr><th>' . __('Processed', 'hourly-room-booking') . '</th><td>' . date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($payment->processed_at)) . '</td></tr>';
         }
         $html .= '</table>';
         $html .= '</div>';

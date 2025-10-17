@@ -1369,11 +1369,13 @@ class HRB_Database {
         $start_with_cooldown = date('H:i:s', strtotime($start_time) - ($cooldown_minutes * 60));
         $end_with_cooldown = date('H:i:s', strtotime($end_time) + ($cooldown_minutes * 60));
 
-        $params = array($room_id, $booking_date, $start_with_cooldown, $end_with_cooldown, $start_with_cooldown, $end_with_cooldown);
+        // For cooldown check, we need to check if existing bookings end too close to our start
+        // or if our booking ends too close to existing bookings start
+        $cooldown_params = array($room_id, $booking_date, $start_time, $start_time, $cooldown_minutes, $end_time, $cooldown_minutes, $end_time);
 
         if ($exclude_booking_id) {
             $exclude_sql = ' AND id != %d';
-            $params[] = $exclude_booking_id;
+            $cooldown_params[] = $exclude_booking_id;
         }
 
         // Check for direct overlap (always blocked)
@@ -1403,6 +1405,7 @@ class HRB_Database {
         }
 
         // Check for cooldown conflicts (unless admin overrides)
+        // Cooldown applies: new booking starts too close to existing booking end time
         $cooldown_conflict = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
              WHERE room_id = %d
@@ -1410,12 +1413,16 @@ class HRB_Database {
              AND status NOT IN ('cancelled', 'no_show')
              AND cooldown_override = 0
              AND (
-                 (start_time <= %s AND end_time > %s) OR
-                 (start_time < %s AND end_time >= %s)
+                 -- New booking starts too close to existing booking end (within cooldown period)
+                 (TIME_TO_SEC(%s) >= TIME_TO_SEC(end_time) AND TIME_TO_SEC(%s) < TIME_TO_SEC(end_time) + (%d * 60)) OR
+                 -- New booking ends too close to existing booking start (within cooldown period)
+                 (TIME_TO_SEC(%s) > TIME_TO_SEC(start_time) - (%d * 60) AND TIME_TO_SEC(%s) <= TIME_TO_SEC(start_time))
              )
              $exclude_sql",
-            $params
+            $cooldown_params
         ));
+        
+        
 
         return ($cooldown_conflict > 0);
     }

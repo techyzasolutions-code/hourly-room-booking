@@ -126,11 +126,22 @@ $subtitle = isset($atts['subtitle']) ? $atts['subtitle'] : __('Search and book r
                     $start_hour = intval(substr($booking_start_time, 0, 2));
                     $end_hour = intval(substr($booking_end_time, 0, 2));
                     
-                    // Generate time options based on settings
+                    // Generate time options based on settings (30-minute intervals)
                     for ($hour = $start_hour; $hour <= $end_hour; $hour++) {
+                        // Add :00 option
                         $time_value = sprintf('%02d:00', $hour);
                         $selected = isset($_GET['time']) ? $_GET['time'] : '';
                         echo '<option value="' . esc_attr($time_value) . '" ' . selected($selected, $time_value, false) . '>' . esc_html($time_value) . '</option>';
+                        
+                        // Add :30 option (except for the last hour if it ends exactly on the hour)
+                        $booking_end_hour = intval(substr($booking_end_time, 0, 2));
+                        $booking_end_minute = intval(substr($booking_end_time, 3, 2));
+                        
+                        // Only add :30 if it's not the last hour or if the end time has minutes
+                        if ($hour < $booking_end_hour || ($hour == $booking_end_hour && $booking_end_minute > 0)) {
+                            $time_value = sprintf('%02d:30', $hour);
+                            echo '<option value="' . esc_attr($time_value) . '" ' . selected($selected, $time_value, false) . '>' . esc_html($time_value) . '</option>';
+                        }
                     }
                     ?>
                 </select>

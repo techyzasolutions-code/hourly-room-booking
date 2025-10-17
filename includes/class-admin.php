@@ -46,7 +46,7 @@ class HRB_Admin {
         add_menu_page(
             __('Room Bookings', 'hourly-room-booking'),
             __('Room Bookings', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-dashboard',
             array($this, 'dashboard_page'),
             'dashicons-calendar-alt',
@@ -58,7 +58,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('All Bookings', 'hourly-room-booking'),
             __('All Bookings', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-bookings',
             array($this, 'bookings_page')
         );
@@ -68,7 +68,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Old Bookings', 'hourly-room-booking'),
             __('Old Bookings', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-old-bookings',
             array($this, 'old_bookings_page')
         );
@@ -78,7 +78,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Rooms', 'hourly-room-booking'),
             __('Rooms', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-rooms',
             array($this, 'rooms_page')
         );
@@ -88,7 +88,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Calendar', 'hourly-room-booking'),
             __('Calendar', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_calendar',
             'hrb-calendar',
             array($this, 'calendar_page')
         );
@@ -98,7 +98,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Customers', 'hourly-room-booking'),
             __('Customers', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_customers',
             'hrb-customers',
             array($this, 'customers_page')
         );
@@ -108,7 +108,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Extras', 'hourly-room-booking'),
             __('Extras', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-extras',
             array($this, 'extras_page')
         );
@@ -118,7 +118,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Payments', 'hourly-room-booking'),
             __('Payments', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_payments',
             'hrb-payments',
             array($this, 'payments_page')
         );
@@ -128,7 +128,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Reports', 'hourly-room-booking'),
             __('Reports', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_reports',
             'hrb-reports',
             array($this, 'reports_page')
         );
@@ -138,7 +138,7 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Email Templates', 'hourly-room-booking'),
             __('Email Templates', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_view_bookings',
             'hrb-email-templates',
             array($this, 'render_email_templates_page')
         );
@@ -148,9 +148,19 @@ class HRB_Admin {
             'hrb-dashboard',
             __('Settings', 'hourly-room-booking'),
             __('Settings', 'hourly-room-booking'),
-            'manage_options',
+            'hrb_manage_settings',
             'hrb-settings',
             array($this, 'settings_page')
+        );
+        
+        // Guide submenu
+        add_submenu_page(
+            'hrb-dashboard',
+            __('User Guide', 'hourly-room-booking'),
+            __('User Guide', 'hourly-room-booking'),
+            'hrb_view_bookings',
+            'hrb-guide',
+            array($this, 'guide_page')
         );
     }
     
@@ -234,7 +244,7 @@ class HRB_Admin {
      * Dashboard page
      */
     public function dashboard_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         
         $booking_manager = HRB_Booking_Manager::getInstance();
         $payment_handler = HRB_Payment_Handler::getInstance();
@@ -253,9 +263,14 @@ class HRB_Admin {
      * Bookings page
      */
     public function bookings_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         $booking_manager = HRB_Booking_Manager::getInstance();
         $room_manager = HRB_Room_Manager::getInstance();
+        
+        // Check if user is trying to add or edit a booking but doesn't have permission
+        if (isset($_GET['action']) && in_array($_GET['action'], ['add', 'edit']) && !current_user_can('hrb_manage_bookings')) {
+            wp_die(__('You do not have permission to manage bookings.', 'hourly-room-booking'));
+        }
         
         // Handle actions
         if (isset($_POST['action']) && isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_admin_action')) {
@@ -285,7 +300,7 @@ class HRB_Admin {
      * Old Bookings Page
      */
     public function old_bookings_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         include HRB_PLUGIN_DIR . 'admin/views/old-bookings.php';
     }
     
@@ -293,8 +308,13 @@ class HRB_Admin {
      * Rooms page
      */
     public function rooms_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         $room_manager = HRB_Room_Manager::getInstance();
+        
+        // Check if user is trying to add/edit a room but doesn't have permission
+        if (isset($_GET['action']) && in_array($_GET['action'], ['add', 'edit']) && !current_user_can('hrb_manage_rooms')) {
+            wp_die(__('You do not have permission to manage rooms.', 'hourly-room-booking'));
+        }
         
         // Handle actions
         if (isset($_POST['action']) && isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_admin_action')) {
@@ -312,7 +332,7 @@ class HRB_Admin {
      * Calendar page
      */
     public function calendar_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_calendar');
         $room_manager = HRB_Room_Manager::getInstance();
         $booking_manager = HRB_Booking_Manager::getInstance();
         
@@ -338,7 +358,7 @@ class HRB_Admin {
      * Customers page
      */
     public function customers_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_customers');
         global $wpdb;
         
         // Get customers with booking statistics
@@ -362,7 +382,7 @@ class HRB_Admin {
      * Payments page
      */
     public function payments_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_payments');
         global $wpdb;
         
         // Handle payment actions
@@ -389,7 +409,7 @@ class HRB_Admin {
      * Reports page
      */
     public function reports_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_reports');
         $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d', strtotime('-30 days'));
         $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : date('Y-m-d');
         
@@ -404,7 +424,7 @@ class HRB_Admin {
      * Render email templates page
      */
     public function render_email_templates_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         
         // Handle form submissions
         if (isset($_POST['action']) && wp_verify_nonce($_POST['hrb_nonce'], 'hrb_email_template_action')) {
@@ -480,7 +500,7 @@ class HRB_Admin {
      * Settings page
      */
     public function settings_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_manage_settings');
 
         if (isset($_POST['submit']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_settings')) {
             $this->save_settings();
@@ -496,7 +516,7 @@ class HRB_Admin {
      * Extras management page
      */
     public function extras_page() {
-        $this->check_permissions();
+        $this->check_permissions('hrb_view_bookings');
         $extras_manager = HRB_Extras::getInstance();
 
         // Handle actions
@@ -513,6 +533,12 @@ class HRB_Admin {
      * Handle booking actions
      */
     private function handle_booking_actions() {
+        // Check if user can manage bookings
+        if (!current_user_can('hrb_manage_bookings')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage bookings.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
         $action = sanitize_text_field($_POST['action']);
         $booking_manager = HRB_Booking_Manager::getInstance();
         
@@ -559,6 +585,12 @@ class HRB_Admin {
      * Handle room actions
      */
     private function handle_room_actions() {
+        // Check if user can manage rooms
+        if (!current_user_can('hrb_manage_rooms')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage rooms.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
         $action = sanitize_text_field($_POST['action']);
         $room_manager = HRB_Room_Manager::getInstance();
         
@@ -669,6 +701,12 @@ class HRB_Admin {
      * Handle payment actions
      */
     private function handle_payment_actions() {
+        // Check if user can manage payments
+        if (!current_user_can('hrb_manage_payments')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage payments.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
         $action = sanitize_text_field($_POST['action']);
         $payment_handler = HRB_Payment_Handler::getInstance();
         
@@ -702,6 +740,12 @@ class HRB_Admin {
      * Handle extras actions
      */
     private function handle_extras_actions() {
+        // Check if user can manage bookings (extras are part of booking management)
+        if (!current_user_can('hrb_manage_bookings')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage extras.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
         $action = sanitize_text_field($_POST['action']);
         $extras_manager = HRB_Extras::getInstance();
 
@@ -913,6 +957,14 @@ class HRB_Admin {
                 $this->ajax_export_bookings();
                 break;
                 
+        case 'cleanup_expired_bookings':
+            $this->ajax_cleanup_expired_bookings();
+            break;
+            
+        case 'fix_extra_people_pricing':
+            $this->ajax_fix_extra_people_pricing();
+            break;
+                
             default:
                 wp_send_json_error(__('Invalid action', 'hourly-room-booking'));
         }
@@ -993,8 +1045,8 @@ class HRB_Admin {
                 $booking->end_time,
                 $booking->total_hours,
                 $booking->total_amount,
-                ucfirst($booking->payment_status),
-                ucfirst($booking->status)
+                hrb_get_payment_status_label($booking->payment_status),
+                hrb_get_booking_status_label($booking->status)
             );
         }
         
@@ -1008,15 +1060,26 @@ class HRB_Admin {
      * Add custom user roles
      */
     public static function add_user_roles() {
-        // Add room booking staff role
+        // Remove existing role first to ensure clean update
+        remove_role('hrb_staff');
+        
+        // Add room booking staff role (VIEW-ONLY)
         add_role('hrb_staff', __('Room Booking Staff', 'hourly-room-booking'), array(
             'read' => true,
             'hrb_view_bookings' => true,
-            'hrb_manage_bookings' => true,
+            'hrb_manage_bookings' => false,  // Staff cannot manage bookings
             'hrb_view_calendar' => true,
             'hrb_view_customers' => true,
-            'hrb_view_payments' => true
+            'hrb_view_payments' => true,
+            'hrb_view_reports' => true,
+            'hrb_manage_settings' => false,  // Staff cannot access settings
+            'hrb_manage_rooms' => false,    // Staff cannot manage rooms
+            'hrb_manage_customers' => false, // Staff cannot manage customers
+            'hrb_manage_payments' => false   // Staff cannot manage payments
         ));
+        
+        // Force update existing users with hrb_staff role
+        self::update_existing_staff_capabilities();
         
         // Add capabilities to administrator
         $admin_role = get_role('administrator');
@@ -1031,6 +1094,30 @@ class HRB_Admin {
             $admin_role->add_cap('hrb_manage_payments');
             $admin_role->add_cap('hrb_view_reports');
             $admin_role->add_cap('hrb_manage_settings');
+        }
+    }
+    
+    /**
+     * Update existing staff users with correct capabilities
+     */
+    public static function update_existing_staff_capabilities() {
+        // Get all users with hrb_staff role
+        $staff_users = get_users(array('role' => 'hrb_staff'));
+        
+        foreach ($staff_users as $user) {
+            // Remove old capabilities that might exist
+            $user->remove_cap('hrb_manage_bookings');
+            $user->remove_cap('hrb_manage_rooms');
+            $user->remove_cap('hrb_manage_customers');
+            $user->remove_cap('hrb_manage_payments');
+            $user->remove_cap('hrb_manage_settings');
+            
+            // Ensure they have the correct view-only capabilities
+            $user->add_cap('hrb_view_bookings');
+            $user->add_cap('hrb_view_calendar');
+            $user->add_cap('hrb_view_customers');
+            $user->add_cap('hrb_view_payments');
+            $user->add_cap('hrb_view_reports');
         }
     }
     
@@ -1095,7 +1182,7 @@ class HRB_Admin {
     /**
      * Check user permissions for admin pages
      */
-    private function check_permissions($capability = 'manage_options') {
+    private function check_permissions($capability = 'hrb_view_bookings') {
         if (!current_user_can($capability)) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'hourly-room-booking'));
         }
@@ -1439,6 +1526,31 @@ class HRB_Admin {
     }
 
     /**
+     * Get payment status badge
+     *
+     * @since 1.0.0
+     * @param string $status Payment status to generate badge for
+     * @return string Payment status badge HTML
+     */
+    public function get_payment_status_badge(string $status): string {
+        $badges = [
+            'pending' => ['class' => 'hrb-payment-status-pending', 'text' => __('Pending', 'hourly-room-booking')],
+            'completed' => ['class' => 'hrb-payment-status-completed', 'text' => __('Completed', 'hourly-room-booking')],
+            'failed' => ['class' => 'hrb-payment-status-failed', 'text' => __('Failed', 'hourly-room-booking')],
+            'refunded' => ['class' => 'hrb-payment-status-refunded', 'text' => __('Refunded', 'hourly-room-booking')],
+            'partially_refunded' => ['class' => 'hrb-payment-status-partially_refunded', 'text' => __('Partially Refunded', 'hourly-room-booking')]
+        ];
+
+        $badge = $badges[$status] ?? $badges['pending'];
+
+        return sprintf(
+            '<span class="hrb-payment-status-badge %s">%s</span>',
+            esc_attr($badge['class']),
+            esc_html($badge['text'])
+        );
+    }
+
+    /**
      * AJAX handler for booking chart data
      *
      * @since 1.0.0
@@ -1609,7 +1721,6 @@ class HRB_Admin {
             wp_send_json_success($calendar_events);
 
         } catch (Exception $e) {
-            error_log('HRB Calendar Events Error: ' . $e->getMessage());
             wp_send_json_error('Calendar error: ' . $e->getMessage());
         }
     }
@@ -1637,7 +1748,7 @@ class HRB_Admin {
     public function ajax_get_calendar_stats(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_calendar')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1691,11 +1802,12 @@ class HRB_Admin {
             AND status IN ('confirmed', 'completed')
         ", $month_start, $month_end));
 
+
         wp_send_json_success([
             'today' => intval($today_bookings),
             'week' => intval($week_bookings),
             'month' => intval($month_bookings),
-            'revenue' => number_format($month_revenue, 2)
+            'revenue' => floatval($month_revenue)
         ]);
     }
 
@@ -1763,11 +1875,11 @@ class HRB_Admin {
         $html .= '</div>';
 
         $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Date:', 'hourly-room-booking') . '</strong> ' . date('F j, Y', strtotime($booking->booking_date));
+        $html .= '<strong>' . __('Date:', 'hourly-room-booking') . '</strong> ' . date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date));
         $html .= '</div>';
 
         $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Time:', 'hourly-room-booking') . '</strong> ' . date('H:i', strtotime($booking->start_time)) . ' - ' . date('H:i', strtotime($booking->end_time));
+        $html .= '<strong>' . __('Time:', 'hourly-room-booking') . '</strong> ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time));
         $html .= '</div>';
 
         $html .= '<div class="hrb-detail-row">';
@@ -1775,7 +1887,7 @@ class HRB_Admin {
         $html .= '</div>';
 
         $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Payment Status:', 'hourly-room-booking') . '</strong> ' . ucfirst($booking->payment_status);
+        $html .= '<strong>' . __('Payment Status:', 'hourly-room-booking') . '</strong> ' . $this->get_payment_status_badge($booking->payment_status);
         $html .= '</div>';
 
         $html .= '<div class="hrb-detail-row">';
@@ -1857,7 +1969,7 @@ class HRB_Admin {
 
             $html .= '<div class="hrb-form-row">';
             $html .= '<label for="last_name"><strong>' . __('Last Name:', 'hourly-room-booking') . '</strong></label>';
-            $html .= '<input type="text" id="last_name" name="last_name" value="' . esc_attr($customer->last_name) . '" required>';
+            $html .= '<input type="text" id="last_name" name="last_name" value="' . esc_attr($customer->last_name) . '">';
             $html .= '</div>';
 
             $html .= '<div class="hrb-form-row">';
@@ -1981,8 +2093,8 @@ class HRB_Admin {
         $address = sanitize_textarea_field($_POST['address'] ?? '');
 
         // Validate required fields
-        if (empty($first_name) || empty($last_name) || empty($email)) {
-            wp_send_json_error(__('First name, last name, and email are required', 'hourly-room-booking'));
+        if (empty($first_name) || empty($email)) {
+            wp_send_json_error(__('First name and email are required', 'hourly-room-booking'));
             return;
         }
 
@@ -2187,6 +2299,39 @@ class HRB_Admin {
         } else {
             wp_send_json_error(__('Template not found', 'hourly-room-booking'));
         }
+    }
+
+    /**
+     * Guide page
+     */
+    public function guide_page() {
+        $this->check_permissions('hrb_view_bookings');
+        include HRB_PLUGIN_DIR . 'admin/views/guide.php';
+    }
+    
+    /**
+     * AJAX: Cleanup expired bookings
+     */
+    private function ajax_cleanup_expired_bookings() {
+        $booking_manager = HRB_Booking_Manager::getInstance();
+
+        // Run the cleanup
+        $booking_manager->cleanup_expired_bookings();
+
+        wp_send_json_success(array(
+            'message' => __('Booking cleanup completed successfully', 'hourly-room-booking')
+        ));
+    }
+    
+    private function ajax_fix_extra_people_pricing() {
+        $booking_manager = HRB_Booking_Manager::getInstance();
+
+        // Fix extra people pricing for existing bookings
+        $fixed_count = $booking_manager->fix_extra_people_pricing();
+
+        wp_send_json_success(array(
+            'message' => sprintf(__('Fixed extra people pricing for %d bookings', 'hourly-room-booking'), $fixed_count)
+        ));
     }
 
 }

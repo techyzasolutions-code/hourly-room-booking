@@ -127,7 +127,7 @@ $daily_bookings = $wpdb->get_results($wpdb->prepare("
 $booking_labels = [];
 $booking_data = [];
 foreach ($daily_bookings as $day) {
-    $booking_labels[] = date('D', strtotime($day->date));
+    $booking_labels[] = hrb_get_german_day_abbreviation($day->date);
     $booking_data[] = (int)$day->count;
 }
 
@@ -172,7 +172,12 @@ $analytics_data = [
     'peak_hours' => $peak_hours,
     'booking_labels' => $booking_labels,
     'booking_data' => $booking_data,
-    'status_labels' => ['Confirmed', 'Pending', 'Cancelled', 'Completed'],
+    'status_labels' => [
+        hrb_get_booking_status_label('confirmed'),
+        hrb_get_booking_status_label('pending'),
+        hrb_get_booking_status_label('cancelled'),
+        hrb_get_booking_status_label('completed')
+    ],
     'status_data' => [
         (int)($booking_stats->confirmed_bookings ?? 0),
         (int)($booking_stats->pending_bookings ?? 0),
@@ -196,7 +201,7 @@ $daily_revenue = $wpdb->get_results($wpdb->prepare("
 $revenue_labels = [];
 $revenue_data_values = [];
 foreach ($daily_revenue as $day) {
-    $revenue_labels[] = date('D', strtotime($day->date));
+    $revenue_labels[] = hrb_get_german_day_abbreviation($day->date);
     $revenue_data_values[] = (float)$day->revenue;
 }
 

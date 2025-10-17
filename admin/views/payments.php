@@ -171,7 +171,7 @@ $currency_symbol = hrb_get_currency_symbol();
                                 </a>
                                 <div class="booking-details">
                                     <small><?php echo esc_html($payment->room_name ?? 'N/A'); ?></small><br>
-                                    <small><?php echo date('M j, Y', strtotime($payment->booking_date ?? 'now')); ?></small>
+                                    <small><?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($payment->booking_date ?? 'now')); ?></small>
                                 </div>
                             </td>
                             <td class="column-customer">
@@ -195,26 +195,16 @@ $currency_symbol = hrb_get_currency_symbol();
                             </td>
                             <td class="column-method">
                                 <span class="payment-method payment-method-<?php echo $payment->payment_method; ?>">
-                                    <?php echo ucfirst(str_replace('_', ' ', $payment->payment_method)); ?>
+                                    <?php echo esc_html(hrb_get_payment_method_label($payment->payment_method)); ?>
                                 </span>
                             </td>
                             <td class="column-status">
                                 <span class="hrb-status status-<?php echo $payment->status; ?>">
-                                    <?php
-                                    $status_labels = [
-                                        'completed' => __('Completed', 'hourly-room-booking'),
-                                        'pending' => __('Pending', 'hourly-room-booking'),
-                                        'failed' => __('Failed', 'hourly-room-booking'),
-                                        'cancelled' => __('Cancelled', 'hourly-room-booking'),
-                                        'refunded' => __('Refunded', 'hourly-room-booking'),
-                                        'partially_refunded' => __('Partially Refunded', 'hourly-room-booking'),
-                                    ];
-                                    echo $status_labels[$payment->status] ?? ucfirst($payment->status);
-                                    ?>
+                                    <?php echo esc_html(hrb_get_payment_status_label($payment->status)); ?>
                                 </span>
                             </td>
                             <td class="column-date">
-                                <?php echo date('M j, Y g:i A', strtotime($payment->created_at)); ?>
+                                <?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($payment->created_at)); ?>
                             </td>
                             <td class="column-actions">
                                 <div class="hrb-actions">

@@ -18,8 +18,14 @@ $prefill_date = isset($GLOBALS['prefill_date']) ? $GLOBALS['prefill_date'] : (is
 $prefill_time = isset($GLOBALS['prefill_time']) ? $GLOBALS['prefill_time'] : (isset($_GET['time']) ? sanitize_text_field($_GET['time']) : '');
 $prefill_duration = isset($GLOBALS['prefill_duration']) ? $GLOBALS['prefill_duration'] : (isset($_GET['duration']) ? sanitize_text_field($_GET['duration']) : '');
 
-// Debug logging
-error_log('HRB Template: Using pre-fill values - Date: ' . $prefill_date . ', Time: ' . $prefill_time . ', Duration: ' . $prefill_duration);
+// Set default values if no prefill data is available (direct access to booking form)
+if (empty($prefill_date)) {
+    $prefill_date = date('Y-m-d'); // Today's date
+}
+if (empty($prefill_duration)) {
+    $prefill_duration = '2'; // Default 2 hours
+}
+
 
 if (!$room_id || !$room) {
     echo '<div class="hrb-alert hrb-alert-error">' . __('Room not found or inactive', 'hourly-room-booking') . '</div>';
@@ -57,30 +63,51 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 <style>
     /* Enhanced Professional Booking Form Variables */
     :root {
-        --hrb-primary: #6366f1;
-        --hrb-primary-dark: #4f46e5;
-        --hrb-secondary: #8b5cf6;
-        --hrb-accent: #06b6d4;
-        --hrb-success: #10b981;
-        --hrb-warning: #f59e0b;
-        --hrb-error: #ef4444;
-        --hrb-text: #1f2937;
-        --hrb-text-light: #6b7280;
-        --hrb-text-muted: #9ca3af;
-        --hrb-border: #e5e7eb;
-        --hrb-border-light: #f3f4f6;
-        --hrb-background: #ffffff;
-        --hrb-background-light: #f8fafc;
-        --hrb-background-dark: #f1f5f9;
-        --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-        --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-        --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-        --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-        --hrb-radius: 8px;
-        --hrb-radius-lg: 12px;
-        --hrb-radius-xl: 16px;
-        --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    /* Primary Brand Colors */
+    --hrb-primary: #7a1618;
+    --hrb-primary-dark: #5a1012;
+    --hrb-primary-light: #9a3a3c;
+    --hrb-secondary: #c4622d;
+    --hrb-accent: #7a1618;
+    
+    /* Status Colors */
+    --hrb-success: #10b981;
+    --hrb-success-dark: #059669;
+    --hrb-success-light: #d1fae5;
+    --hrb-warning: #f59e0b;
+    --hrb-warning-light: #fef3c7;
+    --hrb-error: #ef4444;
+    --hrb-error-dark: #dc2626;
+    --hrb-error-light: #fef2f2;
+    
+    /* Text Colors */
+    --hrb-text: #1f2937;
+    --hrb-text-light: #6b7280;
+    --hrb-text-muted: #9ca3af;
+    
+    /* Background Colors */
+    --hrb-background: #ffffff;
+    --hrb-background-light: #f8fafc;
+    --hrb-background-dark: #f1f5f9;
+    
+    /* Border Colors */
+    --hrb-border: #e5e7eb;
+    --hrb-border-light: #f3f4f6;
+    
+    /* Box Shadows */
+    --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    
+    /* Border Radius */
+    --hrb-radius: 8px;
+    --hrb-radius-lg: 12px;
+    --hrb-radius-xl: 16px;
+    
+    /* Transitions */
+    --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
     /* Enhanced Main Container */
     .hrb-booking-form-wrapper {
@@ -2094,7 +2121,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
 
     <div class="hrb-booking-form-wrapper">
-        <form class="hrb-booking-form hrb-form" id="hrb-booking-form-<?php echo esc_attr($room_id); ?>" data-room-id="<?php echo esc_attr($room_id); ?>" data-local-pricing="true">
+        <form class="hrb-booking-form hrb-form" id="hrb-booking-form-<?php echo esc_attr($room_id); ?>" data-room-id="<?php echo esc_attr($room_id); ?>" data-room-name="<?php echo esc_attr($room->name); ?>" data-local-pricing="true">
             <!-- Step Progress Indicator -->
             <div class="hrb-form-steps" style="display: none;">
                 <div class="hrb-step active" data-step="1">
@@ -2224,6 +2251,11 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <label class="hrb-form-label required">
                         <?php _e('Available Time Slots', 'hourly-room-booking'); ?>
                     </label>
+                    <div class="hrb-timezone-notice">
+                        <small style="color: #666; font-style: italic;">
+                            <?php _e('Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben.', 'hourly-room-booking'); ?>
+                        </small>
+                    </div>
                     <div class="hrb-time-slots" id="time-slots-<?php echo $room_id; ?>">
                         <!-- Time slots will be loaded via AJAX -->
                         <div class="hrb-loading-message">
@@ -2335,6 +2367,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             <!-- Step 3: Customer Details -->
             <div class="hrb-form-step-content" data-step="3">
                 <h3 class="hrb-heading-sm"><?php _e('Your Details', 'hourly-room-booking'); ?></h3>
+                
+                <!-- Anonymous Booking Information -->
+                <div class="hrb-static-info" style="margin-bottom: 20px;">
+                    <h4><?php _e('Note on anonymous booking', 'hourly-room-booking'); ?></h4>
+                    <p><?php _e('You can complete this booking anonymously. The "Last Name" field is therefore not a mandatory field – it is sufficient if you enter a synonym or an abbreviation.', 'hourly-room-booking'); ?></p>
+                    <p><?php _e('Please note, however: To successfully complete the booking, an email verification is required. We will send a confirmation code to the email address you provided, which you must enter in the next step.', 'hourly-room-booking'); ?></p>
+                </div>
 
                 <?php
                 // Auto-fill user details for logged-in users using booking-specific meta fields
@@ -2370,7 +2409,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 ?>
 
                 <?php if (is_user_logged_in()): ?>
-                    <div class="hrb-alert hrb-alert-info" style="margin-bottom: 20px;">
+                    <div class="hrb-static-info" style="margin-bottom: 20px;">
                         <strong><?php _e('Welcome back!', 'hourly-room-booking'); ?></strong>
                         <?php _e('Your details have been pre-filled from your account. You can modify them if needed.', 'hourly-room-booking'); ?>
                     </div>
@@ -2392,15 +2431,14 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                     <div class="hrb-col-12">
                         <div class="hrb-form-group">
-                            <label class="hrb-form-label required" for="last-name-<?php echo $room_id; ?>">
+                            <label class="hrb-form-label" for="last-name-<?php echo $room_id; ?>">
                                 <?php _e('Last Name', 'hourly-room-booking'); ?>
                             </label>
                             <input type="text"
                                 class="hrb-form-control"
                                 id="last-name-<?php echo $room_id; ?>"
                                 name="last_name"
-                                value="<?php echo esc_attr($user_last_name); ?>"
-                                required>
+                                value="<?php echo esc_attr($user_last_name); ?>">
                         </div>
                     </div>
                 </div>
@@ -2421,7 +2459,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                     <div class="hrb-col-12">
                         <div class="hrb-form-group">
-                            <label class="hrb-form-label required" for="phone-<?php echo $room_id; ?>">
+                            <label class="hrb-form-label" for="phone-<?php echo $room_id; ?>">
                                 <?php _e('Phone Number', 'hourly-room-booking'); ?>
                             </label>
                             <input type="tel"
@@ -2429,22 +2467,11 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 id="phone-<?php echo $room_id; ?>"
                                 name="phone"
                                 value="<?php echo esc_attr($user_phone); ?>"
-                                required
                                 placeholder="+49 123 456 789">
                         </div>
                     </div>
                 </div>
 
-                <div class="hrb-form-group">
-                    <label class="hrb-form-label" for="company-<?php echo $room_id; ?>">
-                        <?php _e('Company (Optional)', 'hourly-room-booking'); ?>
-                    </label>
-                    <input type="text"
-                        class="hrb-form-control"
-                        id="company-<?php echo $room_id; ?>"
-                        name="company"
-                        value="<?php echo esc_attr($user_company); ?>">
-                </div>
 
                 <!-- Contact Verification Section -->
                 <div class="hrb-verification-container">
@@ -2457,7 +2484,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     $both_enabled = $email_notifications && $sms_notifications;
                     ?>
 
-                    <div class="hrb-alert hrb-alert-info">
+                    <div class="hrb-verification-alert">
                         <strong><?php _e('Verification Required', 'hourly-room-booking'); ?></strong>
                         <?php if ($both_enabled): ?>
                             <?php _e('Please verify your contact information before proceeding. Choose your preferred verification method.', 'hourly-room-booking'); ?>
@@ -2518,6 +2545,16 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                         </div>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Change Email Button -->
+                        <div class="hrb-form-group">
+                            <button type="button" class="hrb-btn hrb-btn-secondary hrb-btn-sm" id="change-email-button">
+                                <?php _e('Change Email', 'hourly-room-booking'); ?>
+                            </button>
+                            <div class="hrb-form-help">
+                                <span><?php _e('Need to use a different email address?', 'hourly-room-booking'); ?></span>
                             </div>
                         </div>
 
@@ -2600,7 +2637,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                 </div>
 
-                <div class="hrb-payment-notice hrb-alert hrb-alert-info">
+                <div class="hrb-payment-notice hrb-info-box hrb-alert-info">
                     <strong><?php _e('Payment Policy:', 'hourly-room-booking'); ?></strong>
                     <ul>
                         <li><?php _e('Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds', 'hourly-room-booking'); ?></li>
@@ -2668,7 +2705,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
                 <div class="hrb-terms-acceptance">
                     <label class="hrb-checkbox-label">
-                        <input type="checkbox" name="accept_terms" required>
+                        <input type="checkbox" name="accept_terms">
                         <span>
                             <?php _e('I accept the', 'hourly-room-booking'); ?>
                             <a href="#" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
@@ -2944,26 +2981,71 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         // Hourly price removed - using 2-4 hour pricing system
         const currencySymbol = '<?php echo esc_js($currency_symbol); ?>';
 
+        // Auto-load time slots if default values are set
+        const defaultDate = '<?php echo esc_js($prefill_date); ?>';
+        const defaultDuration = '<?php echo esc_js($prefill_duration); ?>';
+        
+        if (defaultDate && defaultDuration) {
+            // Load time slots automatically for default values
+            loadTimeSlots(<?php echo $room_id; ?>, defaultDate, defaultDuration);
+        }
+        
+        // Get booking time settings from database
+        const bookingStartTime = '<?php echo esc_js(get_option('hrb_booking_start_time', '08:00')); ?>';
+        const bookingEndTime = '<?php echo esc_js(get_option('hrb_booking_end_time', '20:00')); ?>';
+
         // Auto-load time slots if form is pre-filled from search
         const prefillDate = '<?php echo esc_js($prefill_date); ?>';
         const prefillTime = '<?php echo esc_js($prefill_time); ?>';
         const prefillDuration = '<?php echo esc_js($prefill_duration); ?>';
 
         if (prefillDate && prefillDuration) {
-            // Trigger time slot loading
-            loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration);
-
-            // If time is also pre-filled, select the corresponding time slot
+            // If time is also pre-filled, load time slots with callback
             if (prefillTime) {
-                setTimeout(function() {
-                    const timeSlot = form.find('.hrb-time-slot').filter(function() {
-                        return $(this).find('.hrb-time-slot-time').text().trim() === prefillTime;
-                    });
-                    if (timeSlot.length) {
-                        timeSlot.click();
-                    }
-                }, 1000); // Wait for time slots to load
+                loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration, function() {
+                    // Add a small delay to ensure DOM is fully rendered and scroll events are processed
+                    setTimeout(function() {
+                        // Auto-select the pre-filled time slot after time slots are loaded
+                        const timeSlot = form.find('.hrb-time-slot').filter(function() {
+                            const timeText = $(this).find('.hrb-time-slot-time').text();
+                            const startTime = timeText.split('-')[0].trim();
+                            const isAvailable = $(this).hasClass('available') && !$(this).hasClass('unavailable');
+                            return startTime === prefillTime && isAvailable;
+                        });
+                        
+                        if (timeSlot.length) {
+                            // Directly trigger time slot selection instead of relying on click
+                            const selectedSlot = timeSlot.first();
+                            const startTime = selectedSlot.data('start-time');
+                            const endTime = selectedSlot.data('end-time');
+                            const roomId = <?php echo $room_id; ?>;
+
+                            // Remove previous selection
+                            form.find('.hrb-time-slot').removeClass('selected');
+                            selectedSlot.addClass('selected');
+
+                            // Update hidden fields
+                            $('#start-time-' + roomId).val(startTime);
+                            $('#end-time-' + roomId).val(endTime);
+
+                            // Update booking summary
+                            updateBookingSummary();
+                        }
+                    }, 200); // Small delay to ensure DOM is ready and scroll events are processed
+                });
+            } else {
+                // Trigger time slot loading
+                loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration);
             }
+        }
+
+        // Check initial verification status if email is pre-filled
+        const initialEmail = form.find('input[name="email"]').val();
+        if (initialEmail && initialEmail.trim() !== '') {
+            // Small delay to ensure all elements are loaded
+            setTimeout(function() {
+                updateVerificationContactInfo();
+            }, 500);
         }
 
         // Fallback showMessage function to prevent undefined errors
@@ -3041,18 +3123,8 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                         return false;
                     }
 
-                    if (!lastName.trim()) {
-                        showValidationError('<?php _e('Please enter your last name', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
-
                     if (!email.trim() || !isValidEmail(email)) {
                         showValidationError('<?php _e('Please enter a valid email address', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
-
-                    if (!phone.trim()) {
-                        showValidationError('<?php _e('Please enter your phone number', 'hourly-room-booking'); ?>');
                         return false;
                     }
 
@@ -3069,6 +3141,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     const paymentMethod = form.find('input[name="payment_method"]:checked').val();
                     if (!paymentMethod) {
                         showValidationError('<?php _e('Please select a payment method', 'hourly-room-booking'); ?>');
+                        return false;
+                    }
+                    break;
+                    
+                case 5:
+                    // Validate terms acceptance
+                    const termsAccepted = form.find('input[name="accept_terms"]').is(':checked');
+                    if (!termsAccepted) {
+                        showValidationError('<?php _e('Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen, um fortzufahren.', 'hourly-room-booking'); ?>');
                         return false;
                     }
                     break;
@@ -3152,9 +3233,9 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
 
-        // Handle payment method restriction for long bookings
-        form.find('select[name="duration"]').on('change', function() {
-            const duration = parseInt($(this).val());
+        // Function to apply payment method restriction
+        function applyPaymentMethodRestriction() {
+            const duration = parseInt(form.find('select[name="duration"]').val());
             const onsiteOption = $('#onsite-payment-option');
 
             if (duration >= 4) {
@@ -3163,7 +3244,14 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             } else {
                 onsiteOption.show();
             }
+        }
 
+        // Apply payment method restriction on page load
+        applyPaymentMethodRestriction();
+
+        // Handle payment method restriction for long bookings
+        form.find('select[name="duration"]').on('change', function() {
+            applyPaymentMethodRestriction();
             updateBookingSummary();
         });
 
@@ -3194,10 +3282,26 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             updateBookingSummary();
         });
 
+        // Handle clicking on payment method containers
+        form.on('click', '.hrb-payment-method', function(e) {
+            // Don't trigger if clicking on the radio button itself
+            if (e.target.type === 'radio') {
+                return;
+            }
+
+            const radio = $(this).find('input[type="radio"]');
+            radio.prop('checked', true).trigger('change');
+        });
+
 
         // Handle form submission
         form.on('submit', function(e) {
             e.preventDefault();
+
+            // Validate the final step (terms acceptance)
+            if (!validateStep(5)) {
+                return;
+            }
 
             const paymentMethod = form.find('input[name="payment_method"]:checked').val();
 
@@ -3262,7 +3366,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             $(this).removeClass('hrb-step-clickable');
         });
 
-        function loadTimeSlots(roomId, date, duration) {
+        function loadTimeSlots(roomId, date, duration, callback) {
             const container = $('#time-slots-' + roomId);
 
             if (!date || !duration) {
@@ -3271,6 +3375,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <div class="hrb-loading-text"><?php _e('Please select a date and duration first', 'hourly-room-booking'); ?></div>
                 </div>
             `);
+                if (callback) callback();
                 return;
             }
 
@@ -3297,9 +3402,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     } else {
                         container.html('<div class="hrb-no-slots"><?php _e('No available time slots for this date and duration', 'hourly-room-booking'); ?></div>');
                     }
+                    // Execute callback after time slots are loaded
+                    if (callback) callback();
                 },
                 error: function() {
                     container.html('<div class="hrb-error-message"><?php _e('Error loading time slots. Please try again.', 'hourly-room-booking'); ?></div>');
+                    // Execute callback even on error
+                    if (callback) callback();
                 }
             });
         }
@@ -3360,13 +3469,48 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         function generateTimeSlots(duration) {
             const slots = [];
-            const startHour = 8;
-            const endHour = 20;
             const durationHours = parseInt(duration);
-
-            for (let hour = startHour; hour <= endHour - durationHours; hour++) {
-                const startTime = String(hour).padStart(2, '0') + ':00';
-                const endTime = String(hour + durationHours).padStart(2, '0') + ':00';
+            
+            // Parse start and end times from settings
+            const startHour = parseInt(bookingStartTime.split(':')[0]);
+            const startMinute = parseInt(bookingStartTime.split(':')[1]);
+            const endHour = parseInt(bookingEndTime.split(':')[0]);
+            const endMinute = parseInt(bookingEndTime.split(':')[1]);
+            
+            // Convert to minutes for easier calculation
+            const startTimeMinutes = startHour * 60 + startMinute;
+            const endTimeMinutes = endHour * 60 + endMinute;
+            const durationMinutes = durationHours * 60;
+            
+            // Generate time slots in 30-minute intervals
+            for (let timeMinutes = startTimeMinutes; timeMinutes <= endTimeMinutes - durationMinutes; timeMinutes += 30) {
+                const startHourSlot = Math.floor(timeMinutes / 60);
+                const startMinuteSlot = timeMinutes % 60;
+                const endTimeMinutesSlot = timeMinutes + durationMinutes;
+                const endHourSlot = Math.floor(endTimeMinutesSlot / 60);
+                const endMinuteSlot = endTimeMinutesSlot % 60;
+                
+                // Check if the slot exceeds the end time (handle day overflow)
+                let endHourDisplay = endHourSlot;
+                let slotExceedsEndTime = false;
+                
+                if (endHourSlot >= 24) {
+                    // Slot crosses midnight - check if it's within the same day
+                    endHourDisplay = endHourSlot - 24;
+                    // If the slot ends after midnight, it exceeds the end time
+                    slotExceedsEndTime = true;
+                } else {
+                    // Check if slot ends after the configured end time
+                    slotExceedsEndTime = endTimeMinutesSlot > endTimeMinutes;
+                }
+                
+                // Skip this slot if it exceeds the end time
+                if (slotExceedsEndTime) {
+                    continue;
+                }
+                
+                const startTime = String(startHourSlot).padStart(2, '0') + ':' + String(startMinuteSlot).padStart(2, '0');
+                const endTime = String(endHourDisplay).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
                 const display = startTime + ' - ' + endTime;
 
                 // Calculate price based on duration
@@ -3392,8 +3536,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             const extraPeople = parseInt(form.find('input[name="extra_people"]').val()) || 0;
             const selectedExtras = form.find('input[name="extras[]"]:checked');
 
-            $('#review-date').text(formData.booking_date);
-            $('#review-time').text(formData.start_time + ' - ' + formData.end_time);
+            // Format date to German format (d.m.Y)
+            const dateParts = formData.booking_date.split('-');
+            const formattedDate = dateParts[2] + '.' + dateParts[1] + '.' + dateParts[0];
+            $('#review-date').text(formattedDate);
+            
+            // Format time to 24-hour format (H:i)
+            const startTime = formData.start_time.substring(0, 5); // Remove seconds
+            const endTime = formData.end_time.substring(0, 5); // Remove seconds
+            $('#review-time').text(startTime + ' - ' + endTime);
             $('#review-duration').text(formData.duration + ' <?php _e('hours', 'hourly-room-booking'); ?>');
             $('#review-customer-name').text(formData.first_name + ' ' + formData.last_name);
             $('#review-email').text(formData.email);
@@ -3435,13 +3586,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handlePayPalPayment() {
-            console.log('Processing PayPal payment...');
 
             // Get form data
             const formData = getFormData();
 
             // Validate required fields before creating PayPal order
-            if (!formData.first_name || !formData.last_name || !formData.email || !formData.phone) {
+            if (!formData.first_name || !formData.email) {
                 showValidationError('Please fill in all required customer details before proceeding with payment.');
                 return;
             }
@@ -3498,7 +3648,6 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 last_name: form.find('input[name="last_name"]').val(),
                 email: form.find('input[name="email"]').val(),
                 phone: form.find('input[name="phone"]').val(),
-                company: form.find('input[name="company"]').val()
             };
 
             // Get selected extras
@@ -3652,7 +3801,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                         ${extra.image_url ? `<img src="${extra.image_url}" alt="${extra.name}">` : '⭐'}
                                     </div>
                                     <div class="hrb-extra-details">
-                                        <div class="hrb-extra-title">${extra.name}${stockInfo}</div>
+                                        <div class="hrb-extra-title">${extra.name}</div>
                                     </div>
                                     <div class="hrb-extra-price">+${window.HRB.utils.formatPrice(extra.price)}</div>
                                 </div>
@@ -3789,6 +3938,10 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             // Calculate subtotal
             const subtotal = basePrice + extrasPrice + additionalPeoplePrice;
 
+            // Calculate VAT (19% in Germany)
+            const taxRate = <?php echo floatval(get_option('hrb_tax_rate', 19)); ?>;
+            const taxAmount = subtotal * (taxRate / 100);
+
             // Calculate PayPal fee only if PayPal is explicitly selected
             let paypalFee = 0;
             if (paymentMethod && paymentMethod === 'paypal') {
@@ -3796,7 +3949,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             }
 
             // Calculate total
-            const total = subtotal + paypalFee;
+            const total = subtotal + taxAmount + paypalFee;
 
             // Build summary HTML
             let summaryHtml = `
@@ -3823,6 +3976,22 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     summaryHtml += `<div class="hrb-summary-item hrb-summary-extra">${detail}</div>`;
                 });
             }
+
+            // Add subtotal line
+            summaryHtml += `
+                <div class="hrb-summary-item hrb-summary-subtotal">
+                    <span><strong>Zwischensumme</strong></span>
+                    <span><strong>${window.HRB.utils.formatPrice(subtotal)}</strong></span>
+                </div>
+            `;
+
+            // Add VAT line
+            summaryHtml += `
+                <div class="hrb-summary-item hrb-summary-vat">
+                    <span>zzgl. ${taxRate}% MwSt.</span>
+                    <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
+                </div>
+            `;
 
             if (paypalFee > 0 && paymentMethod === 'paypal') {
                 summaryHtml += `
@@ -3863,6 +4032,10 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         // Update verification displays when email/phone changes
         form.find('input[name="email"], input[name="phone"]').on('input', function() {
+            // If email is being changed, reset verification state
+            if ($(this).attr('name') === 'email') {
+                resetVerificationState();
+            }
             updateVerificationContactInfo();
         });
 
@@ -3891,6 +4064,24 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             }
         });
 
+        // Change Email button handler
+        $('#change-email-button').on('click', function() {
+            // Scroll to the email field in the customer details section
+            const emailField = form.find('input[name="email"]');
+            if (emailField.length) {
+                // Scroll to the email field with smooth animation
+                $('html, body').animate({
+                    scrollTop: emailField.offset().top - 100
+                }, 500);
+                
+                // Focus on the email field after a short delay
+                setTimeout(function() {
+                    emailField.focus();
+                    emailField.select(); // Select all text for easy replacement
+                }, 600);
+            }
+        });
+
         function updateVerificationContactInfo() {
             const email = form.find('input[name="email"]').val();
             const phone = form.find('input[name="phone"]').val();
@@ -3902,19 +4093,32 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 checkVerificationStatus(email);
             } else {
                 // Reset verification form to default state for invalid/empty email
-                $('.hrb-alert-success').remove();
-                $('.hrb-alert.hrb-alert-info').show();
-                $('.hrb-verification-section').show();
-                $('#send-verification-code').show();
-                $('.hrb-verification-code-section').hide();
-                $('.hrb-resend-section').hide();
-                verificationCompleted = false;
-                verificationVerified = false;
-
-                // Reset button to verification state
-                $('#details-and-verification-next').prop('disabled', true);
-                $('#details-and-verification-next').text('<?php _e('Verify & Continue', 'hourly-room-booking'); ?>');
+                resetVerificationState();
             }
+        }
+
+        function resetVerificationState() {
+            // Clear any existing verification messages
+            $('.hrb-alert-success').remove();
+            $('.hrb-alert.hrb-alert-info').show();
+            $('.hrb-verification-section').show();
+            $('#send-verification-code').show();
+            $('.hrb-verification-code-section').hide();
+            $('.hrb-resend-section').hide();
+            
+            // Clear verification code input
+            $('#verification-code-<?php echo $room_id; ?>').val('');
+            
+            // Reset verification state variables
+            verificationCompleted = false;
+            verificationVerified = false;
+
+            // Reset button to verification state
+            $('#details-and-verification-next').prop('disabled', true);
+            $('#details-and-verification-next').text('<?php _e('Verify & Continue', 'hourly-room-booking'); ?>');
+            
+            // Re-enable send verification button
+            $('#send-verification-code').prop('disabled', false);
         }
 
         function checkVerificationStatus(email) {
@@ -3932,12 +4136,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 success: function(response) {
                     if (response.success && response.data.is_verified) {
                         // User is already verified - hide entire verification form
-                        $('.hrb-alert.hrb-alert-info').hide();
+                        $('.hrb-verification-alert').hide();
                         $('.hrb-verification-section').hide();
 
                         // Remove any existing success messages and add new one
                         $('.hrb-alert-success').remove();
-                        $('.hrb-alert.hrb-alert-info').after('<div class="hrb-alert hrb-alert-success"><strong>✅ ' + response.data.message + '</strong></div>');
+                        $('.hrb-verification-container').prepend('<div class="hrb-alert hrb-alert-success"><strong>✅ ' + response.data.message + '</strong></div>');
 
                         // Mark as verified and enable next step button
                         verificationCompleted = true;

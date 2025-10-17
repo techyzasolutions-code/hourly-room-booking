@@ -10,6 +10,11 @@ if (!defined('ABSPATH')) {
 
 $show_filters = isset($atts['show_filters']) ? $atts['show_filters'] === 'true' : true;
 $rooms_per_page = isset($atts['rooms_per_page']) ? intval($atts['rooms_per_page']) : 6;
+$columns = isset($atts['columns']) ? intval($atts['columns']) : 3;
+$show_price = isset($atts['show_price']) ? $atts['show_price'] === 'true' : true;
+$show_capacity = isset($atts['show_capacity']) ? $atts['show_capacity'] === 'true' : true;
+$show_amenities = isset($atts['show_amenities']) ? $atts['show_amenities'] === 'true' : true;
+$show_view_button = isset($atts['show_view_button']) ? $atts['show_view_button'] === 'true' : true;
 
 // Get settings for currency
 $settings = HRB_Settings::getInstance();
@@ -43,10 +48,14 @@ if ($filter_date || $filter_time || $filter_duration) {
             $booking_start_time = get_option('hrb_booking_start_time', '08:00');
             $booking_end_time = get_option('hrb_booking_end_time', '20:00');
             
-            $start_time = $filter_time ?: $booking_start_time . ':00';
-            $end_time = $filter_time ? date('H:i:s', strtotime($filter_time . ' +' . ($filter_duration ?: 2) . ' hours')) : $booking_end_time . ':00';
+            // Use filter time as start time, or default to booking start time
+            $start_time = $filter_time ? $filter_time . ':00' : $booking_start_time . ':00';
+            // Calculate end time by adding duration to start time
+            $end_time = date('H:i:s', strtotime($start_time . ' +' . ($filter_duration ?: 2) . ' hours'));
             
             $is_available = $room_manager->is_room_available($room->id, $filter_date, $start_time, $end_time);
+            
+            
             if (!$is_available) {
                 return false;
             }
@@ -58,34 +67,7 @@ if ($filter_date || $filter_time || $filter_duration) {
 
 <style>
 /* Enhanced Search Form Styles */
-:root {
-    --hrb-primary: #6366f1;
-    --hrb-primary-dark: #4f46e5;
-    --hrb-secondary: #8b5cf6;
-    --hrb-accent: #06b6d4;
-    --hrb-success: #10b981;
-    --hrb-warning: #f59e0b;
-    --hrb-error: #ef4444;
-    --hrb-text: #1f2937;
-    --hrb-text-light: #6b7280;
-    --hrb-text-muted: #9ca3af;
-    --hrb-border: #e5e7eb;
-    --hrb-border-light: #f3f4f6;
-    --hrb-background: #ffffff;
-    --hrb-background-light: #f8fafc;
-    --hrb-background-dark: #f1f5f9;
-    --hrb-gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    --hrb-gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-    --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-    --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-    --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-    --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-    --hrb-shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
-    --hrb-radius: 8px;
-    --hrb-radius-lg: 12px;
-    --hrb-radius-xl: 16px;
-    --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+
 
 .hrb-search-container {
     max-width: 1200px;
@@ -230,7 +212,7 @@ if ($filter_date || $filter_time || $filter_duration) {
     box-shadow: var(--hrb-shadow-md);
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .hrb-search-row {
         grid-template-columns: 1fr;
         gap: 15px;
@@ -243,6 +225,7 @@ if ($filter_date || $filter_time || $filter_duration) {
     .hrb-search-buttons {
         flex-direction: column;
         gap: 10px;
+        width: 100%;
     }
     
     .hrb-search-buttons .hrb-clear-filters {
@@ -250,6 +233,17 @@ if ($filter_date || $filter_time || $filter_duration) {
         padding: 16px 20px;
         width: 100%;
         min-width: auto;
+        text-align: center;
+    }
+    
+    .hrb-search-col {
+        width: 100%;
+    }
+    
+    .hrb-search-col .hrb-btn {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 16px;
     }
 }
 </style>
@@ -283,10 +277,21 @@ if ($filter_date || $filter_time || $filter_duration) {
                         $start_hour = intval(substr($booking_start_time, 0, 2));
                         $end_hour = intval(substr($booking_end_time, 0, 2));
                         
-                        // Generate time options based on settings
+                        // Generate time options based on settings (30-minute intervals)
                         for ($hour = $start_hour; $hour <= $end_hour; $hour++) {
+                            // Add :00 option
                             $time_value = sprintf('%02d:00', $hour);
                             echo '<option value="' . esc_attr($time_value) . '" ' . selected($filter_time, $time_value, false) . '>' . esc_html($time_value) . '</option>';
+                            
+                            // Add :30 option (except for the last hour if it ends exactly on the hour)
+                            $booking_end_hour = intval(substr($booking_end_time, 0, 2));
+                            $booking_end_minute = intval(substr($booking_end_time, 3, 2));
+                            
+                            // Only add :30 if it's not the last hour or if the end time has minutes
+                            if ($hour < $booking_end_hour || ($hour == $booking_end_hour && $booking_end_minute > 0)) {
+                                $time_value = sprintf('%02d:30', $hour);
+                                echo '<option value="' . esc_attr($time_value) . '" ' . selected($filter_time, $time_value, false) . '>' . esc_html($time_value) . '</option>';
+                            }
                         }
                         ?>
                     </select>
@@ -296,12 +301,12 @@ if ($filter_date || $filter_time || $filter_duration) {
                     <label for="hrb-search-duration"><?php _e('Duration', 'hourly-room-booking'); ?></label>
                     <select id="hrb-search-duration" name="duration">
                         <option value=""><?php _e('Any duration', 'hourly-room-booking'); ?></option>
-                        <option value="2" <?php selected($filter_duration, '2'); ?>>2 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="3" <?php selected($filter_duration, '3'); ?>>3 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="4" <?php selected($filter_duration, '4'); ?>>4 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="5" <?php selected($filter_duration, '5'); ?>>5 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="6" <?php selected($filter_duration, '6'); ?>>6 <?php _e('hours', 'hourly-room-booking'); ?></option>
-                        <option value="8" <?php selected($filter_duration, '8'); ?>>8+ <?php _e('hours', 'hourly-room-booking'); ?></option>
+                        <?php for ($hours = 2; $hours <= 12; $hours++): ?>
+                            <?php $selected = ($filter_duration == $hours) ? 'selected' : ''; ?>
+                            <option value="<?php echo $hours; ?>" <?php echo $selected; ?>>
+                                <?php echo $hours; ?> <?php _e('hours', 'hourly-room-booking'); ?>
+                            </option>
+                        <?php endfor; ?>
                     </select>
                 </div>
 
@@ -347,7 +352,7 @@ if ($filter_date || $filter_time || $filter_duration) {
                     <p><?php _e('No rooms available matching your criteria.', 'hourly-room-booking'); ?></p>
                 </div>
             <?php else: ?>
-                <div class="hrb-rooms-grid">
+                <div class="hrb-rooms-grid hrb-columns-<?php echo esc_attr($columns); ?>">
                     <?php
                     $displayed_rooms = array_slice($rooms, 0, $rooms_per_page);
                     foreach ($displayed_rooms as $room):
@@ -365,19 +370,22 @@ if ($filter_date || $filter_time || $filter_duration) {
                                     </div>
                                 <?php endif; ?>
 
-                                <div class="hrb-room-price">
-                                    <?php 
-                                    $room_manager = HRB_Room_Manager::getInstance();
-                                    $price_range = $room_manager->get_room_price_range($room);
-                                    ?>
-                                    <span class="hrb-price">
-                                        <?php echo $price_range['formatted']; ?>
-                                    </span>
-                                </div>
                             </div>
 
                             <div class="hrb-room-content">
                                 <h3 class="hrb-room-title"><?php echo esc_html($room->name); ?></h3>
+
+                                <?php if ($show_price): ?>
+                                    <div class="hrb-room-price" data-room-id="<?php echo $room->id; ?>">
+                                        <?php 
+                                        $room_manager = HRB_Room_Manager::getInstance();
+                                        
+                                        // Always show price range by default, JavaScript will update it when filters are applied
+                                        $price_range = $room_manager->get_room_price_range($room);
+                                        echo '<span class="hrb-price">' . $price_range['formatted'] . '</span>';
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
 
                                 <?php if (!empty($room->description)): ?>
                                     <p class="hrb-room-description">
@@ -386,31 +394,37 @@ if ($filter_date || $filter_time || $filter_duration) {
                                 <?php endif; ?>
 
                                 <div class="hrb-room-details">
-                                    <div class="hrb-room-detail">
-                                        <i class="hrb-icon-people"></i>
-                                        <span><?php printf(__('Up to %d people', 'hourly-room-booking'), $room->capacity); ?></span>
-                                    </div>
-
-                                    <?php
-                                    $amenities = $room_manager->get_room_amenities($room->id);
-                                    if (!empty($amenities)):
-                                    ?>
+                                    <?php if ($show_capacity): ?>
                                         <div class="hrb-room-detail">
-                                            <i class="hrb-icon-amenities"></i>
-                                            <span>
-                                                <?php echo implode(', ', array_slice($amenities, 0, 3)); ?>
-                                                <?php if (count($amenities) > 3): ?>
-                                                    <span class="hrb-more-amenities">+<?php echo count($amenities) - 3; ?> <?php _e('more', 'hourly-room-booking'); ?></span>
-                                                <?php endif; ?>
-                                            </span>
+                                            <i class="hrb-icon-people"></i>
+                                            <span><?php printf(__('Up to %d people', 'hourly-room-booking'), $room->capacity); ?></span>
                                         </div>
+                                    <?php endif; ?>
+
+                                    <?php if ($show_amenities): ?>
+                                        <?php
+                                        $amenities = $room_manager->get_room_amenities($room->id);
+                                        if (!empty($amenities)):
+                                        ?>
+                                            <div class="hrb-room-detail">
+                                                <i class="hrb-icon-amenities"></i>
+                                                <span>
+                                                    <?php echo implode(', ', array_slice($amenities, 0, 3)); ?>
+                                                    <?php if (count($amenities) > 3): ?>
+                                                        <span class="hrb-more-amenities">+<?php echo count($amenities) - 3; ?> <?php _e('more', 'hourly-room-booking'); ?></span>
+                                                    <?php endif; ?>
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
 
                                 <div class="hrb-room-actions">
-                                    <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
-                                        <?php _e('View Details', 'hourly-room-booking'); ?>
-                                    </a>
+                                    <?php if ($show_view_button): ?>
+                                        <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
+                                            <?php _e('View Details', 'hourly-room-booking'); ?>
+                                        </a>
+                                    <?php endif; ?>
                                     <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
                                         <?php _e('Book Now', 'hourly-room-booking'); ?>
                                     </a>
@@ -436,14 +450,9 @@ if ($filter_date || $filter_time || $filter_duration) {
 </div>
 
 <style>
-.hrb-search-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
 
 .hrb-search-form {
-    background: #f8f9fa;
+    background: var(--hrb-background-light);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -460,14 +469,14 @@ if ($filter_date || $filter_time || $filter_duration) {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #333;
+    color: var(--hrb-text);
 }
 
 .hrb-search-col input,
 .hrb-search-col select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--hrb-border);
     border-radius: 4px;
     font-size: 14px;
 }
@@ -478,17 +487,17 @@ if ($filter_date || $filter_time || $filter_duration) {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--hrb-border);
 }
 
 .hrb-results-title {
     margin: 0;
-    color: #333;
+    color: var(--hrb-text);
 }
 
 .hrb-results-controls select {
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--hrb-border);
     border-radius: 4px;
 }
 
@@ -499,20 +508,28 @@ if ($filter_date || $filter_time || $filter_duration) {
     margin-bottom: 30px;
 }
 
-/* Professional Design Variables */
-:root {
-    --hrb-primary: #0073aa;
-    --hrb-secondary: #005a87;
-    --hrb-accent: #0078d4;
-    --hrb-success: #107c10;
-    --hrb-text: #333333;
-    --hrb-text-light: #666666;
-    --hrb-border: #e1e1e1;
-    --hrb-background: #ffffff;
-    --hrb-background-light: #f8f9fa;
-    --hrb-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --hrb-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+.hrb-rooms-grid.hrb-columns-1 { grid-template-columns: 1fr !important; }
+.hrb-rooms-grid.hrb-columns-2 { grid-template-columns: repeat(2, 1fr) !important; }
+.hrb-rooms-grid.hrb-columns-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.hrb-rooms-grid.hrb-columns-4 { grid-template-columns: repeat(4, 1fr) !important; }
+
+/* Responsive column adjustments */
+@media screen and (max-width: 1200px) {
+    .hrb-rooms-grid.hrb-columns-4 { grid-template-columns: repeat(3, 1fr) !important; }
 }
+
+@media screen and (max-width: 900px) {
+    .hrb-rooms-grid.hrb-columns-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    .hrb-rooms-grid.hrb-columns-3 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media screen and (max-width: 600px) {
+    .hrb-rooms-grid.hrb-columns-4 { grid-template-columns: 1fr !important; }
+    .hrb-rooms-grid.hrb-columns-3 { grid-template-columns: 1fr !important; }
+    .hrb-rooms-grid.hrb-columns-2 { grid-template-columns: 1fr !important; }
+}
+
+/* CSS Variables are defined in frontend.css */
 
 .hrb-room-card {
     background: var(--hrb-background);
@@ -558,16 +575,12 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-room-price {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: var(--hrb-background);
-    color: var(--hrb-text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-align: center;
+    margin: 10px 0 15px 0;
+    padding: 12px 16px;
+    background: var(--hrb-background-light);
     border: 1px solid var(--hrb-border);
-    box-shadow: var(--hrb-shadow);
+    border-radius: 8px;
+    text-align: center;
 }
 
 .hrb-price {
@@ -695,8 +708,8 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-modal-content {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--hrb-background);
+    border: 1px solid var(--hrb-border);
     border-radius: 8px;
     width: 100%;
     max-width: 800px;
@@ -718,7 +731,7 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-modal-header {
-    background: #f8f9fa;
+    background: var(--hrb-background-light);
     padding: 20px 24px;
     border-bottom: 1px solid #e5e7eb;
     display: flex;
@@ -728,16 +741,16 @@ if ($filter_date || $filter_time || $filter_duration) {
 
 .hrb-modal-header h3 {
     margin: 0;
-    color: #1f2937;
+    color: var(--hrb-text);
     font-size: 20px;
     font-weight: 600;
 }
 
 .hrb-modal-close {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--hrb-background);
+    border: 1px solid var(--hrb-border);
     font-size: 18px;
-    color: #1f2937;
+    color: var(--hrb-text);
     cursor: pointer;
     width: 30px;
     height: 30px;
@@ -749,15 +762,15 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-modal-close:hover {
-    background: #f8f9fa;
-    border-color: #007cba;
+    background: var(--hrb-background-light);
+    border-color: var(--hrb-primary);
 }
 
 .hrb-modal-body {
     padding: 24px;
     max-height: calc(90vh - 80px);
     overflow-y: auto;
-    background: #ffffff;
+    background: var(--hrb-background);
 }
 
 .hrb-modal-body::-webkit-scrollbar {
@@ -765,7 +778,7 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-modal-body::-webkit-scrollbar-track {
-    background: #f8f9fa;
+    background: var(--hrb-background-light);
     border-radius: 3px;
 }
 
@@ -787,9 +800,9 @@ if ($filter_date || $filter_time || $filter_duration) {
 .hrb-loading-spinner {
     width: 35px;
     height: 35px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--hrb-border);
     border-radius: 50%;
-    border-top-color: #007cba;
+    border-top-color: var(--hrb-primary);
     animation: hrb-spin 1s linear infinite;
     margin: 0 auto 16px;
 }
@@ -800,10 +813,10 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-error {
-    background: #fef2f2;
-    color: #dc2626;
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
     padding: 12px 16px;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--hrb-error-light);
     border-radius: 6px;
     text-align: center;
 }
@@ -846,13 +859,13 @@ if ($filter_date || $filter_time || $filter_duration) {
 
 .hrb-room-description {
     margin: 0 0 15px 0;
-    color: #666;
+    color: var(--hrb-text-light);
     line-height: 1.4;
 }
 
 .hrb-room-meta {
     margin-bottom: 15px;
-    color: #555;
+    color: var(--hrb-text-light);
     font-size: 14px;
 }
 
@@ -878,29 +891,29 @@ if ($filter_date || $filter_time || $filter_duration) {
 }
 
 .hrb-btn-primary {
-    background: #0073aa;
+    background: var(--hrb-primary);
     color: white;
 }
 
 .hrb-btn-primary:hover {
-    background: #005a87;
+    background: var(--hrb-primary-dark);
 }
 
 .hrb-btn-secondary {
-    background: #f8f9fa;
-    color: #0073aa;
-    border: 1px solid #0073aa;
+    background: var(--hrb-background-light);
+    color: var(--hrb-primary);
+    border: 1px solid var(--hrb-primary);
 }
 
 .hrb-btn-secondary:hover {
-    background: #0073aa;
+    background: var(--hrb-primary);
     color: white;
 }
 
 .hrb-no-results {
     text-align: center;
     padding: 60px 20px;
-    color: #666;
+    color: var(--hrb-text-light);
 }
 
 /* Icons */
@@ -908,9 +921,15 @@ if ($filter_date || $filter_time || $filter_duration) {
 .hrb-icon-people:before { content: "👥"; }
 .hrb-icon-amenities:before { content: "⭐"; }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 480px) {
     .hrb-search-row {
         grid-template-columns: 1fr;
+    }
+    .hrb-search-form{
+        padding: 20px;
+    }
+    .hrb-search-container{
+        padding: 15px;
     }
 
     .hrb-results-header {
@@ -919,8 +938,21 @@ if ($filter_date || $filter_time || $filter_duration) {
         align-items: stretch;
     }
 
+    /* Only force single column on very small screens (phones) */
     .hrb-rooms-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+    }
+    
+    .hrb-room-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .hrb-btn {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        text-align: center;
     }
 }
 </style>
@@ -973,6 +1005,63 @@ jQuery(document).ready(function($) {
         filterRooms();
     });
 
+    // Handle duration change to update prices
+    $('#hrb-search-duration').on('change', function() {
+        updateRoomPrices();
+    });
+
+    // Function to update room prices based on selected duration
+    function updateRoomPrices() {
+        const duration = $('#hrb-search-duration').val();
+        
+        if (duration) {
+            // Get all room price elements
+            $('.hrb-room-price').each(function() {
+                const roomId = $(this).data('room-id');
+                const $priceElement = $(this).find('.hrb-price');
+                
+                // Make AJAX call to get specific price for this room and duration
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'hrb_get_room_price_for_duration',
+                        room_id: roomId,
+                        duration: duration,
+                        nonce: '<?php echo wp_create_nonce('hrb_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $priceElement.text(response.data.formatted_price);
+                        }
+                    }
+                });
+            });
+        } else {
+            // Reset to price range when no duration selected
+            $('.hrb-room-price').each(function() {
+                const roomId = $(this).data('room-id');
+                const $priceElement = $(this).find('.hrb-price');
+                
+                // Make AJAX call to get price range for this room
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'hrb_get_room_price_range',
+                        room_id: roomId,
+                        nonce: '<?php echo wp_create_nonce('hrb_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $priceElement.text(response.data.formatted_price);
+                        }
+                    }
+                });
+            });
+        }
+    }
+
     // Handle sort change
     $('#hrb-sort-rooms').on('change', function() {
         sortRooms($(this).val());
@@ -982,7 +1071,6 @@ jQuery(document).ready(function($) {
     $(document).on('click', '.hrb-book-room', function(e) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
-        console.log('Book room clicked:', roomId);
 
         // Show booking form in modal (same as room-list.php)
         showBookingModal(roomId);
@@ -993,7 +1081,6 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
         const externalLink = $(this).data('external-link');
-        console.log('View room clicked:', roomId, 'External link:', externalLink);
 
         // Use external link if available, otherwise use default room detail page
         if (externalLink && externalLink.trim() !== '') {
@@ -1016,7 +1103,6 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         const roomId = $(this).data('room-id');
         if (roomId) {
-            console.log('Book This Room clicked from modal:', roomId);
             // Close the room details modal first
             $('.hrb-modal-overlay').remove();
             // Open booking modal
@@ -1031,7 +1117,6 @@ jQuery(document).ready(function($) {
             e.preventDefault();
             const roomId = $(this).data('room-id');
             if (roomId) {
-                console.log('Book button clicked from modal:', roomId);
                 // Close any existing modal first
                 $('.hrb-modal-overlay').remove();
                 // Open booking modal
@@ -1057,8 +1142,7 @@ jQuery(document).ready(function($) {
 
         // Calculate start and end times from time and duration
         let startTime = formData.time || '09:00';
-        let endTime = startTime;
-
+        
         // Default to 2 hours if no duration specified (minimum booking requirement)
         const duration = formData.duration || '2';
         
@@ -1069,9 +1153,10 @@ jQuery(document).ready(function($) {
             startTime = startTime + ':00';
         }
         
-        const startHour = parseInt(startTime.split(':')[0]);
-        const endHour = startHour + parseInt(duration);
-        endTime = endHour.toString().padStart(2, '0') + ':00';
+        // Calculate end time by adding duration to start time
+        const startTimestamp = new Date('1970-01-01T' + startTime + 'Z').getTime();
+        const endTimestamp = startTimestamp + (parseInt(duration) * 60 * 60 * 1000);
+        const endTime = new Date(endTimestamp).toISOString().substr(11, 8);
         
 
         // Make AJAX call to filter rooms based on availability
@@ -1083,6 +1168,7 @@ jQuery(document).ready(function($) {
                 date: formData.date,
                 start_time: startTime,
                 end_time: endTime,
+                duration: formData.duration,
                 min_capacity: 1,
                 max_price: 999999,
                 nonce: '<?php echo wp_create_nonce('hrb_nonce'); ?>'
@@ -1093,7 +1179,7 @@ jQuery(document).ready(function($) {
                     // Generate HTML from room data
                     let roomsHtml = '';
                     if (response.data.length > 0) {
-                        roomsHtml = '<div class="hrb-rooms-grid hrb-columns-2">';
+                        roomsHtml = '<div class="hrb-rooms-grid hrb-columns-<?php echo esc_attr($columns); ?>">';
                         response.data.forEach(function(room) {
                             roomsHtml += generateRoomCardHtml(room);
                         });
@@ -1104,6 +1190,11 @@ jQuery(document).ready(function($) {
 
                     $('#hrb-rooms-container').html(roomsHtml);
                     $('.hrb-results-title').text('Available Rooms (' + response.data.length + ')');
+                    
+                    // Update prices based on current duration selection
+                    setTimeout(function() {
+                        updateRoomPrices();
+                    }, 100);
                 } else {
                     // Fallback to showing all rooms
                     showAllRooms();
@@ -1123,6 +1214,9 @@ jQuery(document).ready(function($) {
         const allRooms = $('.hrb-room-card');
         allRooms.show();
         $('.hrb-results-title').text('Available Rooms (' + allRooms.length + ')');
+        
+        // Update prices based on current duration selection
+        updateRoomPrices();
     }
 
     function generateRoomCardHtml(room) {
@@ -1131,8 +1225,30 @@ jQuery(document).ready(function($) {
             ? '<img src="' + room.images[0] + '" alt="' + room.name + '">'
             : '<div class="hrb-room-placeholder"><i class="hrb-icon-room"></i></div>';
 
-        // Generate amenities section if available
+        // Generate price section if show_price is true
+        let priceHtml = '';
+        <?php if ($show_price): ?>
+        priceHtml = `
+            <div class="hrb-room-price" data-room-id="${room.id}">
+                <span class="hrb-price">${room.formatted_price}</span>
+            </div>
+        `;
+        <?php endif; ?>
+
+        // Generate capacity section if show_capacity is true
+        let capacityHtml = '';
+        <?php if ($show_capacity): ?>
+        capacityHtml = `
+            <div class="hrb-room-detail">
+                <i class="hrb-icon-people"></i>
+                <span>Up to ${room.capacity} people</span>
+            </div>
+        `;
+        <?php endif; ?>
+
+        // Generate amenities section if show_amenities is true
         let amenitiesHtml = '';
+        <?php if ($show_amenities): ?>
         if (room.amenities && Array.isArray(room.amenities) && room.amenities.length > 0) {
             const displayAmenities = room.amenities.slice(0, 3);
             let amenitiesText = displayAmenities.join(', ');
@@ -1146,6 +1262,17 @@ jQuery(document).ready(function($) {
                 </div>
             `;
         }
+        <?php endif; ?>
+
+        // Generate view button section if show_view_button is true
+        let viewButtonHtml = '';
+        <?php if ($show_view_button): ?>
+        viewButtonHtml = `
+            <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="${room.id}" data-external-link="${room.external_link || ''}">
+                ${hrbTranslations.viewDetails}
+            </a>
+        `;
+        <?php endif; ?>
 
         // Description with word limit like room-list
         const description = room.description ? room.description.split(' ').slice(0, 20).join(' ') : '';
@@ -1155,24 +1282,17 @@ jQuery(document).ready(function($) {
             <div class="hrb-room-card">
                 <div class="hrb-room-image">
                     ${imageHtml}
-                    <div class="hrb-room-price">
-                        <span class="hrb-price">${room.formatted_price}</span>
-                    </div>
                 </div>
                 <div class="hrb-room-content">
                     <h3 class="hrb-room-title">${room.name}</h3>
+                    ${priceHtml}
                     ${descriptionHtml}
                     <div class="hrb-room-details">
-                        <div class="hrb-room-detail">
-                            <i class="hrb-icon-people"></i>
-                            <span>Up to ${room.capacity} people</span>
-                        </div>
+                        ${capacityHtml}
                         ${amenitiesHtml}
                     </div>
                     <div class="hrb-room-actions">
-                        <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="${room.id}" data-external-link="${room.external_link || ''}">
-                            ${hrbTranslations.viewDetails}
-                        </a>
+                        ${viewButtonHtml}
                         <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="${room.id}">
                             ${hrbTranslations.bookNow}
                         </a>
@@ -1191,7 +1311,6 @@ jQuery(document).ready(function($) {
                 sortRoomsInContainer(altContainer, sortBy);
                 return;
             }
-            console.log('Sort container not found');
             return;
         }
 
@@ -1201,7 +1320,6 @@ jQuery(document).ready(function($) {
     function sortRoomsInContainer(container, sortBy) {
         const rooms = container.find('.hrb-room-card').detach();
         if (rooms.length === 0) {
-            console.log('No room cards found to sort');
             return;
         }
 
@@ -1256,12 +1374,7 @@ jQuery(document).ready(function($) {
         const perPage = parseInt(loadMoreBtn.data('per-page')) || 6;
         const nextPage = currentPage + 1;
 
-        console.log('Loading more rooms...', {
-            currentPage,
-            nextPage,
-            totalRooms,
-            perPage
-        });
+        // Load more rooms
 
         // Calculate if there are more rooms to load
         const loadedRooms = currentPage * perPage;
@@ -1282,12 +1395,23 @@ jQuery(document).ready(function($) {
                 action: 'hrb_load_more_rooms',
                 page: nextPage,
                 per_page: perPage,
+                duration: $('#hrb-search-duration').val(),
+                columns: <?php echo $columns; ?>,
+                show_price: <?php echo $show_price ? 'true' : 'false'; ?>,
+                show_capacity: <?php echo $show_capacity ? 'true' : 'false'; ?>,
+                show_amenities: <?php echo $show_amenities ? 'true' : 'false'; ?>,
+                show_view_button: <?php echo $show_view_button ? 'true' : 'false'; ?>,
                 nonce: '<?php echo wp_create_nonce('hrb_nonce'); ?>'
             },
             success: function(response) {
                 if (response.success && response.data.rooms_html) {
                     // Append new rooms to the grid
                     $('.hrb-rooms-grid').append(response.data.rooms_html);
+
+                    // Update prices for the newly loaded rooms
+                    setTimeout(function() {
+                        updateRoomPrices();
+                    }, 100);
 
                     // Update button state
                     loadMoreBtn.data('page', nextPage);
@@ -1299,7 +1423,6 @@ jQuery(document).ready(function($) {
                         loadMoreBtn.text('<?php _e('No More Rooms', 'hourly-room-booking'); ?>').prop('disabled', true);
                     }
 
-                    console.log('Loaded more rooms successfully');
                 } else {
                     console.error('Failed to load more rooms:', response.data);
                     loadMoreBtn.text(originalText).prop('disabled', false);
@@ -1318,11 +1441,7 @@ jQuery(document).ready(function($) {
         const searchTime = $('#hrb-search-time').val();
         const searchDuration = $('#hrb-search-duration').val();
         
-        console.log('Pre-fill values:', {
-            date: searchDate,
-            time: searchTime,
-            duration: searchDuration
-        });
+        // Pre-fill values
         
         // Create modal overlay
         const modalHtml = `
@@ -1357,7 +1476,6 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     $('#hrb-booking-modal .hrb-modal-body').html(response.data.html);
-                    console.log('Booking form loaded with pre-fill values');
                 } else {
                     $('#hrb-booking-modal .hrb-modal-body').html('<p class="hrb-error">' + response.data + '</p>');
                 }

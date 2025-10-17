@@ -22,12 +22,14 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
             <h1><?php _e('Calendar View', 'hourly-room-booking'); ?></h1>
             <p class="description"><?php _e('View and manage all room bookings in a visual calendar format.', 'hourly-room-booking'); ?></p>
         </div>
+        <?php if (current_user_can('hrb_manage_bookings')): ?>
         <div class="hrb-page-actions">
             <button type="button" class="button button-primary" onclick="location.href='<?php echo admin_url('admin.php?page=hrb-bookings&action=add'); ?>'">
                 <span class="dashicons dashicons-plus-alt"></span>
                 <?php _e('Add New Booking', 'hourly-room-booking'); ?>
             </button>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Calendar Controls -->
@@ -350,6 +352,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    flex-direction: column;
 }
 
 .hrb-stat-card::before {
@@ -426,7 +429,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-modal-header {
     padding: 24px 30px;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    /* background: linear-gradient(135deg, #ef4444, #dc2626); */
     color: white;
     display: flex;
     justify-content: space-between;
@@ -440,17 +443,18 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .hrb-modal-close {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 18px;
-    color: white;
+    color: #6b7280;
+    background: white;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
 }
 
 .hrb-modal-close:hover {
@@ -513,7 +517,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 10;
-    background: inherit !important;
+    /* background: inherit !important; */
     color: white !important;
 }
 
@@ -642,9 +646,14 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     }
 }
 
+.fc-event-no_show {
+    background: #8a8c8f;
+    color: #383d41;
+}
 .fc-event-confirmed {
     background: linear-gradient(135deg, #10b981, #059669);
 }
+
 
 .fc-event-pending {
     background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -717,6 +726,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 <!-- FullCalendar CSS & JS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/de.global.min.js"></script>
 
 <script>
 let calendar;
@@ -732,10 +742,15 @@ function initializeCalendar() {
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
+        locale: 'de',
+        dayHeaderFormat: { weekday: 'long' },
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: ''
+        },
+        buttonText: {
+            today: '<?php _e('Today', 'hourly-room-booking'); ?>'
         },
         height: 'auto',
         events: function(info, successCallback, failureCallback) {
@@ -800,6 +815,9 @@ function fetchCalendarEvents(start, end, successCallback, failureCallback) {
 function filterByRoom(roomId) {
     currentRoomFilter = parseInt(roomId);
     calendar.refetchEvents();
+    
+    // Update stats with new room filter
+    loadCalendarStats();
 
     // Update URL
     const url = new URL(window.location);
@@ -865,7 +883,13 @@ function loadCalendarStats() {
                 document.getElementById('stats-week').textContent = stats.week || 0;
                 document.getElementById('stats-month').textContent = stats.month || 0;
                 document.getElementById('stats-revenue').textContent = '<?php echo hrb_get_currency_symbol(); ?>' + (stats.revenue || 0).toFixed(2);
+            } else {
+                console.error('Calendar stats error:', response.data);
             }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX error:', error);
+            console.error('Response:', xhr.responseText);
         }
     });
 }

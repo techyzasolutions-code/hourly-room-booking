@@ -260,6 +260,11 @@ class HRB_Settings {
             'type' => 'email',
             'sanitize' => 'sanitize_email'
         ],
+        'hrb_company_vat_id' => [
+            'default' => '',
+            'type' => 'string',
+            'sanitize' => 'sanitize_text_field'
+        ],
         'hrb_company_logo' => [
             'default' => '',
             'type' => 'string',
@@ -844,6 +849,9 @@ class HRB_Settings {
         // Update cache
         if ($result) {
             $this->settings_cache[$key] = $sanitized_value;
+        } else {
+            // If update failed, clear cache to force fresh retrieval
+            unset($this->settings_cache[$key]);
         }
 
         return $result;
@@ -1080,6 +1088,7 @@ class HRB_Settings {
                     'hrb_company_address',
                     'hrb_company_phone',
                     'hrb_company_email',
+                    'hrb_company_vat_id',
                     'hrb_company_logo',
                     'hrb_admin_email',
                     'hrb_admin_email_notifications',

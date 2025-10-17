@@ -524,10 +524,10 @@
             
             if (summary.length === 0) return;
 
-            let html = '<div class="hrb-summary-title">Booking Summary</div>';
+            let html = '<div class="hrb-summary-title">Buchungsübersicht</div>';
 
             html += `<div class="hrb-summary-item">
-                <span class="hrb-summary-label">Base Price</span>
+                <span class="hrb-summary-label">${this.strings.base_price || 'Base Price'}</span>
                 <span class="hrb-summary-value">${this.formatPrice(pricing.base_price)}</span>
             </div>`;
 
@@ -546,20 +546,31 @@
                 </div>`;
             }
 
-            // Remove tax line completely - not needed for current requirements
-            // Remove subtotal line - go directly to total
+            // Add subtotal line
+            html += `<div class="hrb-summary-item hrb-summary-subtotal">
+                <span class="hrb-summary-label"><strong>Zwischensumme</strong></span>
+                <span class="hrb-summary-value"><strong>${this.formatPrice(pricing.subtotal)}</strong></span>
+            </div>`;
+
+            // Add VAT line
+            if (pricing.tax_amount > 0) {
+                html += `<div class="hrb-summary-item hrb-summary-vat">
+                    <span class="hrb-summary-label">zzgl. ${pricing.tax_rate}% MwSt.</span>
+                    <span class="hrb-summary-value">${this.formatPrice(pricing.tax_amount)}</span>
+                </div>`;
+            }
 
             // Only show PayPal fee if PayPal payment method is selected
             const paymentMethod = form.find('input[name="payment_method"]:checked').val();
             if (pricing.paypal_fee > 0 && paymentMethod === 'paypal') {
                 html += `<div class="hrb-summary-item">
-                    <span class="hrb-summary-label">PayPal Fee (3%)</span>
+                    <span class="hrb-summary-label">${this.strings.paypal_fee || 'PayPal Fee (3%)'}</span>
                     <span class="hrb-summary-value">${this.formatPrice(pricing.paypal_fee)}</span>
                 </div>`;
             }
 
             html += `<div class="hrb-summary-item hrb-summary-total">
-                <span class="hrb-summary-label"><strong>Total</strong></span>
+                <span class="hrb-summary-label"><strong>${this.strings.total || 'Total'}</strong></span>
                 <span class="hrb-summary-value"><strong>${this.formatPrice(pricing.total_amount)}</strong></span>
             </div>`;
 

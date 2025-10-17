@@ -91,6 +91,7 @@ if ($filter_status !== 'all') {
                 <tr>
                     <th scope="col" class="column-image"><?php _e('Image', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-name"><?php _e('Room Name', 'hourly-room-booking'); ?></th>
+                    <th scope="col" class="column-id"><?php _e('Room ID', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-capacity"><?php _e('Capacity', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-price"><?php _e('Hourly Price', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-amenities"><?php _e('Amenities', 'hourly-room-booking'); ?></th>
@@ -101,7 +102,7 @@ if ($filter_status !== 'all') {
             <tbody id="sortable-rooms">
                 <?php if (empty($rooms)): ?>
                     <tr>
-                        <td colspan="7" class="hrb-no-data">
+                        <td colspan="8" class="hrb-no-data">
                             <div class="hrb-empty-state">
                                 <span class="dashicons dashicons-admin-multisite"></span>
                                 <h3><?php _e('No rooms found', 'hourly-room-booking'); ?></h3>
@@ -142,6 +143,13 @@ if ($filter_status !== 'all') {
                                     <div class="room-description"><?php echo wp_trim_words(esc_html($room->description), 10); ?></div>
                                 <?php endif; ?>
                             </td>
+                            <td class="column-id">
+                                <div class="hrb-room-id-display">
+                                    <span class="hrb-room-id-value" onclick="copyRoomIdToClipboard('<?php echo $room->id; ?>')" title="<?php _e('Click to copy', 'hourly-room-booking'); ?>">
+                                        <?php echo $room->id; ?>
+                                    </span>
+                                </div>
+                            </td>
                             <td class="column-capacity">
                                 <span class="capacity-badge"><?php echo esc_html($room->capacity); ?> <?php _e('people', 'hourly-room-booking'); ?></span>
                             </td>
@@ -162,7 +170,7 @@ if ($filter_status !== 'all') {
                                         echo '<span class="amenity-tag">' . esc_html($amenity) . '</span>';
                                     }
                                     if (count($amenities) > 3) {
-                                        echo '<span class="amenity-tag more">+' . (count($amenities) - 3) . ' more</span>';
+                                        echo '<span class="amenity-tag more">+' . (count($amenities) - 3) . ' ' . __('more', 'hourly-room-booking') . '</span>';
                                     }
                                     echo '</div>';
                                 } else {
@@ -177,6 +185,7 @@ if ($filter_status !== 'all') {
                             </td>
                             <td class="column-actions">
                                 <div class="hrb-actions">
+                                    <?php if (current_user_can('hrb_manage_rooms')): ?>
                                     <button type="button" class="button button-small" onclick="editRoom(<?php echo esc_js($room->id); ?>)" title="<?php _e('Edit Room', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-edit"></span>
                                     </button>
@@ -197,6 +206,7 @@ if ($filter_status !== 'all') {
                                     <button type="button" class="button button-small hrb-delete-btn" onclick="deleteRoom(<?php echo esc_js($room->id); ?>, '<?php echo esc_js($room->name); ?>')" title="<?php _e('Delete Room', 'hourly-room-booking'); ?>">
                                         <span class="dashicons dashicons-trash"></span>
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -760,6 +770,65 @@ if ($filter_status !== 'all') {
     color: white;
 }
 
+/* Room ID Display Styles */
+.hrb-room-id-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hrb-room-id-value {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #374151;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #d1d5db;
+    user-select: all;
+    min-width: 40px;
+    text-align: center;
+}
+
+.hrb-room-id-value:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.column-id {
+    width: 80px;
+    text-align: center;
+}
+
+/* Animation for copy notifications */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 .hrb-empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -993,10 +1062,10 @@ if ($filter_status !== 'all') {
 
 <script>
 function showAddRoomModal() {
-    document.getElementById('modal-title').textContent = 'Add New Room';
+    document.getElementById('modal-title').textContent = '<?php _e('Add New Room', 'hourly-room-booking'); ?>';
     document.getElementById('form-action').value = 'create_room';
     document.getElementById('form-room-id').value = '';
-    document.getElementById('submit-button').textContent = 'Add Room';
+    document.getElementById('submit-button').textContent = '<?php _e('Add Room', 'hourly-room-booking'); ?>';
 
     // Reset form
     document.getElementById('room-form').reset();
@@ -1009,10 +1078,10 @@ function showAddRoomModal() {
 }
 
 function editRoom(roomId) {
-    document.getElementById('modal-title').textContent = 'Edit Room';
+    document.getElementById('modal-title').textContent = '<?php _e('Edit Room', 'hourly-room-booking'); ?>';
     document.getElementById('form-action').value = 'update_room';
     document.getElementById('form-room-id').value = roomId;
-    document.getElementById('submit-button').textContent = 'Update Room';
+    document.getElementById('submit-button').textContent = '<?php _e('Update Room', 'hourly-room-booking'); ?>';
 
     // Fetch room data via AJAX
     jQuery.ajax({
@@ -1060,9 +1129,9 @@ function closeRoomModal() {
 }
 
 function deleteRoom(roomId, roomName) {
-    const message = 'Are you sure you want to permanently delete this room?\n\n' +
-                   'Room: ' + roomName + '\n\n' +
-                   'This action cannot be undone!';
+    const message = '<?php _e('Are you sure you want to permanently delete this room?', 'hourly-room-booking'); ?>\n\n' +
+                   '<?php _e('Room:', 'hourly-room-booking'); ?> ' + roomName + '\n\n' +
+                   '<?php _e('This action cannot be undone!', 'hourly-room-booking'); ?>';
 
     if (confirm(message)) {
         const roomIdField = document.getElementById('delete-room-id');
@@ -1168,4 +1237,109 @@ document.getElementById('room-modal').addEventListener('click', function(e) {
         closeRoomModal();
     }
 });
+
+// Function to copy Room ID to clipboard
+function copyRoomIdToClipboard(roomId) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // Use modern clipboard API
+        navigator.clipboard.writeText(roomId).then(function() {
+            showCopySuccess(roomId);
+        }).catch(function(err) {
+            fallbackCopyTextToClipboard(roomId);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyTextToClipboard(roomId);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccess(text);
+        } else {
+            showCopyError();
+        }
+    } catch (err) {
+        showCopyError();
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopySuccess(roomId) {
+    // Create temporary success message
+    const successMsg = document.createElement('div');
+    successMsg.innerHTML = '<?php _e('Room ID', 'hourly-room-booking'); ?> ' + roomId + ' <?php _e('copied to clipboard!', 'hourly-room-booking'); ?>';
+    successMsg.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10001;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(successMsg);
+    
+    setTimeout(function() {
+        successMsg.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(function() {
+            if (document.body.contains(successMsg)) {
+                document.body.removeChild(successMsg);
+            }
+        }, 300);
+    }, 3000);
+}
+
+function showCopyError() {
+    // Create temporary error message
+    const errorMsg = document.createElement('div');
+    errorMsg.innerHTML = '<?php _e('Failed to copy. Please select and copy manually.', 'hourly-room-booking'); ?>';
+    errorMsg.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ef4444;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10001;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(errorMsg);
+    
+    setTimeout(function() {
+        errorMsg.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(function() {
+            if (document.body.contains(errorMsg)) {
+                document.body.removeChild(errorMsg);
+            }
+        }, 300);
+    }, 4000);
+}
 </script>

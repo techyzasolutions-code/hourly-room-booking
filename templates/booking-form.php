@@ -18,8 +18,14 @@ $prefill_date = isset($GLOBALS['prefill_date']) ? $GLOBALS['prefill_date'] : (is
 $prefill_time = isset($GLOBALS['prefill_time']) ? $GLOBALS['prefill_time'] : (isset($_GET['time']) ? sanitize_text_field($_GET['time']) : '');
 $prefill_duration = isset($GLOBALS['prefill_duration']) ? $GLOBALS['prefill_duration'] : (isset($_GET['duration']) ? sanitize_text_field($_GET['duration']) : '');
 
-// Debug logging
-error_log('HRB Template: Using pre-fill values - Date: ' . $prefill_date . ', Time: ' . $prefill_time . ', Duration: ' . $prefill_duration);
+// Set default values if no prefill data is available (direct access to booking form)
+if (empty($prefill_date)) {
+    $prefill_date = date('Y-m-d'); // Today's date
+}
+if (empty($prefill_duration)) {
+    $prefill_duration = '2'; // Default 2 hours
+}
+
 
 if (!$room_id || !$room) {
     echo '<div class="hrb-alert hrb-alert-error">' . __('Room not found or inactive', 'hourly-room-booking') . '</div>';
@@ -55,2036 +61,1107 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 ?>
 
 <style>
-    /* Enhanced Professional Booking Form Variables */
-    :root {
-        --hrb-primary: #6366f1;
-        --hrb-primary-dark: #4f46e5;
-        --hrb-secondary: #8b5cf6;
-        --hrb-accent: #06b6d4;
-        --hrb-success: #10b981;
-        --hrb-warning: #f59e0b;
-        --hrb-error: #ef4444;
-        --hrb-text: #1f2937;
-        --hrb-text-light: #6b7280;
-        --hrb-text-muted: #9ca3af;
-        --hrb-border: #e5e7eb;
-        --hrb-border-light: #f3f4f6;
-        --hrb-background: #ffffff;
-        --hrb-background-light: #f8fafc;
-        --hrb-background-dark: #f1f5f9;
-        --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-        --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-        --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-        --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-        --hrb-radius: 8px;
-        --hrb-radius-lg: 12px;
-        --hrb-radius-xl: 16px;
-        --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+  /* Enhanced Professional Booking Form Variables */
 
-    /* Enhanced Main Container */
+
+/* Main Container */
+.hrb-booking-form-wrapper {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border-radius: var(--hrb-radius-xl);
+    padding: 0;
+    margin: 40px 0;
+    box-shadow: var(--hrb-shadow-xl);
+    border: 1px solid var(--hrb-border-light);
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(10px);
+    animation: slideInUp 0.6s ease-out;
+}
+
+.hrb-booking-form {
+    padding: 40px;
+    position: relative;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Room Info Header */
+.hrb-room-info {
+    background: linear-gradient(135deg, var(--hrb-primary) 0%, var(--hrb-secondary) 100%);
+    color: white;
+    padding: 40px;
+    margin: -40px -40px 40px -40px;
+    border-radius: var(--hrb-radius-xl) var(--hrb-radius-xl) 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hrb-room-info h2.hrb-heading-md {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    letter-spacing: -0.02em;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hrb-room-info .hrb-text-muted {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 1;
+    font-weight: 400;
+}
+
+/* Step Navigation */
+.hrb-form-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding: 20px 25px;
+    position: relative;
+    background: linear-gradient(135deg, var(--hrb-background) 0%, var(--hrb-background-light) 100%);
+    border-radius: 15px;
+    border: 1px solid var(--hrb-border);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.hrb-form-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 8%;
+    right: 8%;
+    height: 4px;
+    background: var(--hrb-border);
+    transform: translateY(-50%);
+    z-index: 1;
+    border-radius: 2px;
+}
+
+.hrb-step {
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    padding: 8px 12px;
+    transition: var(--hrb-transition);
+    cursor: pointer;
+    min-width: 60px;
+    border-radius: 8px;
+    gap: 8px;
+}
+
+.hrb-step:hover {
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateY(-2px);
+}
+
+.hrb-step-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--hrb-background-dark);
+    color: var(--hrb-text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin: 0;
+    transition: var(--hrb-transition);
+    border: 2px solid var(--hrb-border);
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+.hrb-step-label {
+    font-size: 12px;
+    color: var(--hrb-text-light);
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin: 0;
+    transition: var(--hrb-transition);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Active Step */
+.hrb-step.active .hrb-step-icon {
+    background: linear-gradient(135deg, var(--hrb-primary) 0%, var(--hrb-primary-dark) 100%);
+    color: white;
+    border-color: var(--hrb-primary);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    transform: scale(1.1);
+    animation: activePulse 2s infinite;
+}
+
+.hrb-step.active .hrb-step-label {
+    color: var(--hrb-primary);
+    font-weight: 700;
+}
+
+/* Completed Step */
+.hrb-step.completed .hrb-step-icon {
+    background: linear-gradient(135deg, var(--hrb-success) 0%, var(--hrb-success-dark) 100%);
+    color: white;
+    border-color: var(--hrb-success);
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
+    transform: scale(1.05);
+}
+
+.hrb-step.completed .hrb-step-label {
+    color: var(--hrb-success);
+    font-weight: 700;
+}
+.hrb-verification-code-section input {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    font-family: monospace;
+}
+
+
+@keyframes activePulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+}
+
+/* Form Content */
+.hrb-form-step-content {
+    display: none;
+}
+
+.hrb-form-step-content.active {
+    display: block;
+    animation: slideInFadeIn 0.4s ease;
+}
+
+@keyframes slideInFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form Groups */
+.hrb-form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.hrb-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--hrb-text);
+    font-size: 14px;
+    letter-spacing: 0.01em;
+}
+
+.hrb-form-label.required::after {
+    content: ' *';
+    color: var(--hrb-error);
+    margin-left: 4px;
+    font-weight: 700;
+}
+
+/* Form Inputs */
+.hrb-form-input,
+.hrb-form-select,
+.hrb-form-control,
+.hrb-form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+    font-size: 14px;
+    font-weight: 400;
+    transition: var(--hrb-transition);
+    background: var(--hrb-background);
+    color: var(--hrb-text);
+    box-sizing: border-box;
+    box-shadow: var(--hrb-shadow);
+    line-height: 1.5;
+    font-family: inherit;
+}
+
+.hrb-form-input:hover,
+.hrb-form-select:hover,
+.hrb-form-control:hover,
+.hrb-form-textarea:hover {
+    border-color: var(--hrb-primary);
+    box-shadow: var(--hrb-shadow-md);
+    transform: translateY(-1px);
+}
+
+.hrb-form-input:focus,
+.hrb-form-select:focus,
+.hrb-form-control:focus,
+.hrb-form-textarea:focus {
+    outline: none;
+    border-color: var(--hrb-primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.hrb-form-input.error,
+.hrb-form-select.error,
+.hrb-form-control.error {
+    border-color: var(--hrb-error-dark);
+    background: var(--hrb-error-light);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.hrb-form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Select Dropdown */
+.hrb-form-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* Buttons */
+.hrb-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--hrb-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--hrb-shadow);
+    letter-spacing: 0.025em;
+}
+
+.hrb-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--hrb-shadow-lg);
+}
+
+.hrb-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.hrb-btn-primary {
+    background: var(--hrb-primary);
+    color: white;
+}
+
+.hrb-btn-primary:hover:not(:disabled) {
+    background: var(--hrb-primary-dark);
+}
+
+.hrb-btn-secondary {
+    background: var(--hrb-text-light);
+    color: white;
+}
+
+.hrb-btn-secondary:hover:not(:disabled) {
+    background: var(--hrb-text);
+}
+
+.hrb-btn-success {
+    background: var(--hrb-success);
+    color: white;
+}
+
+.hrb-btn-success:hover:not(:disabled) {
+    background: var(--hrb-success-dark);
+}
+
+.hrb-btn-sm {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+/* Time Slots */
+.hrb-time-slots,
+.hrb-time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.hrb-time-slot {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 70px;
+    padding: 12px 8px;
+    background: var(--hrb-background);
+    border: 2px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+    cursor: pointer;
+    text-align: center;
+    transition: var(--hrb-transition);
+    color: var(--hrb-text);
+}
+
+.hrb-time-slot.available {
+    border-color: var(--hrb-success);
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
+}
+
+.hrb-time-slot.available:hover {
+    border-color: var(--hrb-success-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.hrb-time-slot.selected {
+    border-color: var(--hrb-accent);
+    background: var(--hrb-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.hrb-time-slot.unavailable {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-color: var(--hrb-error);
+}
+
+.hrb-time-slot-time {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.hrb-time-slot-status,
+.hrb-time-slot-price {
+    font-size: 11px;
+    opacity: 0.8;
+    line-height: 1.2;
+}
+
+/* Extras */
+.hrb-extra-item {
+    border: 1px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    background: var(--hrb-background);
+    box-shadow: var(--hrb-shadow);
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.hrb-extra-item:hover {
+    border-color: var(--hrb-primary);
+    box-shadow: var(--hrb-shadow-md);
+    transform: translateY(-2px);
+}
+
+.hrb-extra-item:has(input[type="checkbox"]:checked) {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border-color: var(--hrb-primary);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.hrb-extra-content {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    transition: var(--hrb-transition);
+}
+
+.hrb-extra-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.hrb-extra-checkbox {
+    display: none;
+}
+
+.hrb-extra-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--hrb-background-light);
+    border: 1px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--hrb-primary);
+    flex-shrink: 0;
+}
+
+.hrb-extra-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.hrb-extra-title {
+    font-weight: 600;
+    color: var(--hrb-text);
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.hrb-extra-price {
+    flex: none;
+    font-weight: bold;
+    color: var(--hrb-success-dark);
+    font-size: 16px;
+    background: var(--hrb-success-light);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--hrb-success);
+}
+
+.hrb-extra-description {
+    color: var(--hrb-text-light);
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, var(--hrb-background-light), var(--hrb-background-dark));
+    border-radius: 6px;
+    border-left: 3px solid var(--hrb-primary);
+    box-shadow: var(--hrb-shadow);
+}
+
+/* People Counter */
+.hrb-people-counter {
+    display: flex;
+    /* align-items: center; */
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.hrb-people-counter .hrb-btn {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    min-width: 32px !important;
+    border-radius: 4px !important;
+    flex: none !important;
+    font-weight: 600 !important;
+    background: var(--hrb-primary) !important;
+    color: white !important;
+    border: 1px solid var(--hrb-primary) !important;
+}
+
+.hrb-people-counter input {
+    text-align: center;
+    max-width: 80px;
+    flex: none;
+}
+
+/* Verification Methods */
+.hrb-verification-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+.hrb-verification-method {
+    border: 2px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    overflow: hidden;
+}
+
+.hrb-verification-method:hover {
+    border-color: var(--hrb-primary);
+    box-shadow: var(--hrb-shadow-md);
+}
+
+.hrb-verification-method input[type="radio"] {
+    display: none;
+}
+
+.hrb-verification-method input[type="radio"]:checked + .hrb-verification-method-content {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border-left: 4px solid var(--hrb-primary);
+}
+
+.hrb-verification-method-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px;
+    transition: var(--hrb-transition);
+}
+
+/* Payment Methods */
+.hrb-payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.hrb-payment-method {
+    border: 2px solid var(--hrb-border);
+    border-radius: var(--hrb-radius-lg);
+    cursor: pointer;
+    transition: var(--hrb-transition);
+    overflow: hidden;
+    background: var(--hrb-background);
+    box-shadow: var(--hrb-shadow);
+}
+
+.hrb-payment-method:hover {
+    border-color: var(--hrb-primary);
+    box-shadow: var(--hrb-shadow-md);
+    transform: translateY(-2px);
+}
+
+.hrb-payment-method input[type="radio"] {
+    display: none;
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-payment-method-content {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border-left: 4px solid var(--hrb-primary);
+}
+
+.hrb-payment-method-content {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 15px;
+    transition: var(--hrb-transition);
+}
+
+/* Messages & Alerts */
+.hrb-alert {
+    padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid transparent;
+    border-left-width: 4px;
+}
+
+.hrb-alert-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border-color: var(--hrb-error);
+}
+
+.hrb-alert-success {
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
+    border-color: var(--hrb-success);
+}
+
+.hrb-alert-warning {
+    background: var(--hrb-warning-light);
+    color: var(--hrb-warning);
+    border-color: var(--hrb-warning);
+}
+
+.hrb-alert-info {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--hrb-primary-dark);
+    border-color: var(--hrb-primary);
+}
+
+/* Validation Error */
+.hrb-validation-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    padding: 12px 16px;
+    border: 1px solid var(--hrb-error);
+    border-left-width: 4px;
+    border-radius: var(--hrb-radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--hrb-shadow);
+    display: flex;
+    align-items: center;
+    animation: slideDown 0.3s ease;
+}
+
+.hrb-validation-error::before {
+    content: "⚠️";
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading States */
+.hrb-loading,
+.hrb-loading-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--hrb-text-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.hrb-loading-spinner {
+    width: 35px;
+    height: 35px;
+    border: 2px solid var(--hrb-border);
+    border-radius: 50%;
+    border-top-color: var(--hrb-primary);
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+.hrb-loading-text {
+    font-size: 14px;
+    color: var(--hrb-text-light);
+    font-weight: 500;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Form Actions */
+.hrb-form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hrb-border);
+}
+
+/* Row & Column Layout */
+.hrb-row {
+    display: flex;
+    gap: 20px;
+    margin: 0px;
+}
+
+.hrb-col-6 {
+    flex: 1;
+}
+
+/* Headings */
+.hrb-heading-sm,
+.hrb-heading-xs {
+    font-weight: 600;
+    color: var(--hrb-text);
+    margin: 0 0 15px 0;
+}
+
+.hrb-heading-sm {
+    font-size: 18px;
+}
+
+.hrb-heading-xs {
+    font-size: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--hrb-primary);
+}
+
+/* Helpers */
+.hrb-form-help {
+    font-size: 12px;
+    color: var(--hrb-text-light);
+    margin-top: 6px;
+}
+
+.hrb-no-slots,
+.hrb-no-extras,
+.hrb-error-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: var(--hrb-radius);
+    margin-top: 15px;
+}
+
+.hrb-no-slots,
+.hrb-no-extras {
+    background: var(--hrb-warning-light);
+    color: var(--hrb-warning);
+    border: 1px solid var(--hrb-warning);
+}
+
+.hrb-error-message {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border: 1px solid var(--hrb-error);
+}
+
+/* Contact Display */
+.hrb-contact-display {
+    background: rgba(99, 102, 241, 0.03);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    color: var(--hrb-text);
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Verification Container */
+.hrb-verification-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--hrb-background-light);
+    border: 1px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+}
+
+.hrb-verification-section {
+    position: relative;
+    background: rgba(99, 102, 241, 0.02);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: var(--hrb-radius);
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.hrb-verification-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--hrb-radius);
+    z-index: 10;
+}
+
+.hrb-verification-success,
+.hrb-verification-error {
+    padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left-width: 4px;
+}
+
+.hrb-verification-success {
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
+    border: 1px solid var(--hrb-success);
+}
+
+.hrb-verification-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border: 1px solid var(--hrb-error);
+}
+
+/* Payment Processing */
+.hrb-payment-processing {
+    position: relative;
+    pointer-events: none;
+}
+
+.hrb-payment-processing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    border-radius: var(--hrb-radius);
+    animation: fadeIn 0.3s ease;
+}
+
+.hrb-payment-processing::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(99, 102, 241, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--hrb-primary);
+    border-right-color: var(--hrb-secondary);
+    animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    z-index: 1001;
+}
+.hrb-btn-accent {
+    background: var(--hrb-accent);
+    color: white;
+}
+.hrb-badge-important {
+    background: var(--hrb-accent);
+    color: white;
+}
+.some-element:hover {
+    border-color: var(--hrb-accent);
+}
+.hrb-payment-method-content img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8f9fa;
+    padding: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.hrb-payment-method-content p {
+    color: var(--hrb-text-light);
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.4;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
     .hrb-booking-form-wrapper {
-        background: var(--hrb-background);
-        border-radius: var(--hrb-radius-xl);
-        padding: 0;
-        margin: 40px 0;
-        box-shadow: var(--hrb-shadow-xl);
-        border: 1px solid var(--hrb-border-light);
-        overflow: hidden;
-        position: relative;
-        backdrop-filter: blur(10px);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+        margin: 20px 0;
     }
 
     .hrb-booking-form {
-        padding: 40px;
-        position: relative;
+        padding: 20px;
     }
 
-    /* Add subtle animation */
-    .hrb-booking-form-wrapper {
-        animation: slideInUp 0.6s ease-out;
-    }
-
-    @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Enhanced Room Info Header */
     .hrb-room-info {
-        background: linear-gradient(135deg, var(--hrb-primary) 0%, var(--hrb-secondary) 100%);
-        color: white;
-        padding: 40px;
-        margin: -40px -40px 40px -40px;
-        border-radius: var(--hrb-radius-xl) var(--hrb-radius-xl) 0 0;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .hrb-room-info::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        opacity: 0.3;
-        pointer-events: none;
+        margin: -20px -20px 30px -20px;
+        padding: 30px 20px;
     }
 
     .hrb-room-info h2.hrb-heading-md {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0 0 15px 0;
-        letter-spacing: -0.02em;
-        position: relative;
-        z-index: 1;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-size: 2rem;
     }
 
-    .hrb-room-info .hrb-text-muted {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 25px;
-        position: relative;
-        z-index: 1;
-        font-weight: 400;
-    }
-
-    /* Container Styles */
-    .hrb-container {
-        background: var(--hrb-background);
-        border-radius: 12px;
-        padding: 30px;
-        margin: 20px 0;
-        border: 1px solid var(--hrb-border);
-        box-shadow: var(--hrb-shadow);
-        transition: box-shadow 0.3s ease;
-    }
-
-    .hrb-container:hover {
-        box-shadow: var(--hrb-shadow-hover);
-    }
-
-    /* Compact Step Navigation */
     .hrb-form-steps {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 30px;
-        padding: 20px 25px;
-        position: relative;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: 15px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
-    }
-
-    .hrb-form-steps::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 8%;
-        right: 8%;
-        height: 4px;
-        background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
-        transform: translateY(-50%);
-        z-index: 1;
-        border-radius: 2px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
     }
 
     .hrb-step {
-        display: flex;
-        /* flex-direction: row; */
-        align-items: center;
-        position: relative;
-        z-index: 2;
-        background: transparent;
-        padding: 8px 12px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        min-width: 60px;
-        border-radius: 8px;
-        gap: 8px;
-    }
-
-    .hrb-step:hover {
-        background: rgba(99, 102, 241, 0.05);
-        transform: translateY(-2px);
+        padding: 6px 8px;
+        min-width: 50px;
+        gap: 6px;
     }
 
     .hrb-step-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        margin: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid #e2e8f0;
-        font-size: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        position: relative;
-        z-index: 2;
-        flex-shrink: 0;
-    }
-
-    .hrb-step-icon::before {
-        content: '';
-        position: absolute;
-        top: -3px;
-        left: -3px;
-        right: -3px;
-        bottom: -3px;
-        background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .hrb-step:hover .hrb-step-icon::before {
-        opacity: 1;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
     }
 
     .hrb-step-label {
-        font-size: 12px;
-        color: #64748b;
-        text-align: left;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-        text-transform: uppercase;
-        margin: 0;
-        transition: all 0.3s ease;
-        line-height: 1.2;
-        white-space: nowrap;
+        font-size: 10px;
+        letter-spacing: 0.2px;
     }
 
-    /* Active Step */
-    .hrb-step.active .hrb-step-icon {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        color: white;
-        border-color: #6366f1;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        transform: scale(1.1);
-        animation: activePulse 2s infinite;
-    }
-
-    @keyframes activePulse {
-
-        0%,
-        100% {
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        50% {
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-    }
-
-    .hrb-step.active .hrb-step-label {
-        color: #6366f1;
-        font-weight: 700;
-        transform: scale(1.02);
-    }
-
-    .hrb-step.active {
-        background: rgba(99, 102, 241, 0.08);
-        border-radius: 8px;
-    }
-
-    /* Completed Step */
-    .hrb-step.completed .hrb-step-icon {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border-color: #10b981;
-        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
-        transform: scale(1.05);
-    }
-
-    /* Removed checkmark overlay since we're using icons */
-
-    .hrb-step.completed .hrb-step-label {
-        color: #10b981;
-        font-weight: 700;
-    }
-
-    .hrb-step.completed {
-        background: rgba(16, 185, 129, 0.08);
-        border-radius: 8px;
-    }
-
-    /* Progress Line Animation */
-    .hrb-form-steps::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 8%;
-        height: 4px;
-        background: linear-gradient(90deg, #10b981 0%, #6366f1 100%);
-        transform: translateY(-50%);
-        z-index: 1;
-        border-radius: 2px;
-        transition: width 0.6s ease;
-        width: 0%;
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .hrb-form-steps {
-            padding: 15px 20px;
-            margin-bottom: 25px;
-        }
-
-        .hrb-step {
-            padding: 6px 8px;
-            min-width: 50px;
-            gap: 6px;
-        }
-
-        .hrb-step-icon {
-            width: 28px;
-            height: 28px;
-            font-size: 14px;
-        }
-
-        .hrb-step-label {
-            font-size: 10px;
-            letter-spacing: 0.2px;
-        }
-
-        .hrb-form-steps::before,
-        .hrb-form-steps::after {
-            left: 10%;
-            right: 10%;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .hrb-form-steps {
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            display: flex !important;
-            justify-content: space-between !important;
-        }
-
-        .hrb-step {
-            padding: 4px 6px;
-            min-width: 40px;
-            gap: 4px;
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-        }
-
-        .hrb-step-icon {
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
-        }
-
-        .hrb-step-label {
-            display: none !important;
-            /* Hide text labels on mobile */
-        }
-    }
-
-    /* Enhanced Form Step Content */
-    .hrb-form-step-content {
-        display: none;
-    }
-
-    .hrb-form-step-content.active {
-        display: block;
-        animation: slideInFadeIn 0.4s ease;
-    }
-
-    @keyframes slideInFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Simplified Form Sections */
-    .hrb-form-step-content>div,
-    .hrb-form-step-content>section {
-        background: transparent;
-        padding: 0;
-        margin-bottom: 35px;
-        border: none;
-        box-shadow: none;
-    }
-
-    /* Fixed Form Groups and Alignment */
-    .hrb-form-group {
-        margin-bottom: 20px;
-        position: relative;
-    }
-
-    .hrb-form-group:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Fix label alignment issues */
-    .hrb-form-step-content h3,
-    .hrb-form-step-content h4,
-    .hrb-heading-sm {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: var(--hrb-text) !important;
-        margin: 0 0 15px 0 !important;
-        padding: 0 !important;
-        line-height: 1.3 !important;
-    }
-
-    /* Ensure consistent section spacing */
-    .hrb-form-step-content>div,
-    .hrb-form-step-content>section {
-        margin-bottom: 25px !important;
-    }
-
-    /* Fix specific alignment issues */
-    .hrb-time-slots-grid,
-    .hrb-time-slots {
-        margin-top: 10px !important;
-    }
-
-    .hrb-extras-list {
-        margin-top: 10px !important;
-    }
-
-    .hrb-people-counter {
-        margin-top: 10px !important;
-        align-items: center !important;
-    }
-
-    .hrb-verification-methods {
-        margin-top: 10px !important;
-    }
-
-    .hrb-payment-methods {
-        margin-top: 10px !important;
-    }
-
-    /* Validation Error Styles */
-    .hrb-validation-error {
-        background: #fef2f2 !important;
-        color: #dc2626 !important;
-        padding: 12px 16px !important;
-        border: 1px solid #fecaca !important;
-        border-left: 4px solid #dc2626 !important;
-        border-radius: 6px !important;
-        margin-bottom: 20px !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1) !important;
-        display: flex !important;
-        align-items: center !important;
-        animation: slideDown 0.3s ease !important;
-    }
-
-    .hrb-validation-error::before {
-        content: "⚠️" !important;
-        margin-right: 8px !important;
-        font-size: 16px !important;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Enhanced Time Slots Grid Styling */
-    .hrb-time-slots {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 12px;
-        margin-top: 15px;
-        max-width: 100%;
-    }
-
+    .hrb-time-slots,
     .hrb-time-slots-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 12px;
-        margin-top: 15px;
-        max-width: 100%;
-    }
-
-    .hrb-time-slot {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 70px;
-        padding: 12px 8px;
-        background: var(--hrb-background);
-        border: 2px solid var(--hrb-border);
-        border-radius: 8px;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.3s ease;
-        color: var(--hrb-text);
-        word-wrap: break-word;
-        overflow: hidden;
-    }
-
-    .hrb-time-slot.available {
-        border-color: #10b981;
-        background: #f0fdf4;
-        color: #065f46;
-    }
-
-    .hrb-time-slot.available:hover {
-        border-color: #059669;
-        background: #dcfce7;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-    }
-
-    .hrb-time-slot.selected {
-        border-color: var(--hrb-primary);
-        background: var(--hrb-primary);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.3);
-    }
-
-    .hrb-time-slot.unavailable {
-        background: var(--hrb-background-light);
-        color: var(--hrb-text-light);
-        cursor: not-allowed;
-        opacity: 0.6;
-        border-color: #ef4444;
-        background: #fef2f2;
-        color: #991b1b;
-    }
-
-    .hrb-time-slot.unavailable:hover {
-        border-color: #ef4444;
-        background: #fef2f2;
-        transform: none;
-        box-shadow: none;
-    }
-
-    .hrb-time-slot-time {
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 4px;
-        color: inherit;
-        line-height: 1.2;
-    }
-
-    .hrb-time-slot-status {
-        font-size: 11px;
-        opacity: 0.8;
-        line-height: 1.2;
-    }
-
-    .hrb-time-slot-price {
-        font-size: 12px;
-        opacity: 0.8;
-        font-weight: 500;
-        line-height: 1.2;
-    }
-
-    /* Responsive Grid Adjustments */
-    @media (max-width: 768px) {
-
-        .hrb-time-slots,
-        .hrb-time-slots-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        .hrb-time-slot {
-            min-height: 60px;
-            padding: 10px 6px;
-        }
-
-        .hrb-time-slot-time {
-            font-size: 13px;
-        }
-
-        .hrb-time-slot-status,
-        .hrb-time-slot-price {
-            font-size: 10px;
-        }
-    }
-
-    @media (max-width: 480px) {
-
-        .hrb-time-slots,
-        .hrb-time-slots-grid {
-            /* grid-template-columns: repeat(2, 1fr); */
-            gap: 8px;
-        }
-
-        .hrb-time-slot {
-            min-height: 55px;
-            padding: 8px 4px;
-        }
-
-        .hrb-time-slot-time {
-            font-size: 12px;
-        }
-
-        .hrb-loading-spinner {
-            width: 32px;
-            height: 32px;
-        }
-
-        .hrb-loading-text {
-            font-size: 13px;
-        }
-    }
-
-    .hrb-loading {
-        text-align: center;
-        padding: 40px 20px;
-        color: var(--hrb-text-light);
-        font-style: italic;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .hrb-loading::before {
-        content: '';
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(59, 130, 246, 0.1);
-        border-radius: 50%;
-        border-top-color: #3b82f6;
-        border-right-color: #8b5cf6;
-        animation: hrb-spin-beautiful 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-        margin-bottom: 0;
-    }
-
-    .hrb-loading-spinner {
-        width: 35px;
-        height: 35px;
-        border: 2px solid #e5e7eb;
-        border-radius: 50%;
-        border-top-color: #6366f1;
-        animation: hrb-spin 1s linear infinite;
-        margin: 0 auto 16px;
-    }
-
-
-    .hrb-loading-text {
-        font-size: 16px;
-        color: #64748b;
-        font-weight: 500;
-        letter-spacing: 0.025em;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* Form Group and Input Styles */
-    .hrb-form-group {
-        margin-bottom: 20px;
-    }
-
-    .hrb-form-label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--hrb-text);
-        font-size: 16px;
-    }
-
-    .hrb-form-input,
-    .hrb-form-select,
-    .hrb-form-control {
-        width: 100%;
-        padding: 16px 20px;
-        border: 2px solid var(--hrb-border);
-        border-radius: var(--hrb-radius);
-        font-size: 16px;
-        font-weight: 500;
-        transition: var(--hrb-transition);
-        background: var(--hrb-background);
-        color: var(--hrb-text);
-        box-sizing: border-box;
-        box-shadow: var(--hrb-shadow);
-        line-height: 1.5;
-    }
-
-    .hrb-form-input:hover,
-    .hrb-form-select:hover,
-    .hrb-form-control:hover {
-        border-color: var(--hrb-primary);
-        box-shadow: var(--hrb-shadow-md);
-        transform: translateY(-1px);
-    }
-
-    .hrb-form-input::placeholder {
-        color: var(--hrb-text-light);
-    }
-
-    .hrb-form-input:focus,
-    .hrb-form-select:focus,
-    .hrb-form-control:focus {
-        outline: none;
-        border-color: var(--hrb-primary);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--hrb-shadow-lg);
-        transform: translateY(-2px);
-        background: var(--hrb-background);
-    }
-
-    .hrb-form-input.error {
-        border-color: #dc2626;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-    }
-
-    .hrb-form-select {
-        cursor: pointer;
-    }
-
-    .hrb-form-select option {
-        background: var(--hrb-background);
-        color: var(--hrb-text);
-    }
-
-    /* Enhanced Button Styles */
-    .hrb-btn {
-        padding: 16px 32px;
-        border: none;
-        border-radius: var(--hrb-radius);
-        font-size: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: var(--hrb-transition);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        min-width: 140px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: var(--hrb-shadow);
-        letter-spacing: 0.025em;
-        border: 1px solid transparent;
-    }
-
-
-
-    .hrb-btn:hover::before {
-        left: 100%;
-    }
-
-    .hrb-btn-primary {
-        background: var(--hrb-primary);
-        color: white;
-        border-color: var(--hrb-primary);
-    }
-
-    .hrb-btn-primary:hover {
-        background: linear-gradient(135deg, var(--hrb-primary-dark), var(--hrb-secondary));
-        border-color: var(--hrb-secondary);
-        transform: translateY(-3px);
-        box-shadow: var(--hrb-shadow-xl);
-    }
-
-    .hrb-btn-secondary {
-        background: var(--hrb-background);
-        color: var(--hrb-primary);
-        border-color: var(--hrb-primary);
-    }
-
-    .hrb-btn-secondary:hover {
-        background: var(--hrb-primary);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: var(--hrb-shadow-hover);
-    }
-
-    .hrb-btn-success {
-        background: var(--hrb-success);
-        color: white;
-        border-color: var(--hrb-success);
-    }
-
-    .hrb-btn-success:hover {
-        background: #0d5a0d;
-        border-color: #0d5a0d;
-        transform: translateY(-1px);
-        box-shadow: var(--hrb-shadow-hover);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .hrb-container {
-            padding: 20px;
-            margin: 10px;
-        }
-
-        .hrb-form-steps {
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 15px 0;
-        }
-
-        .hrb-step {
-            flex: 1;
-            /* min-width: calc(50% - 5px); */
-        }
-
-        .hrb-step-icon {
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-        }
-
-        .hrb-step-label {
-            font-size: 11px;
-        }
-
-        .hrb-time-slots {
-            /* grid-template-columns: 1fr 1fr; */
-            gap: 10px;
-        }
-    }
-
-    /* Fixed Row Alignment to Match Form Steps */
-    .hrb-row {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-        padding: 0 !important;
-        /* Ensure no extra padding */
-        margin-left: 0 !important;
-        /* Align with form steps */
-        margin-right: 0 !important;
-        /* Align with form steps */
-    }
-
-    .hrb-col-6 {
-        flex: 1;
-    }
-
-    @media (max-width: 768px) {
-        .hrb-row {
-            flex-direction: column;
-            gap: 0;
-        }
-    }
-
-    .hrb-form-actions {
-        display: flex;
-        gap: 15px;
-        justify-content: flex-end;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid var(--hrb-border);
-    }
-
-    .hrb-heading-sm {
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin-bottom: 20px;
-    }
-
-    .required::after {
-        content: ' *';
-        color: #dc2626;
-    }
-
-    /* People Counter Styles */
-    .hrb-people-counter {
-        display: flex;
-        align-items: center;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 10px;
-        margin-top: 8px;
-    }
-
-    .hrb-people-counter .hrb-btn {
-        padding: 8px 12px;
-        font-size: 16px;
-        line-height: 1;
-        min-width: 40px;
-        flex: none;
-    }
-
-    .hrb-people-counter input {
-        text-align: center;
-        max-width: 80px;
-        flex: none;
-    }
-
-    .hrb-form-help {
-        font-size: 12px;
-        color: var(--hrb-text-light);
-        margin-top: 6px;
-    }
-
-    /* Time Slots Styles */
-    .hrb-time-slots-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 12px;
-        margin-top: 15px;
     }
 
     .hrb-time-slot {
-        border: 2px solid var(--hrb-border);
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: var(--hrb-background);
-        position: relative;
-    }
-
-    .hrb-time-slot.available {
-        border-color: #10b981;
-        background: #f0fdf4;
-    }
-
-    .hrb-time-slot.available:hover {
-        border-color: #059669;
-        background: #dcfce7;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-    }
-
-    .hrb-time-slot.selected {
-        border-color: var(--hrb-primary);
-        background: var(--hrb-accent);
-        color: white;
-    }
-
-    .hrb-time-slot.unavailable {
-        border-color: #ef4444;
-        background: #fef2f2;
-        color: #991b1b;
-        cursor: not-allowed;
-        opacity: 0.6;
+        min-height: 60px;
+        padding: 10px 6px;
     }
 
     .hrb-time-slot-time {
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 4px;
+        font-size: 14px;
     }
 
-    .hrb-time-slot-status {
-        font-size: 12px;
-        opacity: 0.8;
+    .hrb-time-slot-status,
+    .hrb-time-slot-price {
+        font-size: 10px;
     }
 
-    .hrb-no-slots,
-    .hrb-loading-message,
-    .hrb-error-message {
-        text-align: center;
-        padding: 20px;
-        border-radius: 6px;
-        margin-top: 15px;
-    }
-
-    .hrb-no-slots {
-        background: #fef3cd;
-        color: #996633;
-        border: 1px solid #fde68a;
-    }
-
-    .hrb-loading-message {
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-        color: var(--hrb-text-light);
-        border: 1px solid rgba(59, 130, 246, 0.1);
-        position: relative;
-        overflow: hidden;
-        display: flex;
+    .hrb-row {
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        text-align: center;
-    }
-
-    @keyframes hrb-shimmer {
-        0% {
-            left: -100%;
-        }
-
-        100% {
-            left: 100%;
-        }
-    }
-
-    .hrb-error-message {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    /* Extras List Styles */
-    /* .hrb-extras-list {
-    border: 1px solid var(--hrb-border);
-    border-radius: 6px;
-    background: var(--hrb-background);
-} */
-
-    .hrb-extra-item {
-        border: 1px solid var(--hrb-border);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        /* overflow: hidden; */
-        background: var(--hrb-background);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-bottom: 15px;
-        position: relative;
-    }
-
-    .hrb-extra-item:hover {
-        border-color: var(--hrb-primary);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.15);
-        transform: translateY(-2px);
-    }
-
-    .hrb-extra-item input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        accent-color: var(--hrb-primary);
-        cursor: pointer;
-        flex-shrink: 0;
-        margin: 0;
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked~.hrb-extra-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked {
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-color: #10b981;
-        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked+.hrb-extra-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked~.hrb-extra-content .hrb-extra-icon {
-        border-color: var(--hrb-primary);
-        background: #f0f8ff;
-    }
-
-    /* Selected extra item styling */
-    .hrb-extra-item:has(input[type="checkbox"]:checked) {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-        transform: translateY(-1px);
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-header {
-        background: rgba(99, 102, 241, 0.1);
-        border-radius: 8px;
-        padding: 8px;
-        margin: -8px;
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-icon {
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        color: white;
-        border-color: #6366f1;
-        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-title {
-        color: #6366f1;
-        font-weight: 700;
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-price {
-        color: #6366f1;
-        font-weight: 700;
+        gap: 0;
     }
 
     .hrb-extra-content {
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-        gap: 12px;
-        transition: all 0.3s ease;
-    }
-
-    /* First row: Icon + Title + Price */
-    .hrb-extra-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
+        padding: 12px;
+        gap: 10px;
     }
 
     .hrb-extra-icon {
-        width: 40px;
-        height: 40px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        color: var(--hrb-primary);
-        flex-shrink: 0;
-    }
-
-    .hrb-extra-details {
-        flex: 1;
-        min-width: 0;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
     }
 
     .hrb-extra-title {
-        font-weight: 600;
-        color: var(--hrb-text);
-        font-size: 16px;
-        margin: 0;
-        line-height: 1.3;
-        /* white-space: nowrap; */
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 14px;
     }
 
     .hrb-extra-price {
-        /* flex: none;
-    font-weight: 600;
-    color: var(--hrb-primary);
-    font-size: 16px;
-    white-space: nowrap; */
-        flex: none;
-        font-weight: bold;
-        color: #059669;
-        font-size: 16px;
-        background: #d1fae5;
-        padding: 1px 5px;
-        border-radius: 4px;
-        border: 1px solid #10b981;
-       
-    }
-
-    /* Second row: Description */
-    .hrb-extra-description {
-        color: var(--hrb-text-light);
-        margin: 0;
-        font-size: 16px;
-        line-height: 1.4;
-        padding: 8px 12px;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-radius: 6px;
-        border-left: 3px solid var(--hrb-primary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-    input.hrb-extra-checkbox {
-            display: none;
-        }
-    /* Mobile responsive adjustments */
-    @media (max-width: 768px) {
-
-        .hrb-extra-content {
-            padding: 12px;
-            gap: 10px;
-        }
-
-        .hrb-time-slots-grid {
-            grid-template-columns: repeat(2, minmax(135px, 1fr));
-        }
-
-        input.hrb-extra-checkbox {
-            display: none;
-        }
-
-        .hrb-extra-header {
-            gap: 10px;
-        }
-
-        .hrb-extra-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 16px;
-        }
-
-        .hrb-extra-title {
-            font-size: 16px;
-        }
-       
-        .hrb-extra-price {
-            font-size: 13px;
-            position: absolute;
+        font-size: 13px;
+        position: absolute;
         right: -12px;
         top: -9px;
-        }
-
-        .hrb-extra-description {
-            font-size: 13px;
-            padding: 6px 10px;
-        }
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked+.hrb-extra-content .hrb-extra-icon {
-        border-color: var(--hrb-primary);
-        background: #f0f8ff;
-    }
-
-
-    .hrb-extra-title {
-        font-weight: 700;
-        color: var(--hrb-text);
-        margin: 0 0 8px 0;
-        font-size: 15px;
-        letter-spacing: 0.025em;
     }
 
     .hrb-extra-description {
-        color: var(--hrb-text-muted);
-        font-size: 12px;
-        margin: 4px 0 0 0;
-        line-height: 1.5;
-        font-style: italic;
-        padding: 8px 12px;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-radius: 6px;
-        border-left: 3px solid var(--hrb-primary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease;
-    }
-
-    /* .hrb-extra-price {
-    flex: none;
-    font-weight: 600;
-    color: var(--hrb-primary);
-    font-size: 14px;
-} */
-
-    .hrb-no-extras {
-        text-align: center;
-        padding: 20px;
-        color: var(--hrb-text-light);
-        font-style: italic;
-    }
-
-    /* Form Textarea */
-    .hrb-form-textarea {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid var(--hrb-border);
-        border-radius: 6px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        background: var(--hrb-background);
-        color: var(--hrb-text);
-        box-sizing: border-box;
-        resize: vertical;
-        min-height: 80px;
-        font-family: inherit;
-    }
-
-    .hrb-form-textarea:focus {
-        outline: none;
-        border-color: var(--hrb-primary);
-        box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1);
-    }
-
-    /* Alert Styles */
-    .hrb-alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        font-size: 16px;
-        border: 1px solid transparent;
-    }
-
-    .hrb-alert-error {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fecaca;
-    }
-
-    .hrb-alert-success {
-        background: #f0fdf4;
-        color: #166534;
-        border-color: #bbf7d0;
-    }
-
-    .hrb-alert-warning {
-        background: #fefce8;
-        color: #a16207;
-        border-color: #fef08a;
-    }
-
-    .hrb-alert-info {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-color: #dbeafe;
-    }
-
-    .hrb-alert-success {
-        background: #dcfce7;
-        color: #15803d;
-        border-color: #bbf7d0;
-    }
-
-    /* Enhanced Verification Section Styles */
-    .hrb-verification-methods {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin: 15px 0;
-    }
-
-    .hrb-verification-method {
-        border: 2px solid var(--hrb-border);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        margin: 0;
-    }
-
-    .hrb-verification-method:hover {
-        border-color: var(--hrb-primary);
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.1);
-    }
-
-    .hrb-verification-method input[type="radio"] {
-        display: none;
-    }
-
-    .hrb-verification-method input[type="radio"]:checked+.hrb-verification-method-content {
-        background: #f0f8ff;
-        border-left: 4px solid var(--hrb-primary);
-    }
-
-    .hrb-verification-method-content {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 16px;
-        transition: all 0.3s ease;
-    }
-
-    .hrb-verification-icon {
-        font-size: 24px;
-        flex-shrink: 0;
-    }
-
-    .hrb-verification-method-content div {
-        flex: 1;
-    }
-
-    .hrb-verification-method-content strong {
-        display: block;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin-bottom: 4px;
-    }
-
-    .hrb-verification-method-content p {
-        margin: 0;
-        font-size: 12px;
-        color: var(--hrb-text-light);
-        line-height: 1.4;
-    }
-
-    .hrb-contact-display {
-        background: var(--hrb-background-light);
-        color: var(--hrb-text);
-        font-weight: 600;
-        padding: 12px 16px;
-        border: 2px solid var(--hrb-border);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-    }
-
-    .hrb-contact-display::before {
-        margin-right: 8px;
-    }
-
-    #verification-email-display::before {
-        content: '✉️';
-    }
-
-    #verification-phone-display::before {
-        content: '📱';
-    }
-
-    .hrb-contact-info {
-        margin: 15px 0;
-    }
-
-    .hrb-contact-item {
-        margin-bottom: 15px;
-    }
-
-    .hrb-contact-item:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Verification Container Styles */
-    .hrb-verification-container {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-    }
-
-    .hrb-heading-xs {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin: 0 0 15px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid var(--hrb-primary);
-    }
-
-    .hrb-verification-code-section input {
-        text-align: center;
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: 3px;
-        font-family: monospace;
-    }
-
-    .hrb-verification-section {
-        position: relative;
-    }
-
-    .hrb-verification-loading {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        z-index: 10;
-    }
-
-    .hrb-verification-loading .hrb-spinner {
-        width: 24px;
-        height: 24px;
-        border: 2px solid #e5e7eb;
-        border-radius: 50%;
-        border-top-color: #6366f1;
-        animation: hrb-spin 1s linear infinite;
-    }
-
-
-    .hrb-btn-sm {
-        padding: 8px 16px;
-        font-size: 12px;
-    }
-
-    /* Enhanced Payment Method Styles */
-    .hrb-payment-methods {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin: 20px 0;
-    }
-
-    .hrb-payment-method {
-        border: 2px solid var(--hrb-border);
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        background: var(--hrb-background);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .hrb-payment-method:hover {
-        border-color: var(--hrb-primary);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.15);
-        transform: translateY(-2px);
-    }
-
-    .hrb-payment-method input[type="radio"] {
-        display: none;
-    }
-
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
+        font-size: 13px;
+        padding: 6px 10px;
     }
 
     .hrb-payment-method-content {
-        display: flex;
-        align-items: center;
-        padding: 20px;
-        gap: 15px;
-        transition: all 0.3s ease;
+        padding: 15px;
+        gap: 12px;
     }
 
     .hrb-payment-method-content img {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-        border-radius: 8px;
-        background: #f8f9fa;
-        padding: 8px;
-        border: 1px solid #e9ecef;
-    }
-
-    .hrb-payment-method-content div {
-        flex: 1;
+        width: 40px;
+        height: 40px;
+        padding: 6px;
     }
 
     .hrb-payment-method-content strong {
-        display: block;
-        color: var(--hrb-text);
-        font-size: 16px;
-        margin-bottom: 4px;
-        font-weight: 600;
+        font-size: 15px;
     }
 
     .hrb-payment-method-content p {
-        color: var(--hrb-text-light);
-        margin: 0;
-        font-size: 16px;
-        line-height: 1.4;
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .hrb-form-steps {
+        padding: 12px 15px;
+        margin-bottom: 20px;
     }
 
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content img {
-        border-color: var(--hrb-primary);
-        background: #f0f8ff;
-    }
-
-    /* Enhanced Step Navigation with Click Support */
     .hrb-step {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .hrb-step:hover .hrb-step-icon {
-        transform: scale(1.05);
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.2);
-    }
-
-    .hrb-step.completed {
-        cursor: pointer;
-    }
-
-    .hrb-step.completed:hover .hrb-step-icon {
-        background: #0d5a0d;
-        transform: scale(1.1);
-    }
-
-    .hrb-step.active:hover .hrb-step-icon {
-        background: var(--hrb-secondary);
-        transform: scale(1.05);
+        padding: 4px 6px;
+        min-width: 40px;
+        gap: 4px;
     }
 
     .hrb-step-icon {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .hrb-step-icon::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .hrb-step:hover .hrb-step-icon::before {
-        opacity: 1;
-    }
-
-    .hrb-step-clickable .hrb-step-icon {
-        background: #0d5a0d !important;
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);
-    }
-
-    .hrb-step-clickable .hrb-step-label {
-        color: #0d5a0d !important;
-        font-weight: 700;
-    }
-
-    /* Payment Method Responsive Design */
-    @media (max-width: 768px) {
-        .hrb-payment-method-content {
-            padding: 15px;
-            gap: 12px;
-        }
-
-        .hrb-payment-method-content img {
-            width: 40px;
-            height: 40px;
-            padding: 6px;
-        }
-
-        .hrb-payment-method-content strong {
-            font-size: 15px;
-        }
-
-        .hrb-payment-method-content p {
-            font-size: 13px;
-        }
-    }
-
-    .hrb-countdown-timer {
+        width: 24px;
+        height: 24px;
         font-size: 12px;
-        color: var(--hrb-text-light);
-        margin-top: 5px;
     }
 
-    .hrb-verification-success {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin: 15px 0;
-        display: flex;
-        align-items: center;
+    .hrb-step-label {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .hrb-time-slots,
+    .hrb-time-slots-grid {
         gap: 8px;
     }
 
-    .hrb-verification-success::before {
-        content: '✅';
-    }
-
-    .hrb-verification-error {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin: 15px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .hrb-verification-error::before {
-        content: '❌';
-    }
-
-    /* Fixed Form Input Styling */
-    .hrb-form-label {
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        letter-spacing: 0.01em;
-        line-height: 1.4;
-        margin-bottom: 8px !important;
-        display: block !important;
-    }
-
-    .hrb-form-label.required::after {
-        content: '*' !important;
-        color: #dc2626;
-        margin-left: 4px;
-        font-weight: 700;
-    }
-
-    .hrb-form-input,
-    .hrb-form-select,
-    .hrb-form-control {
-        padding: 12px 16px !important;
-        border-radius: 6px !important;
-        font-size: 14px !important;
-        font-weight: 400;
-        background: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease !important;
-        line-height: 1.4;
-        height: auto !important;
-        min-height: 44px !important;
-    }
-
-    .hrb-form-input:hover,
-    .hrb-form-select:hover,
-    .hrb-form-control:hover {
-        border-color: rgba(0, 115, 170, 0.3) !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .hrb-form-input:focus,
-    .hrb-form-select:focus,
-    .hrb-form-control:focus {
-        border-color: var(--hrb-primary) !important;
-        box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1) !important;
-        background: #ffffff !important;
-    }
-
-    .hrb-form-input.error,
-    .hrb-form-select.error,
-    .hrb-form-control.error {
-        border-color: #dc2626 !important;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-        background: #fef2f2 !important;
-    }
-
-    .hrb-form-input::placeholder {
-        font-weight: 400;
-        opacity: 0.6;
-    }
-
-    /* Fixed Select Styling */
-    .hrb-form-select {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-        background-position: right !important;
-        background-repeat: no-repeat !important;
-        background-size: 40px !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-    }
-
-    .hrb-form-select:focus {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230073aa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-        background-repeat: no-repeat !important;
-        background-position: right !important;
-    }
-
-    /* Fixed Textarea */
-    textarea.hrb-form-control {
-        resize: vertical !important;
-        min-height: 100px !important;
-        font-family: inherit !important;
-        line-height: 1.5 !important;
-        padding: 12px 16px !important;
-    }
-
-    /* Fixed Contact Display Fields */
-    .hrb-contact-display {
-        background: rgba(0, 115, 170, 0.03) !important;
-        border: 1px solid rgba(0, 115, 170, 0.15) !important;
-        color: var(--hrb-text) !important;
-        font-weight: 500 !important;
-        padding: 12px 16px !important;
-        border-radius: 6px !important;
-        min-height: 44px !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    /* Simplified Button Styles */
-    .hrb-btn {
-        padding: 12px 24px !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-        text-align: center !important;
-        border: 1px solid transparent !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .hrb-btn:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .hrb-btn-primary {
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        border-color: var(--hrb-primary) !important;
-    }
-
-    .hrb-btn-primary:hover {
-        background: var(--hrb-secondary) !important;
-        border-color: var(--hrb-secondary) !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn-secondary {
-        background: #6c757d !important;
-        color: white !important;
-        border-color: #6c757d !important;
-    }
-
-    .hrb-btn-secondary:hover {
-        background: #5a6268 !important;
-        border-color: #5a6268 !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn-success {
-        background: var(--hrb-success) !important;
-        color: white !important;
-        border-color: var(--hrb-success) !important;
-    }
-
-    .hrb-btn-success:hover {
-        background: #0d5a0d !important;
-        border-color: #0d5a0d !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn:disabled,
-    .hrb-btn[disabled] {
-        background: #e9ecef !important;
-        color: #6c757d !important;
-        border-color: #e9ecef !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-        box-shadow: none !important;
-        opacity: 0.6 !important;
-    }
-
-    .hrb-btn:disabled:hover,
-    .hrb-btn[disabled]:hover {
-        background: #e9ecef !important;
-        color: #6c757d !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    /* Simplified Time Slot Buttons */
     .hrb-time-slot {
-        border: 1px solid var(--hrb-border) !important;
-        border-radius: 6px !important;
-        padding: 12px !important;
-        text-align: center !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        background: #ffffff !important;
+        min-height: 55px;
+        padding: 8px 4px;
     }
 
-    .hrb-time-slot.available {
-        border-color: #10b981 !important;
-        background: #f0fdf4 !important;
+    .hrb-time-slot-time {
+        font-size: 12px;
     }
 
-    .hrb-time-slot.available:hover {
-        border-color: #059669 !important;
-        background: #dcfce7 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+    .hrb-loading-spinner {
+        width: 32px;
+        height: 32px;
     }
 
-    .hrb-time-slot.selected {
-        border-color: var(--hrb-primary) !important;
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.3) !important;
+    .hrb-loading-text {
+        font-size: 13px;
     }
-
-    .hrb-time-slot.unavailable {
-        border-color: #ef4444 !important;
-        background: #fef2f2 !important;
-        color: #991b1b !important;
-        cursor: not-allowed !important;
-        opacity: 0.7 !important;
-    }
-
-    /* Fixed People Counter Buttons */
-    .hrb-people-counter .hrb-btn {
-        padding: 8px 12px !important;
-        font-size: 14px !important;
-        line-height: 1 !important;
-        min-width: 32px !important;
-        border-radius: 4px !important;
-        flex: none !important;
-        font-weight: 600 !important;
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        border: 1px solid var(--hrb-primary) !important;
-    }
-
-    .hrb-people-counter .hrb-btn:hover {
-        background: var(--hrb-secondary) !important;
-        border-color: var(--hrb-secondary) !important;
-    }
-
-    .hrb-people-counter input {
-        max-width: 60px !important;
-        text-align: center !important;
-        padding: 8px 12px !important;
-        min-height: 32px !important;
-    }
-
-    /* Simplified Visual Effects */
-
-    /* Simplified Extras List */
-    /* .hrb-extras-list {
-    border: 1px solid rgba(0, 115, 170, 0.15) !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-    overflow: hidden !important;
-} */
-
-    .hrb-extra-item {
-        border-bottom: 1px solid rgba(0, 115, 170, 0.1) !important;
-        transition: background-color 0.2s ease !important;
-    }
-
-    .hrb-extra-item:hover {
-        background: rgba(0, 115, 170, 0.03) !important;
-    }
-
-    .hrb-checkbox-label {
-        padding: 20px !important;
-        gap: 16px !important;
-    }
-
-    .hrb-checkbox-label input[type="checkbox"] {
-        width: 20px !important;
-        height: 20px !important;
-        accent-color: var(--hrb-primary) !important;
-        position: relative !important;
-    }
-
-    /* Simplified Verification Section */
-    .hrb-verification-section {
-        background: rgba(0, 115, 170, 0.02) !important;
-        border: 1px solid rgba(0, 115, 170, 0.1) !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin: 20px 0 !important;
-    }
-
-    /* Simplified Success/Error Messages */
-    .hrb-verification-success,
-    .hrb-alert-success {
-        background: #f0fdf4 !important;
-        border: 1px solid #10b981 !important;
-        border-radius: 6px !important;
-        padding: 12px 16px !important;
-        border-left: 4px solid #10b981 !important;
-    }
-
-    .hrb-verification-error,
-    .hrb-alert-error {
-        background: #fef2f2 !important;
-        border: 1px solid #ef4444 !important;
-        border-radius: 6px !important;
-        padding: 12px 16px !important;
-        border-left: 4px solid #ef4444 !important;
-    }
-
-    /* Simplified Payment Methods */
-    .hrb-payment-methods {
-        gap: 15px !important;
-        margin: 20px 0 !important;
-    }
-
-    .hrb-payment-method {
-        border: 1px solid rgba(0, 115, 170, 0.15) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease !important;
-        overflow: hidden !important;
-    }
-
-    .hrb-payment-method:hover {
-        border-color: var(--hrb-primary) !important;
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.1) !important;
-    }
-
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content {
-        background: #f0f8ff !important;
-        border-left: 3px solid var(--hrb-primary) !important;
-    }
-
-    /* Simplified Room Info */
-
-    /* Enhanced Responsive Design Elements */
-    @media (max-width: 768px) {
-        .hrb-booking-form {
-            padding: 20px !important;
-        }
-
-        .hrb-room-info {
-            margin: -20px -20px 30px -20px !important;
-            padding: 30px 20px !important;
-        }
-
-        .hrb-room-info h2.hrb-heading-md {
-            font-size: 2rem !important;
-        }
-
-        .hrb-form-steps {
-            padding: 20px 15px !important;
-            margin-bottom: 30px !important;
-        }
-
-        .hrb-step-icon {
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 14px !important;
-        }
-
-        .hrb-step-label {
-            font-size: 12px !important;
-        }
-
-        .hrb-btn {
-            padding: 14px 24px !important;
-            font-size: 14px !important;
-        }
-    }
+}
 </style>
 
 <div class="">
 
 
     <div class="hrb-booking-form-wrapper">
-        <form class="hrb-booking-form hrb-form" id="hrb-booking-form-<?php echo esc_attr($room_id); ?>" data-room-id="<?php echo esc_attr($room_id); ?>" data-local-pricing="true">
+        <form class="hrb-booking-form hrb-form" id="hrb-booking-form-<?php echo esc_attr($room_id); ?>" data-room-id="<?php echo esc_attr($room_id); ?>" data-room-name="<?php echo esc_attr($room->name); ?>" data-local-pricing="true">
             <!-- Step Progress Indicator -->
             <div class="hrb-form-steps">
                 <div class="hrb-step active" data-step="1">
@@ -2214,6 +1291,11 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <label class="hrb-form-label required">
                         <?php _e('Available Time Slots', 'hourly-room-booking'); ?>
                     </label>
+                    <div class="hrb-timezone-notice">
+                        <small style="color: #666; font-style: italic;">
+                            <?php _e('Bitte beachten Sie: Die verfügbaren Zeiten sind in der Zeitzone von Berlin angegeben.', 'hourly-room-booking'); ?>
+                        </small>
+                    </div>
                     <div class="hrb-time-slots" id="time-slots-<?php echo $room_id; ?>">
                         <!-- Time slots will be loaded via AJAX -->
                         <div class="hrb-loading-message">
@@ -2325,6 +1407,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             <!-- Step 3: Customer Details -->
             <div class="hrb-form-step-content" data-step="3">
                 <h3 class="hrb-heading-sm"><?php _e('Your Details', 'hourly-room-booking'); ?></h3>
+                
+                <!-- Anonymous Booking Information -->
+                <div class="hrb-static-info" style="margin-bottom: 20px;">
+                    <h4><?php _e('Note on anonymous booking', 'hourly-room-booking'); ?></h4>
+                    <p><?php _e('You can complete this booking anonymously. The "Last Name" field is therefore not a mandatory field – it is sufficient if you enter a synonym or an abbreviation.', 'hourly-room-booking'); ?></p>
+                    <p><?php _e('Please note, however: To successfully complete the booking, an email verification is required. We will send a confirmation code to the email address you provided, which you must enter in the next step.', 'hourly-room-booking'); ?></p>
+                </div>
 
                 <?php
                 // Auto-fill user details for logged-in users using booking-specific meta fields
@@ -2360,7 +1449,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 ?>
 
                 <?php if (is_user_logged_in()): ?>
-                    <div class="hrb-alert hrb-alert-info" style="margin-bottom: 20px;">
+                    <div class="hrb-static-info" style="margin-bottom: 20px;">
                         <strong><?php _e('Welcome back!', 'hourly-room-booking'); ?></strong>
                         <?php _e('Your details have been pre-filled from your account. You can modify them if needed.', 'hourly-room-booking'); ?>
                     </div>
@@ -2382,15 +1471,14 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                     <div class="hrb-col-6">
                         <div class="hrb-form-group">
-                            <label class="hrb-form-label required" for="last-name-<?php echo $room_id; ?>">
+                            <label class="hrb-form-label" for="last-name-<?php echo $room_id; ?>">
                                 <?php _e('Last Name', 'hourly-room-booking'); ?>
                             </label>
                             <input type="text"
                                 class="hrb-form-control"
                                 id="last-name-<?php echo $room_id; ?>"
                                 name="last_name"
-                                value="<?php echo esc_attr($user_last_name); ?>"
-                                required>
+                                value="<?php echo esc_attr($user_last_name); ?>">
                         </div>
                     </div>
                 </div>
@@ -2411,7 +1499,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                     <div class="hrb-col-6">
                         <div class="hrb-form-group">
-                            <label class="hrb-form-label required" for="phone-<?php echo $room_id; ?>">
+                            <label class="hrb-form-label" for="phone-<?php echo $room_id; ?>">
                                 <?php _e('Phone Number', 'hourly-room-booking'); ?>
                             </label>
                             <input type="tel"
@@ -2419,22 +1507,11 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 id="phone-<?php echo $room_id; ?>"
                                 name="phone"
                                 value="<?php echo esc_attr($user_phone); ?>"
-                                required
                                 placeholder="+49 123 456 789">
                         </div>
                     </div>
                 </div>
 
-                <div class="hrb-form-group">
-                    <label class="hrb-form-label" for="company-<?php echo $room_id; ?>">
-                        <?php _e('Company (Optional)', 'hourly-room-booking'); ?>
-                    </label>
-                    <input type="text"
-                        class="hrb-form-control"
-                        id="company-<?php echo $room_id; ?>"
-                        name="company"
-                        value="<?php echo esc_attr($user_company); ?>">
-                </div>
 
                 <!-- Contact Verification Section -->
                 <div class="hrb-verification-container">
@@ -2447,7 +1524,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     $both_enabled = $email_notifications && $sms_notifications;
                     ?>
 
-                    <div class="hrb-alert hrb-alert-info">
+                    <div class="hrb-verification-alert">
                         <strong><?php _e('Verification Required', 'hourly-room-booking'); ?></strong>
                         <?php if ($both_enabled): ?>
                             <?php _e('Please verify your contact information before proceeding. Choose your preferred verification method.', 'hourly-room-booking'); ?>
@@ -2508,6 +1585,16 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                         </div>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Change Email Button -->
+                        <div class="hrb-form-group">
+                            <button type="button" class="hrb-btn hrb-btn-secondary hrb-btn-sm" id="change-email-button">
+                                <?php _e('Change Email', 'hourly-room-booking'); ?>
+                            </button>
+                            <div class="hrb-form-help">
+                                <span><?php _e('Need to use a different email address?', 'hourly-room-booking'); ?></span>
                             </div>
                         </div>
 
@@ -2590,7 +1677,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     </div>
                 </div>
 
-                <div class="hrb-payment-notice hrb-alert hrb-alert-info">
+                <div class="hrb-payment-notice hrb-info-box hrb-alert-info">
                     <strong><?php _e('Payment Policy:', 'hourly-room-booking'); ?></strong>
                     <ul>
                         <li><?php _e('Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds', 'hourly-room-booking'); ?></li>
@@ -2658,7 +1745,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
                 <div class="hrb-terms-acceptance">
                     <label class="hrb-checkbox-label">
-                        <input type="checkbox" name="accept_terms" required>
+                        <input type="checkbox" name="accept_terms">
                         <span>
                             <?php _e('I accept the', 'hourly-room-booking'); ?>
                             <a href="#" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
@@ -2728,7 +1815,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         height: 50px;
         border: 4px solid rgba(59, 130, 246, 0.1);
         border-radius: 50%;
-        border-top-color: #3b82f6;
+        border-top-color: var(--hrb-loading-primary);
         border-right-color: #8b5cf6;
         animation: hrb-spin-beautiful 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
         z-index: 1001;
@@ -2738,7 +1825,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         position: relative;
         pointer-events: none;
         opacity: 0.9;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, var(--hrb-loading-primary), var(--hrb-alert-info-text));
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         transform: scale(0.98);
         transition: all 0.3s ease;
@@ -2762,7 +1849,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         height: 16px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
-        border-top-color: #ffffff;
+        border-top-color: var(--hrb-ffffff);
         animation: hrb-spin 1s linear infinite;
         margin-right: 8px;
     }
@@ -2846,7 +1933,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
     }
 
     .hrb-payment-redirect-message {
-        background: linear-gradient(135deg, #0073aa, #005a87);
+        background: linear-gradient(135deg, var(--hrb-0073aa), var(--hrb-005a87));
         color: white;
         padding: 30px;
         border-radius: 12px;
@@ -2915,13 +2002,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
     /* Loading button styles */
     .hrb-submit-btn:disabled {
-        background-color: #6c757d !important;
+        background-color: var(--hrb-text-muted) !important;
         cursor: not-allowed !important;
         opacity: 0.7 !important;
     }
 
     .hrb-submit-btn.hrb-loading:disabled {
-        background-color: #0073aa !important;
+        background-color: var(--hrb-0073aa) !important;
         cursor: not-allowed !important;
         opacity: 1 !important;
     }
@@ -2934,26 +2021,71 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         // Hourly price removed - using 2-4 hour pricing system
         const currencySymbol = '<?php echo esc_js($currency_symbol); ?>';
 
+        // Auto-load time slots if default values are set
+        const defaultDate = '<?php echo esc_js($prefill_date); ?>';
+        const defaultDuration = '<?php echo esc_js($prefill_duration); ?>';
+        
+        if (defaultDate && defaultDuration) {
+            // Load time slots automatically for default values
+            loadTimeSlots(<?php echo $room_id; ?>, defaultDate, defaultDuration);
+        }
+        
+        // Get booking time settings from database
+        const bookingStartTime = '<?php echo esc_js(get_option('hrb_booking_start_time', '08:00')); ?>';
+        const bookingEndTime = '<?php echo esc_js(get_option('hrb_booking_end_time', '20:00')); ?>';
+
         // Auto-load time slots if form is pre-filled from search
         const prefillDate = '<?php echo esc_js($prefill_date); ?>';
         const prefillTime = '<?php echo esc_js($prefill_time); ?>';
         const prefillDuration = '<?php echo esc_js($prefill_duration); ?>';
 
         if (prefillDate && prefillDuration) {
-            // Trigger time slot loading
-            loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration);
-
-            // If time is also pre-filled, select the corresponding time slot
+            // If time is also pre-filled, load time slots with callback
             if (prefillTime) {
-                setTimeout(function() {
-                    const timeSlot = form.find('.hrb-time-slot').filter(function() {
-                        return $(this).find('.hrb-time-slot-time').text().trim() === prefillTime;
-                    });
-                    if (timeSlot.length) {
-                        timeSlot.click();
-                    }
-                }, 1000); // Wait for time slots to load
+                loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration, function() {
+                    // Add a small delay to ensure DOM is fully rendered and scroll events are processed
+                    setTimeout(function() {
+                        // Auto-select the pre-filled time slot after time slots are loaded
+                        const timeSlot = form.find('.hrb-time-slot').filter(function() {
+                            const timeText = $(this).find('.hrb-time-slot-time').text();
+                            const startTime = timeText.split('-')[0].trim();
+                            const isAvailable = $(this).hasClass('available') && !$(this).hasClass('unavailable');
+                            return startTime === prefillTime && isAvailable;
+                        });
+                        
+                        if (timeSlot.length) {
+                            // Directly trigger time slot selection instead of relying on click
+                            const selectedSlot = timeSlot.first();
+                            const startTime = selectedSlot.data('start-time');
+                            const endTime = selectedSlot.data('end-time');
+                            const roomId = <?php echo $room_id; ?>;
+
+                            // Remove previous selection
+                            form.find('.hrb-time-slot').removeClass('selected');
+                            selectedSlot.addClass('selected');
+
+                            // Update hidden fields
+                            $('#start-time-' + roomId).val(startTime);
+                            $('#end-time-' + roomId).val(endTime);
+
+                            // Update booking summary
+                            updateBookingSummary();
+                        }
+                    }, 200); // Small delay to ensure DOM is ready and scroll events are processed
+                });
+            } else {
+                // Trigger time slot loading
+                loadTimeSlots(<?php echo $room_id; ?>, prefillDate, prefillDuration);
             }
+        }
+
+        // Check initial verification status if email is pre-filled
+        const initialEmail = form.find('input[name="email"]').val();
+        if (initialEmail && initialEmail.trim() !== '') {
+            // Small delay to ensure all elements are loaded
+            setTimeout(function() {
+                updateVerificationContactInfo();
+            }, 500);
         }
 
         // Fallback showMessage function to prevent undefined errors
@@ -3031,18 +2163,8 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                         return false;
                     }
 
-                    if (!lastName.trim()) {
-                        showValidationError('<?php _e('Please enter your last name', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
-
                     if (!email.trim() || !isValidEmail(email)) {
                         showValidationError('<?php _e('Please enter a valid email address', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
-
-                    if (!phone.trim()) {
-                        showValidationError('<?php _e('Please enter your phone number', 'hourly-room-booking'); ?>');
                         return false;
                     }
 
@@ -3059,6 +2181,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     const paymentMethod = form.find('input[name="payment_method"]:checked').val();
                     if (!paymentMethod) {
                         showValidationError('<?php _e('Please select a payment method', 'hourly-room-booking'); ?>');
+                        return false;
+                    }
+                    break;
+                    
+                case 5:
+                    // Validate terms acceptance
+                    const termsAccepted = form.find('input[name="accept_terms"]').is(':checked');
+                    if (!termsAccepted) {
+                        showValidationError('<?php _e('Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen, um fortzufahren.', 'hourly-room-booking'); ?>');
                         return false;
                     }
                     break;
@@ -3142,9 +2273,9 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
 
-        // Handle payment method restriction for long bookings
-        form.find('select[name="duration"]').on('change', function() {
-            const duration = parseInt($(this).val());
+        // Function to apply payment method restriction
+        function applyPaymentMethodRestriction() {
+            const duration = parseInt(form.find('select[name="duration"]').val());
             const onsiteOption = $('#onsite-payment-option');
 
             if (duration >= 4) {
@@ -3153,7 +2284,14 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             } else {
                 onsiteOption.show();
             }
+        }
 
+        // Apply payment method restriction on page load
+        applyPaymentMethodRestriction();
+
+        // Handle payment method restriction for long bookings
+        form.find('select[name="duration"]').on('change', function() {
+            applyPaymentMethodRestriction();
             updateBookingSummary();
         });
 
@@ -3184,10 +2322,26 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             updateBookingSummary();
         });
 
+        // Handle clicking on payment method containers
+        form.on('click', '.hrb-payment-method', function(e) {
+            // Don't trigger if clicking on the radio button itself
+            if (e.target.type === 'radio') {
+                return;
+            }
+
+            const radio = $(this).find('input[type="radio"]');
+            radio.prop('checked', true).trigger('change');
+        });
+
 
         // Handle form submission
         form.on('submit', function(e) {
             e.preventDefault();
+
+            // Validate the final step (terms acceptance)
+            if (!validateStep(5)) {
+                return;
+            }
 
             const paymentMethod = form.find('input[name="payment_method"]:checked').val();
 
@@ -3252,7 +2406,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             $(this).removeClass('hrb-step-clickable');
         });
 
-        function loadTimeSlots(roomId, date, duration) {
+        function loadTimeSlots(roomId, date, duration, callback) {
             const container = $('#time-slots-' + roomId);
 
             if (!date || !duration) {
@@ -3261,6 +2415,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <div class="hrb-loading-text"><?php _e('Please select a date and duration first', 'hourly-room-booking'); ?></div>
                 </div>
             `);
+                if (callback) callback();
                 return;
             }
 
@@ -3287,9 +2442,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     } else {
                         container.html('<div class="hrb-no-slots"><?php _e('No available time slots for this date and duration', 'hourly-room-booking'); ?></div>');
                     }
+                    // Execute callback after time slots are loaded
+                    if (callback) callback();
                 },
                 error: function() {
                     container.html('<div class="hrb-error-message"><?php _e('Error loading time slots. Please try again.', 'hourly-room-booking'); ?></div>');
+                    // Execute callback even on error
+                    if (callback) callback();
                 }
             });
         }
@@ -3350,13 +2509,48 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         function generateTimeSlots(duration) {
             const slots = [];
-            const startHour = 8;
-            const endHour = 20;
             const durationHours = parseInt(duration);
-
-            for (let hour = startHour; hour <= endHour - durationHours; hour++) {
-                const startTime = String(hour).padStart(2, '0') + ':00';
-                const endTime = String(hour + durationHours).padStart(2, '0') + ':00';
+            
+            // Parse start and end times from settings
+            const startHour = parseInt(bookingStartTime.split(':')[0]);
+            const startMinute = parseInt(bookingStartTime.split(':')[1]);
+            const endHour = parseInt(bookingEndTime.split(':')[0]);
+            const endMinute = parseInt(bookingEndTime.split(':')[1]);
+            
+            // Convert to minutes for easier calculation
+            const startTimeMinutes = startHour * 60 + startMinute;
+            const endTimeMinutes = endHour * 60 + endMinute;
+            const durationMinutes = durationHours * 60;
+            
+            // Generate time slots in 30-minute intervals
+            for (let timeMinutes = startTimeMinutes; timeMinutes <= endTimeMinutes - durationMinutes; timeMinutes += 30) {
+                const startHourSlot = Math.floor(timeMinutes / 60);
+                const startMinuteSlot = timeMinutes % 60;
+                const endTimeMinutesSlot = timeMinutes + durationMinutes;
+                const endHourSlot = Math.floor(endTimeMinutesSlot / 60);
+                const endMinuteSlot = endTimeMinutesSlot % 60;
+                
+                // Check if the slot exceeds the end time (handle day overflow)
+                let endHourDisplay = endHourSlot;
+                let slotExceedsEndTime = false;
+                
+                if (endHourSlot >= 24) {
+                    // Slot crosses midnight - check if it's within the same day
+                    endHourDisplay = endHourSlot - 24;
+                    // If the slot ends after midnight, it exceeds the end time
+                    slotExceedsEndTime = true;
+                } else {
+                    // Check if slot ends after the configured end time
+                    slotExceedsEndTime = endTimeMinutesSlot > endTimeMinutes;
+                }
+                
+                // Skip this slot if it exceeds the end time
+                if (slotExceedsEndTime) {
+                    continue;
+                }
+                
+                const startTime = String(startHourSlot).padStart(2, '0') + ':' + String(startMinuteSlot).padStart(2, '0');
+                const endTime = String(endHourDisplay).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
                 const display = startTime + ' - ' + endTime;
 
                 // Calculate price based on duration
@@ -3382,8 +2576,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             const extraPeople = parseInt(form.find('input[name="extra_people"]').val()) || 0;
             const selectedExtras = form.find('input[name="extras[]"]:checked');
 
-            $('#review-date').text(formData.booking_date);
-            $('#review-time').text(formData.start_time + ' - ' + formData.end_time);
+            // Format date to German format (d.m.Y)
+            const dateParts = formData.booking_date.split('-');
+            const formattedDate = dateParts[2] + '.' + dateParts[1] + '.' + dateParts[0];
+            $('#review-date').text(formattedDate);
+            
+            // Format time to 24-hour format (H:i)
+            const startTime = formData.start_time.substring(0, 5); // Remove seconds
+            const endTime = formData.end_time.substring(0, 5); // Remove seconds
+            $('#review-time').text(startTime + ' - ' + endTime);
             $('#review-duration').text(formData.duration + ' <?php _e('hours', 'hourly-room-booking'); ?>');
             $('#review-customer-name').text(formData.first_name + ' ' + formData.last_name);
             $('#review-email').text(formData.email);
@@ -3425,13 +2626,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handlePayPalPayment() {
-            console.log('Processing PayPal payment...');
 
             // Get form data
             const formData = getFormData();
 
             // Validate required fields before creating PayPal order
-            if (!formData.first_name || !formData.last_name || !formData.email || !formData.phone) {
+            if (!formData.first_name || !formData.email) {
                 showValidationError('Please fill in all required customer details before proceeding with payment.');
                 return;
             }
@@ -3488,7 +2688,6 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 last_name: form.find('input[name="last_name"]').val(),
                 email: form.find('input[name="email"]').val(),
                 phone: form.find('input[name="phone"]').val(),
-                company: form.find('input[name="company"]').val()
             };
 
             // Get selected extras
@@ -3642,7 +2841,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                         ${extra.image_url ? `<img src="${extra.image_url}" alt="${extra.name}">` : '⭐'}
                                     </div>
                                     <div class="hrb-extra-details">
-                                        <div class="hrb-extra-title">${extra.name}${stockInfo}</div>
+                                        <div class="hrb-extra-title">${extra.name}</div>
                                     </div>
                                     <div class="hrb-extra-price">+${window.HRB.utils.formatPrice(extra.price)}</div>
                                 </div>
@@ -3785,8 +2984,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 paypalFee = subtotal * 0.03; // 3% fee
             }
 
+            // Calculate VAT (19% in Germany)
+            const taxRate = <?php echo floatval(get_option('hrb_tax_rate', 19)); ?>;
+            const taxAmount = subtotal * (taxRate / 100);
+            
             // Calculate total
-            const total = subtotal + paypalFee;
+            const total = subtotal + taxAmount + paypalFee;
 
             // Build summary HTML
             let summaryHtml = `
@@ -3813,6 +3016,22 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     summaryHtml += `<div class="hrb-summary-item hrb-summary-extra">${detail}</div>`;
                 });
             }
+
+            // Add subtotal line
+            summaryHtml += `
+                <div class="hrb-summary-item hrb-summary-subtotal">
+                    <span><strong>Zwischensumme</strong></span>
+                    <span><strong>${window.HRB.utils.formatPrice(subtotal)}</strong></span>
+                </div>
+            `;
+
+            // Add VAT line
+            summaryHtml += `
+                <div class="hrb-summary-item hrb-summary-vat">
+                    <span>zzgl. ${taxRate}% MwSt.</span>
+                    <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
+                </div>
+            `;
 
             if (paypalFee > 0 && paymentMethod === 'paypal') {
                 summaryHtml += `
@@ -3853,6 +3072,10 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         // Update verification displays when email/phone changes
         form.find('input[name="email"], input[name="phone"]').on('input', function() {
+            // If email is being changed, reset verification state
+            if ($(this).attr('name') === 'email') {
+                resetVerificationState();
+            }
             updateVerificationContactInfo();
         });
 
@@ -3881,6 +3104,24 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             }
         });
 
+        // Change Email button handler
+        $('#change-email-button').on('click', function() {
+            // Scroll to the email field in the customer details section
+            const emailField = form.find('input[name="email"]');
+            if (emailField.length) {
+                // Scroll to the email field with smooth animation
+                $('html, body').animate({
+                    scrollTop: emailField.offset().top - 100
+                }, 500);
+                
+                // Focus on the email field after a short delay
+                setTimeout(function() {
+                    emailField.focus();
+                    emailField.select(); // Select all text for easy replacement
+                }, 600);
+            }
+        });
+
         function updateVerificationContactInfo() {
             const email = form.find('input[name="email"]').val();
             const phone = form.find('input[name="phone"]').val();
@@ -3892,19 +3133,32 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 checkVerificationStatus(email);
             } else {
                 // Reset verification form to default state for invalid/empty email
-                $('.hrb-alert-success').remove();
-                $('.hrb-alert.hrb-alert-info').show();
-                $('.hrb-verification-section').show();
-                $('#send-verification-code').show();
-                $('.hrb-verification-code-section').hide();
-                $('.hrb-resend-section').hide();
-                verificationCompleted = false;
-                verificationVerified = false;
-
-                // Reset button to verification state
-                $('#details-and-verification-next').prop('disabled', true);
-                $('#details-and-verification-next').text('<?php _e('Verify & Continue', 'hourly-room-booking'); ?>');
+                resetVerificationState();
             }
+        }
+
+        function resetVerificationState() {
+            // Clear any existing verification messages
+            $('.hrb-alert-success').remove();
+            $('.hrb-alert.hrb-alert-info').show();
+            $('.hrb-verification-section').show();
+            $('#send-verification-code').show();
+            $('.hrb-verification-code-section').hide();
+            $('.hrb-resend-section').hide();
+            
+            // Clear verification code input
+            $('#verification-code-<?php echo $room_id; ?>').val('');
+            
+            // Reset verification state variables
+            verificationCompleted = false;
+            verificationVerified = false;
+
+            // Reset button to verification state
+            $('#details-and-verification-next').prop('disabled', true);
+            $('#details-and-verification-next').text('<?php _e('Verify & Continue', 'hourly-room-booking'); ?>');
+            
+            // Re-enable send verification button
+            $('#send-verification-code').prop('disabled', false);
         }
 
         function checkVerificationStatus(email) {
@@ -3922,12 +3176,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 success: function(response) {
                     if (response.success && response.data.is_verified) {
                         // User is already verified - hide entire verification form
-                        $('.hrb-alert.hrb-alert-info').hide();
+                        $('.hrb-verification-alert').hide();
                         $('.hrb-verification-section').hide();
 
                         // Remove any existing success messages and add new one
                         $('.hrb-alert-success').remove();
-                        $('.hrb-alert.hrb-alert-info').after('<div class="hrb-alert hrb-alert-success"><strong>✅ ' + response.data.message + '</strong></div>');
+                        $('.hrb-verification-container').prepend('<div class="hrb-alert hrb-alert-success"><strong>✅ ' + response.data.message + '</strong></div>');
 
                         // Mark as verified and enable next step button
                         verificationCompleted = true;

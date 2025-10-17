@@ -222,6 +222,13 @@ class HRB_Booking_Manager {
     public function save_booking_extras($booking_id, $extras_data, $booking_date, $start_time, $end_time) {
         global $wpdb;
         
+        // First, remove all existing extras for this booking
+        $wpdb->delete(
+            $wpdb->prefix . 'hrb_booking_extras',
+            ['booking_id' => $booking_id],
+            ['%d']
+        );
+        
         if (empty($extras_data)) {
             return true;
         }
@@ -250,47 +257,24 @@ class HRB_Booking_Manager {
                 // Save to booking_extras table for pricing and stock management
                 $extra = $extras_manager->get_extra($extra_id);
                 if ($extra) {
-                    // Check if extra already exists for this booking
-                    $existing_extra = $wpdb->get_var($wpdb->prepare(
-                        "SELECT id FROM {$wpdb->prefix}hrb_booking_extras 
-                         WHERE booking_id = %d AND extra_id = %d 
-                         AND booking_date = %s AND start_time = %s AND end_time = %s",
-                        $booking_id, $extra_id, $booking_date, $start_time, $end_time
-                    ));
+                    // Insert new extra (since we cleared all existing ones)
+                    $result = $wpdb->insert(
+                        $wpdb->prefix . 'hrb_booking_extras',
+                        [
+                            'booking_id' => $booking_id,
+                            'extra_id' => $extra_id,
+                            'quantity' => 1,
+                            'unit_price' => $extra->price,
+                            'total_price' => $extra->price,
+                            'booking_date' => $booking_date,
+                            'start_time' => $start_time,
+                            'end_time' => $end_time
+                        ],
+                        ['%d', '%d', '%d', '%f', '%f', '%s', '%s', '%s']
+                    );
                     
-                    if ($existing_extra) {
-                        // Update existing extra
-                        $wpdb->update(
-                            $wpdb->prefix . 'hrb_booking_extras',
-                            [
-                                'quantity' => 1,
-                                'unit_price' => $extra->price,
-                                'total_price' => $extra->price
-                            ],
-                            ['id' => $existing_extra],
-                            ['%d', '%f', '%f'],
-                            ['%d']
-                        );
-                    } else {
-                        // Insert new extra
-                        $result = $wpdb->insert(
-                            $wpdb->prefix . 'hrb_booking_extras',
-                            [
-                                'booking_id' => $booking_id,
-                                'extra_id' => $extra_id,
-                                'quantity' => 1,
-                                'unit_price' => $extra->price,
-                                'total_price' => $extra->price,
-                                'booking_date' => $booking_date,
-                                'start_time' => $start_time,
-                                'end_time' => $end_time
-                            ],
-                            ['%d', '%d', '%d', '%f', '%f', '%s', '%s', '%s']
-                        );
-                        
-                        if ($result === false) {
-                            return new WP_Error('extras_save_failed', __('Failed to save extras pricing', 'hourly-room-booking'));
-                        }
+                    if ($result === false) {
+                        return new WP_Error('extras_save_failed', __('Failed to save extras pricing', 'hourly-room-booking'));
                     }
                 }
             }
@@ -336,9 +320,9 @@ class HRB_Booking_Manager {
         // Calculate subtotal before fees
         $subtotal = $base_price + $extra_people_cost + $extras_cost;
 
-        // No tax calculation for simplified pricing
-        $tax_rate = 0;
-        $tax_amount = 0;
+        // Calculate VAT (19% in Germany)
+        $tax_rate = floatval(get_option('hrb_tax_rate', 19)) / 100; // Convert percentage to decimal
+        $tax_amount = $subtotal * $tax_rate;
 
         // Calculate PayPal fee (3% on subtotal) - only if PayPal is selected
         $paypal_fee = 0;
@@ -354,7 +338,7 @@ class HRB_Booking_Manager {
             'extra_people_cost' => round($extra_people_cost, 2),
             'extras_cost' => round($extras_cost, 2),
             'subtotal' => round($subtotal, 2),
-            'tax_rate' => round($tax_rate * 100, 2),
+            'tax_rate' => round($tax_rate * 100, 2), // Return as percentage
             'tax_amount' => round($tax_amount, 2),
             'paypal_fee' => round($paypal_fee, 2),
             'total_amount' => round($total_amount, 2)
@@ -486,17 +470,53 @@ class HRB_Booking_Manager {
                 return new WP_Error('booking_conflict', __('Updated time slot conflicts with existing booking', 'hourly-room-booking'));
             }
             
-            // Recalculate pricing if time or room changed
-            if (isset($data['booking_date']) || isset($data['start_time']) || isset($data['end_time']) || isset($data['room_id'])) {
-                $pricing = $this->calculate_booking_price($check_data);
+            // Recalculate pricing if any pricing-related field changed
+            $pricing_fields = ['booking_date', 'start_time', 'end_time', 'room_id', 'extra_people', 'extras', 'payment_method'];
+            $should_recalculate = false;
+            
+            foreach ($pricing_fields as $field) {
+                if (isset($data[$field])) {
+                    $should_recalculate = true;
+                    break;
+                }
+            }
+            
+            if ($should_recalculate) {
+                // Get current extras from booking_extras table
+                $current_extras = array();
+                if (isset($data['extras'])) {
+                    $current_extras = $data['extras'];
+                } else {
+                    // Get existing extras from booking_extras table
+                    $existing_extras = $wpdb->get_results($wpdb->prepare(
+                        "SELECT extra_id FROM {$wpdb->prefix}hrb_booking_extras WHERE booking_id = %d",
+                        $booking_id
+                    ));
+                    $current_extras = array_column($existing_extras, 'extra_id');
+                }
+                
+                // Prepare complete data for pricing calculation
+                $pricing_data = array_merge($check_data, array(
+                    'extra_people' => isset($data['extra_people']) ? $data['extra_people'] : $booking->extra_people,
+                    'extras' => $current_extras,
+                    'payment_method' => isset($data['payment_method']) ? $data['payment_method'] : $booking->payment_method
+                ));
+                
+                $pricing = $this->calculate_booking_price($pricing_data);
                 $data = array_merge($data, array(
                     'total_hours' => $this->calculate_duration($check_data['start_time'], $check_data['end_time']),
                     'base_price' => $pricing['base_price'],
+                    'extra_people_price' => $pricing['extra_people_cost'],
+                    'extras_price' => $pricing['extras_cost'],
                     'tax_amount' => $pricing['tax_amount'],
+                    'paypal_fee' => $pricing['paypal_fee'],
                     'total_amount' => $pricing['total_amount']
                 ));
             }
         }
+        
+        // Remove extras from data since it's not a column in bookings table
+        unset($data['extras']);
         
         // Generate format array dynamically for the data being updated
         $format = array();
@@ -605,8 +625,6 @@ class HRB_Booking_Manager {
                 array('%d')
             );
             
-            // Debug: Log the update result
-            error_log("HRB Debug: Cancelling payment for booking {$booking_id}, payment_method: {$booking->payment_method}, payment_status: {$booking->payment_status}, update_result: {$update_result}");
         }
         
         // Send notification
@@ -802,6 +820,7 @@ class HRB_Booking_Manager {
     public function cleanup_expired_bookings() {
         global $wpdb;
         
+        
         // Get expired pending bookings before cancelling them
         $expired_bookings = $wpdb->get_results(
             "SELECT id, payment_method, payment_status 
@@ -832,13 +851,19 @@ class HRB_Booking_Manager {
             }
         }
         
-        // Mark no-show bookings
-        $wpdb->query(
+        // Mark confirmed bookings as completed when their time has passed
+        // This is the primary logic: confirmed bookings become completed when time passes
+        $completed_count = $wpdb->query(
             "UPDATE {$wpdb->prefix}hrb_bookings 
-             SET status = 'no_show' 
+             SET status = 'completed' 
              WHERE status = 'confirmed' 
-             AND CONCAT(booking_date, ' ', end_time) < NOW() - INTERVAL 2 HOUR"
+             AND CONCAT(booking_date, ' ', end_time) < NOW()"
         );
+        
+        
+        // Mark no-show bookings (this should be a separate manual process or different logic)
+        // For now, we'll keep this as a separate query that can be run manually
+        // or triggered by admin action, not automatically
     }
     
     /**
@@ -847,14 +872,19 @@ class HRB_Booking_Manager {
     public function send_booking_reminders() {
         global $wpdb;
         
-        // Get bookings starting in 1 hour
+        
+        // Get bookings starting in 1 hour (expanded window: 45-75 minutes)
         $upcoming_bookings = $wpdb->get_results(
             "SELECT b.*, c.email, c.phone 
              FROM {$wpdb->prefix}hrb_bookings b
              JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
              WHERE b.status = 'confirmed'
-             AND CONCAT(b.booking_date, ' ', b.start_time) BETWEEN NOW() + INTERVAL 50 MINUTE AND NOW() + INTERVAL 70 MINUTE"
+             AND CONCAT(b.booking_date, ' ', b.start_time) BETWEEN NOW() + INTERVAL 45 MINUTE AND NOW() + INTERVAL 75 MINUTE"
         );
+        
+        
+        $reminders_sent = 0;
+        $reminders_skipped = 0;
         
         foreach ($upcoming_bookings as $booking) {
             // Check if reminder already sent
@@ -865,9 +895,113 @@ class HRB_Booking_Manager {
             ));
             
             if ($reminder_sent == 0) {
-                $this->send_booking_notification($booking->id, 'booking_reminder');
+                $result = $this->send_booking_notification($booking->id, 'booking_reminder');
+                $reminders_sent++;
+            } else {
+                $reminders_skipped++;
             }
         }
+        
+        
+        return array(
+            'total_found' => count($upcoming_bookings),
+            'reminders_sent' => $reminders_sent,
+            'reminders_skipped' => $reminders_skipped
+        );
+    }
+    
+    /**
+     * Test booking reminders manually (for debugging)
+     */
+    public function test_booking_reminders() {
+        global $wpdb;
+        
+        echo "<h3>🧪 Manual Booking Reminder Test</h3>\n";
+        
+        // Check if email notifications are enabled
+        $email_enabled = get_option('hrb_email_notifications', 1);
+        echo "✅ Email notifications enabled: " . ($email_enabled ? 'YES' : 'NO') . "\n";
+        
+        // Check company email
+        $company_email = get_option('hrb_company_email', get_option('admin_email'));
+        echo "✅ Company email: {$company_email}\n";
+        
+        // Get all confirmed bookings
+        $all_bookings = $wpdb->get_results(
+            "SELECT b.id, b.booking_reference, b.booking_date, b.start_time, b.status, c.email 
+             FROM {$wpdb->prefix}hrb_bookings b
+             JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
+             WHERE b.status = 'confirmed'
+             ORDER BY b.booking_date DESC, b.start_time DESC
+             LIMIT 10"
+        );
+        
+        echo "✅ Total confirmed bookings: " . count($all_bookings) . "\n";
+        
+        if (count($all_bookings) > 0) {
+            echo "<h4>📋 Recent Bookings:</h4>\n";
+            foreach ($all_bookings as $booking) {
+                $booking_time = strtotime($booking->booking_date . ' ' . $booking->start_time);
+                $time_until = $booking_time - time();
+                $hours_until = round($time_until / 3600, 1);
+                
+                echo "- Booking #{$booking->id}: {$booking->booking_reference} on {$booking->booking_date} at {$booking->start_time} (Email: {$booking->email}) - {$hours_until} hours from now\n";
+            }
+        }
+        
+        // Test the reminder query
+        $upcoming_bookings = $wpdb->get_results(
+            "SELECT b.*, c.email, c.phone 
+             FROM {$wpdb->prefix}hrb_bookings b
+             JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
+             WHERE b.status = 'confirmed'
+             AND CONCAT(b.booking_date, ' ', b.start_time) BETWEEN NOW() + INTERVAL 45 MINUTE AND NOW() + INTERVAL 75 MINUTE"
+        );
+        
+        echo "<h4>🎯 Bookings in Reminder Window (45-75 minutes):</h4>\n";
+        echo "Found: " . count($upcoming_bookings) . " bookings\n";
+        
+        if (count($upcoming_bookings) > 0) {
+            foreach ($upcoming_bookings as $booking) {
+                echo "- Booking #{$booking->id}: {$booking->booking_reference} starts at {$booking->booking_date} {$booking->start_time} (Email: {$booking->email})\n";
+            }
+        } else {
+            echo "⚠️ No bookings found in the reminder window\n";
+            echo "💡 Try creating a test booking for 1 hour from now\n";
+        }
+        
+        // Check recent notification logs
+        $recent_logs = $wpdb->get_results(
+            "SELECT * FROM {$wpdb->prefix}hrb_notification_logs 
+             WHERE event = 'booking_reminder' 
+             ORDER BY created_at DESC 
+             LIMIT 5"
+        );
+        
+        echo "<h4>📋 Recent Reminder Logs:</h4>\n";
+        echo "Found: " . count($recent_logs) . " reminder logs\n";
+        
+        foreach ($recent_logs as $log) {
+            echo "- {$log->created_at}: {$log->type} to {$log->recipient} - Status: {$log->status}\n";
+            if ($log->error_message) {
+                echo "  Error: {$log->error_message}\n";
+            }
+        }
+        
+        // Manual reminder test
+        if (count($upcoming_bookings) > 0) {
+            echo "<h4>🚀 Manual Reminder Test:</h4>\n";
+            $result = $this->send_booking_reminders();
+            echo "✅ Manual test completed:\n";
+            echo "- Total found: {$result['total_found']}\n";
+            echo "- Reminders sent: {$result['reminders_sent']}\n";
+            echo "- Reminders skipped: {$result['reminders_skipped']}\n";
+        } else {
+            echo "<h4>⚠️ Cannot test - No bookings in reminder window</h4>\n";
+            echo "Create a test booking for 1 hour from now to test reminders\n";
+        }
+        
+        return $result ?? array();
     }
 
     /**
@@ -1159,6 +1293,67 @@ class HRB_Booking_Manager {
         }
 
         return false;
+    }
+    
+    /**
+     * Remove all extras for a booking
+     */
+    public function remove_booking_extras($booking_id) {
+        global $wpdb;
+        
+        $result = $wpdb->delete(
+            $wpdb->prefix . 'hrb_booking_extras',
+            ['booking_id' => $booking_id],
+            ['%d']
+        );
+        
+        return $result !== false;
+    }
+    
+    /**
+     * Fix existing bookings with missing extra_people_price
+     */
+    public function fix_extra_people_pricing() {
+        global $wpdb;
+        
+        // Get bookings that have extra_people > 0 but extra_people_price = 0
+        $bookings_to_fix = $wpdb->get_results(
+            "SELECT id, extra_people FROM {$wpdb->prefix}hrb_bookings 
+             WHERE extra_people > 0 AND extra_people_price = 0"
+        );
+        
+        foreach ($bookings_to_fix as $booking) {
+            $extra_people_price = $booking->extra_people * 15.00; // €15 per person
+            
+            $wpdb->update(
+                $wpdb->prefix . 'hrb_bookings',
+                array('extra_people_price' => $extra_people_price),
+                array('id' => $booking->id),
+                array('%f'),
+                array('%d')
+            );
+        }
+        
+        return count($bookings_to_fix);
+    }
+    
+    /**
+     * Mark bookings as no-show (manual process)
+     * This should be called manually by admin when they know customer didn't show up
+     */
+    public function mark_no_show_bookings() {
+        global $wpdb;
+        
+        // Mark confirmed bookings as no-show if they are past their end time
+        // This is a separate method that can be called manually or on a different schedule
+        $result = $wpdb->query(
+            "UPDATE {$wpdb->prefix}hrb_bookings 
+             SET status = 'no_show' 
+             WHERE status = 'confirmed' 
+             AND CONCAT(booking_date, ' ', end_time) < NOW() - INTERVAL 2 HOUR"
+        );
+        
+        return $result;
     }
 }
 ?>

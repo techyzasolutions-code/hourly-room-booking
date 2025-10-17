@@ -4,7 +4,7 @@
  * Plugin URI: https://yoursite.com/
  * Description: Professional room booking system with hourly slots, payment integration, and comprehensive management features.
  * Version: 1.0.0
- * Author: Your Name
+ * Author: Shivam Sharma
  * Requires at least: 5.0
  * Tested up to: 6.3
  * Requires PHP: 7.4
@@ -16,7 +16,7 @@
  * 
  * @package HourlyRoomBooking
  * @version 1.0.0
- * @author Your Name
+ * @author Shivam Sharma
  * @copyright 2024 Your Company
  * @license GPL-2.0-or-later
  */
@@ -419,7 +419,7 @@ final class HourlyRoomBooking {
                 'hrb-frontend',
                 HRB_ASSETS_URL . 'css/frontend.css',
                 [],
-                '1.1.13'
+                '1.1.19'
             );
         }
 
@@ -432,7 +432,7 @@ final class HourlyRoomBooking {
                 'hrb-calendar',
                 HRB_ASSETS_URL . 'css/calendar.css',
                 [],
-                '1.1.13'
+                '1.1.19'
             );
         }
 
@@ -465,7 +465,7 @@ final class HourlyRoomBooking {
                 'hrb-calendar',
                 HRB_ASSETS_URL . 'js/calendar.js',
                 ['jquery', 'fullcalendar'],
-                '1.1.12',
+                '1.1.18',
                 true
             );
         }
@@ -476,7 +476,7 @@ final class HourlyRoomBooking {
                 'hrb-frontend',
                 HRB_ASSETS_URL . 'js/frontend.js',
                 ['jquery', 'fullcalendar'],
-                '1.1.13',
+                '1.1.19',
                 true
             );
 
@@ -491,6 +491,9 @@ final class HourlyRoomBooking {
                     'loading' => __('Loading...', 'hourly-room-booking'),
                     'error'   => __('An error occurred', 'hourly-room-booking'),
                     'success' => __('Success!', 'hourly-room-booking'),
+                    'base_price' => __('Base Price', 'hourly-room-booking'),
+                    'paypal_fee' => __('PayPal Fee (3%)', 'hourly-room-booking'),
+                    'total' => __('Total', 'hourly-room-booking'),
                 ],
             ]);
         }
@@ -603,7 +606,6 @@ final class HourlyRoomBooking {
             }
 
             // Log error and prevent activation
-            error_log('HRB Plugin Activation Error: ' . $e->getMessage());
 
             wp_die(
                 esc_html($e->getMessage()),
@@ -728,7 +730,6 @@ final class HourlyRoomBooking {
      * @param Exception $e
      */
     private function handle_initialization_error(Exception $e): void {
-        error_log('HRB Plugin Initialization Error: ' . $e->getMessage());
         
         add_action('admin_notices', function() use ($e) {
             printf(
@@ -746,7 +747,6 @@ final class HourlyRoomBooking {
      * @param Exception $e
      */
     private function handle_component_error(Exception $e): void {
-        error_log('HRB Component Error: ' . $e->getMessage());
         
         add_action('admin_notices', function() use ($e) {
             printf(

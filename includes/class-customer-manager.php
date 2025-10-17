@@ -71,8 +71,7 @@ class HRB_Customer_Manager {
         $customer_data = wp_parse_args($data, $defaults);
         
         // Validate required fields
-        if (empty($customer_data['first_name']) || empty($customer_data['last_name']) || 
-            empty($customer_data['email']) || empty($customer_data['phone'])) {
+        if (empty($customer_data['first_name']) || empty($customer_data['email'])) {
             return new WP_Error('missing_fields', __('Required fields are missing', 'hourly-room-booking'));
         }
         
