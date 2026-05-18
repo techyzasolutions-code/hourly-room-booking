@@ -516,6 +516,48 @@ class HRB_Payment_Handler {
             wp_send_json_error(__('Missing required parameters', 'hourly-room-booking'));
         }
 
+        // SECURITY: Verify this PayPal order was issued by us for this booking.
+        // The pending payment record was created by create_paypal_order() with
+        // gateway_transaction_id = $order['id']. Without this check, an attacker
+        // could submit an arbitrary order_id (e.g. one created for a cheap
+        // booking) to mark a different (higher-value) booking as paid.
+        global $wpdb;
+        $expected_payment = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_payments
+             WHERE booking_id = %d
+               AND payment_method = 'paypal'
+               AND status = 'pending'
+               AND gateway_transaction_id = %s
+             ORDER BY id DESC LIMIT 1",
+            $booking_id,
+            $order_id
+        ));
+
+        if (!$expected_payment) {
+            // Retry of an already-captured order? Return idempotent success.
+            $already_completed = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}hrb_payments
+                 WHERE booking_id = %d
+                   AND payment_method = 'paypal'
+                   AND status = 'completed'
+                   AND gateway_transaction_id = %s
+                 LIMIT 1",
+                $booking_id,
+                $order_id
+            ));
+            if ($already_completed) {
+                wp_send_json_success(array(
+                    'message' => __('Payment Already Completed', 'hourly-room-booking'),
+                    'transaction_id' => $order_id
+                ));
+                return;
+            }
+            wp_send_json_error(__('Payment record not found for this order. Capture rejected.', 'hourly-room-booking'));
+        }
+
+        $expected_amount = floatval($expected_payment->amount);
+        $expected_currency = strtoupper((string) $expected_payment->currency);
+
         $access_token = $this->get_paypal_access_token();
         if (is_wp_error($access_token)) {
             wp_send_json_error($access_token->get_error_message());
@@ -540,8 +582,40 @@ class HRB_Payment_Handler {
         $capture_result = json_decode($body, true);
 
         if ($capture_result['status'] === 'COMPLETED') {
+            // SECURITY: defense-in-depth — confirm the captured amount and
+            // currency match what we issued the order for. If they don't,
+            // refuse to mark the booking as paid; the captured funds must
+            // be reviewed/refunded manually by an admin.
+            $captured_amount   = floatval($capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value']);
+            $captured_currency = strtoupper((string) $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['currency_code']);
+
+            if (abs($captured_amount - $expected_amount) > 0.01 || $captured_currency !== $expected_currency) {
+                // Flag this pending payment as failed/disputed so admins can spot it.
+                $wpdb->update(
+                    $wpdb->prefix . 'hrb_payments',
+                    array(
+                        'status'           => 'failed',
+                        'transaction_id'   => $capture_result['id'],
+                        'amount'           => $captured_amount,
+                        'currency'         => $captured_currency,
+                        'gateway_response' => json_encode($capture_result),
+                        'processed_at'     => current_time('mysql'),
+                    ),
+                    array('id' => $expected_payment->id),
+                    array('%s', '%s', '%f', '%s', '%s', '%s'),
+                    array('%d')
+                );
+
+                wp_send_json_error(sprintf(
+                    __('Payment amount mismatch (expected %1$s %2$s, captured %3$s %4$s). The booking has not been marked as paid. Please contact support to arrange a refund.', 'hourly-room-booking'),
+                    number_format($expected_amount, 2),
+                    $expected_currency,
+                    number_format($captured_amount, 2),
+                    $captured_currency
+                ));
+            }
+
             // Check if this payment has already been captured to prevent duplicates
-            global $wpdb;
             $existing_completed = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM {$wpdb->prefix}hrb_payments
                  WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'completed'
@@ -1340,13 +1414,49 @@ class HRB_Payment_Handler {
      * Capture PayPal payment (for success page)
      */
     public function capture_paypal_payment_ajax($order_id, $booking_id) {
+        global $wpdb;
+
+        // SECURITY: same guard as the public AJAX endpoint — verify the order
+        // was created by us for this booking before contacting PayPal.
+        $expected_payment = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_payments
+             WHERE booking_id = %d
+               AND payment_method = 'paypal'
+               AND status = 'pending'
+               AND gateway_transaction_id = %s
+             ORDER BY id DESC LIMIT 1",
+            $booking_id,
+            $order_id
+        ));
+
+        if (!$expected_payment) {
+            // Idempotent: already captured?
+            $already_completed = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}hrb_payments
+                 WHERE booking_id = %d
+                   AND payment_method = 'paypal'
+                   AND status = 'completed'
+                   AND gateway_transaction_id = %s
+                 LIMIT 1",
+                $booking_id,
+                $order_id
+            ));
+            if ($already_completed) {
+                return true;
+            }
+            return new WP_Error('hrb_payment_not_found', __('Payment record not found for this order. Capture rejected.', 'hourly-room-booking'));
+        }
+
+        $expected_amount   = floatval($expected_payment->amount);
+        $expected_currency = strtoupper((string) $expected_payment->currency);
+
         $access_token = $this->get_paypal_access_token();
         if (is_wp_error($access_token)) {
             return $access_token;
         }
-        
+
         $api_url = $this->get_paypal_api_url();
-        
+
         $response = wp_remote_post($api_url . '/v2/checkout/orders/' . $order_id . '/capture', array(
             'headers' => array(
                 'Content-Type' => 'application/json',
@@ -1355,17 +1465,44 @@ class HRB_Payment_Handler {
             ),
             'timeout' => 30
         ));
-        
+
         if (is_wp_error($response)) {
             return $response;
         }
-        
+
         $body = wp_remote_retrieve_body($response);
         $capture_result = json_decode($body, true);
-        
+
         if ($capture_result['status'] === 'COMPLETED') {
+            // SECURITY: defense-in-depth amount/currency check.
+            $captured_amount   = floatval($capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value']);
+            $captured_currency = strtoupper((string) $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['currency_code']);
+
+            if (abs($captured_amount - $expected_amount) > 0.01 || $captured_currency !== $expected_currency) {
+                $wpdb->update(
+                    $wpdb->prefix . 'hrb_payments',
+                    array(
+                        'status'           => 'failed',
+                        'transaction_id'   => $capture_result['id'],
+                        'amount'           => $captured_amount,
+                        'currency'         => $captured_currency,
+                        'gateway_response' => json_encode($capture_result),
+                        'processed_at'     => current_time('mysql'),
+                    ),
+                    array('id' => $expected_payment->id),
+                    array('%s', '%s', '%f', '%s', '%s', '%s'),
+                    array('%d')
+                );
+                return new WP_Error('hrb_payment_amount_mismatch', sprintf(
+                    __('Payment amount mismatch (expected %1$s %2$s, captured %3$s %4$s). Please contact support.', 'hourly-room-booking'),
+                    number_format($expected_amount, 2),
+                    $expected_currency,
+                    number_format($captured_amount, 2),
+                    $captured_currency
+                ));
+            }
+
             // Check if this payment has already been captured to prevent duplicates
-            global $wpdb;
             $existing_completed = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM {$wpdb->prefix}hrb_payments
                  WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'completed'

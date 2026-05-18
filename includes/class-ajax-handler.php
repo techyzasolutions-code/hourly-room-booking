@@ -752,6 +752,40 @@ class HRB_Ajax_Handler {
     }
     
     /**
+     * Build the session key used to mark an email as verified.
+     *
+     * The PHP session cookie already binds this to a single client, so the
+     * email hash is purely a namespace. Do NOT include $_SERVER['REMOTE_ADDR']
+     * here — it is spoofable through misconfigured proxies, shared across
+     * NAT'd users, and equal across all clients behind a reverse proxy.
+     */
+    private function get_email_verification_key($email) {
+        return 'hrb_verified_email_' . md5(strtolower(trim((string) $email)));
+    }
+
+    private function mark_email_verified($email) {
+        if (!session_id() && !headers_sent()) {
+            session_start();
+        }
+        $_SESSION[$this->get_email_verification_key($email)] = true;
+    }
+
+    private function is_email_verified($email) {
+        if (!session_id() && !headers_sent()) {
+            session_start();
+        }
+        $key = $this->get_email_verification_key($email);
+        return isset($_SESSION[$key]) && $_SESSION[$key] === true;
+    }
+
+    private function clear_email_verified($email) {
+        if (!session_id() && !headers_sent()) {
+            session_start();
+        }
+        unset($_SESSION[$this->get_email_verification_key($email)]);
+    }
+
+    /**
      * Send OTP verification
      */
     public function send_otp() {
@@ -797,21 +831,17 @@ class HRB_Ajax_Handler {
         $is_valid = $notification_manager->verify_otp($email, $phone, $otp_code);
         
         if ($is_valid) {
-            // Set session verification for this email and IP
-            $session_key = 'hrb_verified_email_' . md5($email . $_SERVER['REMOTE_ADDR']);
-            $_SESSION[$session_key] = true;
-            
-            // Set transient for IP-based verification (24 hours)
-            $ip_key = 'hrb_verified_email_ip_' . md5($email . $_SERVER['REMOTE_ADDR']);
-            set_transient($ip_key, true, 24 * HOUR_IN_SECONDS);
-            
+            // Mark the email as verified for the current PHP session.
+            // Session cookie binds this to the client; no IP component needed.
+            $this->mark_email_verified($email);
+
             wp_send_json_success(__('Verification successful', 'hourly-room-booking'));
         } else {
             wp_send_json_error(__('Invalid or expired verification code', 'hourly-room-booking'));
         }
     }
-    
-    
+
+
     /**
      * Get color for booking status
      */
@@ -1533,16 +1563,9 @@ class HRB_Ajax_Handler {
             $email
         ));
 
-        // Check if email is verified for current session (not globally)
-        $session_key = 'hrb_verified_email_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        $is_session_verified = isset($_SESSION[$session_key]) && $_SESSION[$session_key] === true;
-        
-        // Check if email was verified recently (within 24 hours) for this IP
-        $ip_key = 'hrb_verified_email_ip_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        $is_ip_verified = get_transient($ip_key) === true;
-        
-        // Only skip OTP if verified for current session/IP
-        if ($is_session_verified || $is_ip_verified) {
+        // Skip sending a new OTP if this email has already been verified
+        // in the current session.
+        if ($this->is_email_verified($email)) {
             wp_send_json_success(__('Email is already verified for this session', 'hourly-room-booking'));
         }
 
@@ -1640,13 +1663,8 @@ class HRB_Ajax_Handler {
                 );
             }
 
-            // Set session verification for this email and IP
-            $session_key = 'hrb_verified_email_' . md5($email . $_SERVER['REMOTE_ADDR']);
-            $_SESSION[$session_key] = true;
-            
-            // Set transient for IP-based verification (24 hours)
-            $ip_key = 'hrb_verified_email_ip_' . md5($email . $_SERVER['REMOTE_ADDR']);
-            set_transient($ip_key, true, 24 * HOUR_IN_SECONDS);
+            // Mark the email as verified for the current PHP session.
+            $this->mark_email_verified($email);
 
             wp_send_json_success(__('Verification successful', 'hourly-room-booking'));
         } else {
@@ -1668,15 +1686,7 @@ class HRB_Ajax_Handler {
             wp_send_json_error(__('Email is required', 'hourly-room-booking'));
         }
 
-        // Check if email is verified in current session
-        $session_key = 'hrb_verified_email_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        $is_session_verified = isset($_SESSION[$session_key]) && $_SESSION[$session_key] === true;
-        
-        // Check if email was verified recently (within 24 hours) for this IP
-        $ip_key = 'hrb_verified_email_ip_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        $is_ip_verified = get_transient($ip_key) === true;
-
-        if ($is_session_verified || $is_ip_verified) {
+        if ($this->is_email_verified($email)) {
             wp_send_json_success(array(
                 'is_verified' => true,
                 'message' => __('Email is verified for this session! You can proceed with booking.', 'hourly-room-booking')
@@ -1703,13 +1713,7 @@ class HRB_Ajax_Handler {
             wp_send_json_error(__('Email is required', 'hourly-room-booking'));
         }
 
-        // Clear session verification
-        $session_key = 'hrb_verified_email_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        unset($_SESSION[$session_key]);
-        
-        // Clear IP-based verification
-        $ip_key = 'hrb_verified_email_ip_' . md5($email . $_SERVER['REMOTE_ADDR']);
-        delete_transient($ip_key);
+        $this->clear_email_verified($email);
 
         wp_send_json_success(__('Email verification cleared. Please verify your email again.', 'hourly-room-booking'));
     }
