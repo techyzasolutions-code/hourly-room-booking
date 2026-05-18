@@ -2335,7 +2335,7 @@ class HRB_Admin {
             'nonce'        => wp_create_nonce('hrb_admin_nonce'),
             'pollInterval' => 60000, // 60 seconds — paused while tab is hidden
             'strings'      => array(
-                'newBooking' => __('New booking', 'hourly-room-booking'),
+                'newBooking' => __('New Booking', 'hourly-room-booking'),
                 'view'       => __('View', 'hourly-room-booking'),
                 'dismiss'    => __('Dismiss', 'hourly-room-booking'),
                 'anonymous'  => __('Anonymous', 'hourly-room-booking'),

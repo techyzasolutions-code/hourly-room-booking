@@ -3364,3 +3364,7 @@ msgstr "Admin-Notizen"
 
 msgid "Anonymous"
 msgstr "Anonym"
+
+
+msgid "Dismiss"
+msgstr "Schließen"
