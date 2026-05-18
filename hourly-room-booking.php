@@ -3,8 +3,9 @@
  * Plugin Name: Hourly Room Booking System
  * Plugin URI: https://mme-pro.de
  * Description: Professional room booking system with hourly slots, payment integration, and comprehensive management features.
- * Version: 1.2.0
- * Author: MME Pro
+ * Version: 1.3.0
+ * Author: MME-Pro Dev Team
+ * Author URI: https://mme-pro.de
  * Requires at least: 5.0
  * Tested up to: 6.3
  * Requires PHP: 7.4
@@ -13,11 +14,11 @@
  * Text Domain: hourly-room-booking
  * Domain Path: /languages
  * Network: false
- * 
+ *
  * @package HourlyRoomBooking
- * @version 1.0.0
- * @author MME Pro
- * @copyright © 2025 MME Pro. All rights reserved
+ * @version 1.3.0
+ * @author MME-Pro Dev Team
+ * @copyright © 2025 MME-Pro Dev Team. All rights reserved
  * @license GPL-2.0-or-later
  */
 
@@ -44,7 +45,7 @@ if (defined('HRB_VERSION')) {
  * These constants are used throughout the plugin for consistency
  * and to avoid magic strings in the codebase.
  */
-define('HRB_VERSION', '1.2.0');
+define('HRB_VERSION', '1.3.0');
 define('HRB_MIN_PHP_VERSION', '7.4');
 define('HRB_MIN_WP_VERSION', '5.0');
 define('HRB_PLUGIN_FILE', __FILE__);
