@@ -83,6 +83,9 @@ msgstr "Zurück zu alten Buchungen"
 msgid "Base Price"
 msgstr "Grundpreis"
 
+msgid "Base Price:"
+msgstr "Grundpreis:"
+
 msgid "Book Now"
 msgstr "Jetzt buchen"
 
@@ -494,14 +497,14 @@ msgstr "Alte Buchungen"
 msgid "On-site Payment"
 msgstr "Zahlung vor Ort"
 
-msgid "On-site Payment Pay cash or card at the location"
-msgstr "Zahlung vor Ort in Bar oder EC-Karte"
-
-msgid "Pay cash or card at the location"
-msgstr "Zahlung vor Ort in Bar oder EC-Karte"
+msgid "Only cash payments are possible on site."
+msgstr "Vor Ort ist nur eine Barzahlung möglich."
 
 msgid "PayPal Fee"
 msgstr "Paypal Gebühren"
+
+msgid "PayPal Fee:"
+msgstr "Paypal Gebühren:"
 
 msgid "PayPal Fee (3%)"
 msgstr "Paypal Gebühren (3%)"
@@ -522,7 +525,7 @@ msgid "Payment Method"
 msgstr "Zahlungsmethode"
 
 msgid "Payment Policy:"
-msgstr "Zahlungsrichtlinie:"
+msgstr "Zahlungshinweise:"
 
 msgid "Payment Status"
 msgstr "Zahlungsstatus"
@@ -560,10 +563,8 @@ msgstr "Telefon:"
 msgid "Please arrive a few minutes before your booking time."
 msgstr "Bitte kommen Sie ein paar Minuten vor Ihrer Buchungszeit an."
 
-msgid "Please bring payment (cash or card) when you arrive for your booking."
-msgstr ""
-"Bitte bringen Sie die Zahlung (Bargeld oder Karte) mit, wenn Sie zu Ihrer "
-"Buchung kommen."
+msgid "Only cash payments are accepted on site when you arrive for your booking."
+msgstr "Vor Ort sind nur Barzahlungen möglich, wenn Sie zu Ihrer Buchung kommen."
 
 msgid "Please complete the form to see pricing details"
 msgstr "Bitte wählen Sie die Anzahl Ihrer Stunden aus."
@@ -754,6 +755,15 @@ msgstr "Nach Preis sortieren"
 
 msgid "Special Requests"
 msgstr "Besondere Wünsche"
+
+msgid "Admin Notes"
+msgstr "Admin-Notizen"
+
+msgid "Enter any additional notes, extra payments, services, or other information about this booking..."
+msgstr "Geben Sie zusätzliche Notizen, Zusatzzahlungen, Dienstleistungen oder andere Informationen zu dieser Buchung ein..."
+
+msgid "Use this field to add notes about extra payments, services, or any other information for internal use."
+msgstr "Verwenden Sie dieses Feld, um Notizen zu Zusatzzahlungen, Dienstleistungen oder anderen Informationen zur internen Verwendung hinzuzufügen."
 
 msgid "Start Time"
 msgstr "Startzeit"
@@ -1190,8 +1200,14 @@ msgstr "Kunden suchen..."
 msgid "Search"
 msgstr "Suchen"
 
+msgid "Anonymous Booking"
+msgstr "Anonyme Buchung"
+
 msgid "Select a page..."
 msgstr "Seite auswählen..."
+
+msgid "Some settings could not be saved"
+msgstr "Einige Einstellungen konnten nicht gespeichert werden."
 
 msgid "Settings saved successfully."
 msgstr "Einstellungen erfolgreich gespeichert."
@@ -1593,6 +1609,48 @@ msgstr "Sind Sie sicher, dass Sie diesen Kunden löschen möchten?"
 msgid "This will also delete all their bookings and cannot be undone."
 msgstr "Dies wird auch alle ihre Buchungen löschen und kann nicht rückgängig gemacht werden."
 
+msgid "Cannot delete customer. Customer has"
+msgstr "Kunde kann nicht gelöscht werden. Kunde hat"
+
+msgid "active booking(s). Please cancel or complete all bookings first."
+msgstr "aktive Buchung(en). Bitte stornieren oder vervollständigen Sie zuerst alle Buchungen."
+
+msgid "Error checking customer bookings."
+msgstr "Fehler beim Überprüfen der Kundenbuchungen."
+
+msgid "Customer deleted successfully."
+msgstr "Kunde erfolgreich gelöscht."
+
+msgid "Cannot Delete Customer"
+msgstr "Kunde kann nicht gelöscht werden"
+
+msgid "Delete Customer"
+msgstr "Kunde löschen"
+
+msgid "Error"
+msgstr "Fehler"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Download Invoice"
+msgstr "Rechnung herunterladen"
+
+msgid "Color"
+msgstr "Farbe"
+
+msgid "Room Color"
+msgstr "Raumfarbe"
+
+msgid "Choose a color for this room to help identify it in the calendar and booking views."
+msgstr "Wählen Sie eine Farbe für diesen Raum, um ihn in Kalender- und Buchungsansichten zu identifizieren."
+
+msgid "Events colored by room"
+msgstr "Ereignisse nach Raum eingefärbt"
+
 msgid "Are you sure you want to cancel this payment?"
 msgstr "Sind Sie sicher, dass Sie diese Zahlung stornieren möchten?"
 
@@ -1643,9 +1701,6 @@ msgstr "Raumbuchung: %s am %s"
 
 msgid "Failed to create customer record"
 msgstr "Fehler beim Erstellen des Kundenrecords"
-
-msgid "Payment already completed"
-msgstr "Zahlung bereits abgeschlossen"
 
 msgid "Payment completed successfully"
 msgstr "Zahlung erfolgreich abgeschlossen"
@@ -2599,6 +2654,34 @@ msgstr "Nachrichteninhalt"
 msgid "This is the main message content that will appear in the email."
 msgstr "Dies ist der Hauptnachrichteninhalt, der in der E-Mail erscheint."
 
+msgid "Print"
+msgstr "Drucken"
+
+msgid "Print Booking Details"
+msgstr "Buchungsdetails drucken"
+
+msgid "Please select an item in the list."
+msgstr "Bitte wählen Sie einen Raum aus"
+
+msgid "Bitte wählen Sie ein Buchungsdatum aus"
+msgstr "Bitte wählen Sie ein Buchungsdatum aus"
+
+msgid "Bitte wählen Sie eine Dauer aus"
+msgstr "Bitte wählen Sie eine Dauer aus"
+
+msgid "Bitte wählen Sie eine Zeitspanne aus"
+msgstr "Bitte wählen Sie eine Zeitspanne aus"
+
+msgid "Bitte geben Sie Ihren Vornamen ein"
+msgstr "Bitte geben Sie Ihren Vornamen ein"
+
+msgid "Bitte geben Sie Ihre E-Mail-Adresse ein"
+msgstr "Bitte geben Sie Ihre E-Mail-Adresse ein"
+
+msgid "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+
+
 msgid "HTML Content"
 msgstr "HTML-Inhalt"
 
@@ -2641,9 +2724,6 @@ msgstr "Personen"
 msgid "%d extra people"
 msgstr "%d zusätzliche Personen"
 
-msgid "h"
-msgstr "h"
-
 msgid "m"
 msgstr "m"
 
@@ -2652,3 +2732,635 @@ msgstr "Heute"
 
 msgid "PayPal Fees"
 msgstr "PayPal-Gebühren"
+
+msgid "Select a room"
+msgstr "Wählen Sie ein Zimmer"
+
+msgid "Please select a room."
+msgstr "Bitte wählen Sie ein Zimmer aus."
+
+msgid "Please select a room, date and duration first"
+msgstr "Bitte wählen Sie zuerst ein Zimmer, ein Datum und eine Dauer aus"
+
+msgid "Please select a room, date and time slot first"
+msgstr "Bitte wählen Sie zuerst einen Raum, ein Datum und ein Zeitfenster aus"
+
+msgid "Please select room, date, duration and time slot to see pricing"
+msgstr "Bitte wählen Sie Zimmer, Datum, Dauer und Zeitfenster, um die Preise anzuzeigen"
+
+msgid "Price Summary"
+msgstr "Preisübersicht"
+
+msgid "Create Booking"
+msgstr "Buchung erstellen"
+
+msgid "Please select a booking date."
+msgstr "Bitte wählen Sie ein Buchungsdatum."
+
+msgid "Please select an available time slot."
+msgstr "Bitte wählen Sie ein verfügbares Zeitfenster aus."
+
+msgid "Please select room and duration to see pricing"
+msgstr "Bitte wählen Sie Zimmer und Dauer, um die Preise anzuzeigen"
+
+msgid "For bookings of 4 hours or more, payment via PayPal in advance is required. Please note that no refunds are possible in this case."
+msgstr "Bei Buchungen ab 4 Stunden ist die Zahlung per PayPal im Voraus erforderlich. Bitte beachte, dass in diesem Fall keine Rückerstattung möglich ist."
+
+msgid "For bookings under 4 hours, you can pay either via PayPal or on site."
+msgstr "Bei Buchungen unter 4 Stunden kannst Du wahlweise per PayPal oder vor Ort bezahlen."
+
+msgid "There is a 3% processing fee for PayPal payments."
+msgstr "Für PayPal-Zahlungen fällt eine Bearbeitungsgebühr von 3 % an."
+
+msgid "bookings today"
+msgstr "Buchungen heute"
+
+msgid "Registered"
+msgstr "Eingetragen"
+
+msgid "Update the payment status for this booking"
+msgstr "Aktualisieren Sie den Zahlungsstatus für diese Buchung"
+
+msgid "Booking overview"
+msgstr "Buchungsübersicht"
+
+msgid "Online Payment"
+msgstr "Online-Zahlung"
+
+msgid "Payment Timeout Cancellation"
+msgstr "Zahlungs-Timeout-Stornierung"
+
+msgid "Important:"
+msgstr "Wichtig:"
+
+msgid "After clicking on"
+msgstr "Nach dem Klick auf"
+
+msgid "Complete booking"
+msgstr "Buchung abschließen"
+
+msgid "Please make the PayPal payment directly. Otherwise, the transaction may be canceled."
+msgstr "bitte die PayPal-Zahlung direkt durchführen. Andernfalls kann der Vorgang abgebrochen werden."
+
+msgid "All rooms are currently occupied"
+msgstr "Alle Räume sind derzeit belegt"
+
+msgid "All rooms that can be booked online are currently occupied for the selected time period."
+msgstr "Alle Räume, die online gebucht werden können, sind für den ausgewählten Zeitraum derzeit belegt."
+
+msgid "Please call us at the following number and we will see what we can do for you:"
+msgstr "Bitte rufen Sie uns unter der folgenden Nummer an und wir schauen, was wir für Sie tun können:"
+
+msgid "Phone number not configured"
+msgstr "Telefonnummer nicht konfiguriert"
+
+
+msgid "This room is not available for the selected time period."
+msgstr "Dieser Raum ist für den ausgewählten Zeitraum nicht verfügbar."
+
+msgid "Call to Check"
+msgstr "Anrufen zum Prüfen"
+
+msgid "Available Rooms (%d of %d)"
+msgstr "Verfügbare Räume (%d von %d)"
+
+msgid "Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer."
+msgstr "Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer."
+
+msgid "Confirm Action"
+msgstr "Aktion bestätigen"
+
+msgid "Confirm Time Slot Change"
+msgstr "Zeitslot-Änderung bestätigen"
+
+msgid "Original time:"
+msgstr "Ursprüngliche Zeit:"
+
+msgid "New time:"
+msgstr "Neue Zeit:"
+
+msgid "Are you sure you want to change the time slot?"
+msgstr "Sind Sie sicher, dass Sie den Zeitslot ändern möchten?"
+
+# Room Availability Management Translations
+msgid "Room Availability Management"
+msgstr "Raumverfügbarkeitsverwaltung"
+
+msgid "Manage room locks and view availability in a visual calendar format."
+msgstr "Raumsperren verwalten und Verfügbarkeit in einem visuellen Kalenderformat anzeigen."
+
+msgid "Lock Room"
+msgstr "Raum sperren"
+
+msgid "Master Lock"
+msgstr "Hauptsperre"
+
+msgid "Start Date & Time:"
+msgstr "Startdatum & Zeit:"
+
+msgid "Select date and time when the lock should start."
+msgstr "Wählen Sie Datum und Zeit, wann die Sperre beginnen soll."
+
+msgid "End Date & Time:"
+msgstr "Enddatum & Zeit:"
+
+msgid "Select date and time when the lock should end."
+msgstr "Wählen Sie Datum und Zeit, wann die Sperre enden soll."
+
+msgid "Select date and time when the master lock should start."
+msgstr "Wählen Sie Datum und Zeit, wann die Hauptsperre beginnen soll."
+
+msgid "Select date and time when the master lock should end."
+msgstr "Wählen Sie Datum und Zeit, wann die Hauptsperre enden soll."
+
+msgid "Enter reason for locking this room..."
+msgstr "Grund für das Sperren dieses Raums eingeben..."
+
+msgid "Enter reason for master lock..."
+msgstr "Grund für Hauptsperre eingeben..."
+
+msgid "Lock Details"
+msgstr "Sperrdetails"
+
+msgid "Edit Room Lock"
+msgstr "Raumsperre bearbeiten"
+
+msgid "Edit Master Lock"
+msgstr "Hauptsperre bearbeiten"
+
+msgid "Update Lock"
+msgstr "Sperre aktualisieren"
+
+msgid "Are you sure you want to delete this room lock?"
+msgstr "Sind Sie sicher, dass Sie diese Raumsperre löschen möchten?"
+
+msgid "Are you sure you want to delete this master lock?"
+msgstr "Sind Sie sicher, dass Sie diese Hauptsperre löschen möchten?"
+
+msgid "Room lock deleted successfully!"
+msgstr "Raumsperre erfolgreich gelöscht!"
+
+msgid "Master lock deleted successfully!"
+msgstr "Hauptsperre erfolgreich gelöscht!"
+
+msgid "Failed to delete room lock."
+msgstr "Fehler beim Löschen der Raumsperre."
+
+msgid "Failed to delete master lock."
+msgstr "Fehler beim Löschen der Hauptsperre."
+
+msgid "An error occurred while deleting the lock."
+msgstr "Ein Fehler ist beim Löschen der Sperre aufgetreten."
+
+msgid "Creating Lock..."
+msgstr "Sperre wird erstellt..."
+
+msgid "Creating Master Lock..."
+msgstr "Hauptsperre wird erstellt..."
+
+msgid "Room lock updated successfully!"
+msgstr "Raumsperre erfolgreich aktualisiert!"
+
+msgid "Room locked successfully!"
+msgstr "Raum erfolgreich gesperrt!"
+
+msgid "Master lock updated successfully!"
+msgstr "Hauptsperre erfolgreich aktualisiert!"
+
+msgid "Master lock applied successfully!"
+msgstr "Hauptsperre erfolgreich angewendet!"
+
+msgid "Failed to lock room. Please try again."
+msgstr "Fehler beim Sperren des Raums. Bitte versuchen Sie es erneut."
+
+msgid "Failed to apply master lock. Please try again."
+msgstr "Fehler beim Anwenden der Hauptsperre. Bitte versuchen Sie es erneut."
+
+msgid "Room unlocked successfully!"
+msgstr "Raum erfolgreich entsperrt!"
+
+msgid "Failed to unlock room."
+msgstr "Fehler beim Entsperren des Raums."
+
+msgid "Failed to update room lock."
+msgstr "Fehler beim Aktualisieren der Raumsperre."
+
+msgid "Failed to update master lock."
+msgstr "Fehler beim Aktualisieren der Hauptsperre."
+
+msgid "Failed to apply master lock."
+msgstr "Fehler beim Anwenden der Hauptsperre."
+
+msgid "You do not have permission to manage room availability."
+msgstr "Sie haben keine Berechtigung, die Raumverfügbarkeit zu verwalten."
+
+msgid "Reason:"
+msgstr "Grund:"
+
+msgid "Start:"
+msgstr "Start:"
+
+msgid "End:"
+msgstr "Ende:"
+
+msgid "Affects:"
+msgstr "Betrifft:"
+
+msgid "All rooms"
+msgstr "Alle Räume"
+
+msgid "All day"
+msgstr "Ganztägig"
+
+msgid "Room Lock"
+msgstr "Raumsperre"
+
+msgid "Select Room"
+msgstr "Raum auswählen"
+
+msgid "Lock Extra"
+msgstr "Extra sperren"
+
+msgid "Master Lock (All Extras)"
+msgstr "Hauptsperre (Alle Extras)"
+
+msgid "Select an extra"
+msgstr "Extra auswählen"
+
+msgid "Enter reason for locking this extra..."
+msgstr "Grund für die Sperrung dieses Extras eingeben..."
+
+msgid "Enter reason for locking all extras..."
+msgstr "Grund für die Sperrung aller Extras eingeben..."
+
+msgid "Apply Master Lock"
+msgstr "Hauptsperre anwenden"
+
+msgid "Extra Lock"
+msgstr "Extra-Sperre"
+
+msgid "All extras"
+msgstr "Alle Extras"
+
+msgid "Extra:"
+msgstr "Extra:"
+
+msgid "Creating..."
+msgstr "Erstelle..."
+
+msgid "Extra lock created successfully!"
+msgstr "Extra erfolgreich gesperrt!"
+
+msgid "Error creating extra lock"
+msgstr "Fehler beim Sperren des Extras"
+
+msgid "Master lock created successfully!"
+msgstr "Hauptsperre erfolgreich angewendet!"
+
+msgid "Error creating master lock"
+msgstr "Fehler beim Anwenden der Hauptsperre"
+
+msgid "Edit functionality not yet implemented"
+msgstr "Bearbeitungsfunktion noch nicht implementiert"
+
+msgid "Error deleting master lock"
+msgstr "Fehler beim Löschen der Hauptsperre"
+
+msgid "This will lock ALL extras for the specified period. Existing bookings will not be affected, but no new extras can be added to bookings."
+msgstr "Dies sperrt ALLE Extras für den angegebenen Zeitraum. Bestehende Buchungen sind nicht betroffen, aber es können keine neuen Extras zu Buchungen hinzugefügt werden."
+
+msgid "Extras Availability Management"
+msgstr "Extras-Verfügbarkeitsverwaltung"
+
+msgid "Manage extra locks and view availability in a visual calendar format."
+msgstr "Verwalten Sie Extra-Sperren und sehen Sie die Verfügbarkeit in einem visuellen Kalenderformat."
+
+msgid "Filter by Extra:"
+msgstr "Nach Extra filtern:"
+
+msgid "Please select an extra."
+msgstr "Bitte wählen Sie ein Extra aus."
+
+msgid "Please select a start date and time."
+msgstr "Bitte wählen Sie ein Startdatum und eine Startzeit aus."
+
+msgid "Please select an end date and time."
+msgstr "Bitte wählen Sie ein Enddatum und eine Endzeit aus."
+
+msgid "End date and time must be after start date and time."
+msgstr "Enddatum und Endzeit müssen nach dem Startdatum und der Startzeit liegen."
+
+# Menu Items
+msgid "Room Availability"
+msgstr "Raumverfügbarkeit"
+
+msgid "Extras Availability"
+msgstr "Extras-Verfügbarkeit"
+
+msgid "No available time slots for this date and duration"
+msgstr "Für dieses Datum und diese Dauer sind keine Zeitfenster verfügbar"
+
+msgid "PayPal Payment"
+msgstr "PayPal-Zahlung"
+
+msgid "Please complete your payment to confirm your booking"
+msgstr "Bitte schließen Sie Ihre Zahlung ab, um Ihre Buchung zu bestätigen."
+
+msgid "Complete Your Payment"
+msgstr "Schließen Sie Ihre Zahlung ab."
+
+msgid "Click the button below to complete your payment via PayPal. Your booking will be confirmed once payment is processed."
+msgstr "Klicken Sie unten auf die Schaltfläche, um Ihre Zahlung per PayPal abzuschließen. Ihre Buchung wird bestätigt, sobald die Zahlung verarbeitet wurde."
+
+msgid "Current Booking"
+msgstr "Aktuelle Buchung"
+
+msgid "This action cannot be undone."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
+
+msgid "Mark Payment as Completed"
+msgstr "Zahlung als abgeschlossen markieren"
+
+msgid "Mark Completed"
+msgstr "Als abgeschlossen markieren"
+
+msgid "This action should only be done after receiving the actual cash payment."
+msgstr "Diese Aktion sollte nur nach Erhalt der tatsächlichen Barzahlung durchgeführt werden."
+
+msgid "Cancel Payment"
+msgstr "Zahlung stornieren"
+
+msgid "Keep Payment"
+msgstr "Zahlung behalten"
+
+msgid "Already Paid"
+msgstr "Bereits bezahlt"
+
+msgid "Original booking payment"
+msgstr "Ursprüngliche Buchungszahlung"
+
+msgid "Additional Services Paid"
+msgstr "Zusätzliche Leistungen bezahlt"
+
+msgid "Payment for additional services"
+msgstr "Zahlung für zusätzliche Leistungen"
+
+msgid "Outstanding Payment Required"
+msgstr "Ausstehende Zahlung erforderlich"
+
+msgid "For additional services"
+msgstr "Für zusätzliche Leistungen"
+
+msgid "Amount including 3% PayPal Fee"
+msgstr "Betrag inkl. 3% PayPal-Gebühr"
+
+msgid "Send Payment Link"
+msgstr "Zahlungslink senden"
+
+msgid "Regenerate Invoice"
+msgstr "Rechnung neu erstellen"
+
+msgid "Added by Admin"
+msgstr "Hinzugefügt von Admin"
+
+msgid "Added by %s"
+msgstr "Hinzugefügt von %s"
+
+msgid "Payment link email sent successfully"
+msgstr "Zahlungslink-E-Mail erfolgreich gesendet"
+
+msgid "Invoice regenerated and sent via email successfully"
+msgstr "Rechnung erfolgreich neu erstellt und per E-Mail gesendet"
+
+msgid "Mark Payment as Complete"
+msgstr "Zahlung als abgeschlossen markieren"
+
+msgid "Mark as Complete"
+msgstr "Als abgeschlossen markieren"
+
+msgid "Confirm Payment Completion"
+msgstr "Zahlungsabschluss bestätigen"
+
+msgid "Are you sure you want to mark this additional payment as complete?"
+msgstr "Sind Sie sicher, dass Sie diese zusätzliche Zahlung als abgeschlossen markieren möchten?"
+
+msgid "This will update the payment status to \"completed\"."
+msgstr "Dies aktualisiert den Zahlungsstatus auf \"abgeschlossen\"."
+
+msgid "Outstanding Amount:"
+msgstr "Ausstehender Betrag:"
+
+msgid "Total Paid"
+msgstr "Gesamt bezahlt"
+
+msgid "Original Payment"
+msgstr "Ursprüngliche Zahlung"
+
+msgid "Successfully marked %d payment(s) as complete"
+msgstr "Erfolgreich %d Zahlung(en) als abgeschlossen markiert"
+
+msgid "New Services"
+msgstr "Neue Leistungen"
+
+msgid "To Be Paid"
+msgstr "Zu zahlen"
+
+msgid "New Amount to Pay"
+msgstr "Neuer zu zahlender Betrag"
+
+msgid "Master Locked"
+msgstr "Master gesperrt"
+
+msgid "Room Locked"
+msgstr "Raum gesperrt"
+
+msgid "Invalid payment link. Please use the payment link from your email or contact support."
+msgstr "Ungültiger Zahlungslink. Bitte verwenden Sie den Zahlungslink aus Ihrer E-Mail oder kontaktieren Sie den Support."
+
+msgid "Payment Link Error"
+msgstr "Zahlungslink-Fehler"
+
+msgid "If you received this link via email, please use that exact link. If the problem persists, please contact support."
+msgstr "Wenn Sie diesen Link per E-Mail erhalten haben, verwenden Sie bitte genau diesen Link. Wenn das Problem weiterhin besteht, kontaktieren Sie bitte den Support."
+
+msgid "Payment Already Completed"
+msgstr "Zahlung bereits abgeschlossen"
+
+msgid "Payment has already been completed for this booking. Please contact support if you have any questions."
+msgstr "Die Zahlung für diese Buchung wurde bereits abgeschlossen. Bitte kontaktieren Sie den Support, wenn Sie Fragen haben."
+
+msgid "Your payment has been successfully processed. If you have any questions, please contact support."
+msgstr "Ihre Zahlung wurde erfolgreich verarbeitet. Wenn Sie Fragen haben, kontaktieren Sie bitte den Support."
+
+msgid "Additional Payment Required:"
+msgstr "Zusätzliche Zahlung erforderlich:"
+
+msgid "Note:"
+msgstr "Hinweis:"
+
+msgid "This payment is for additional services added to your booking after the original payment was completed."
+msgstr "Diese Zahlung ist für zusätzliche Leistungen, die zu Ihrer Buchung hinzugefügt wurden, nachdem die ursprüngliche Zahlung abgeschlossen wurde."
+
+msgid "Amount to Pay:"
+msgstr "Zu zahlender Betrag:"
+
+msgid "Complete Additional Payment"
+msgstr "Zusätzliche Zahlung abschließen"
+
+msgid "Click the button below to complete the additional payment for the services added to your booking. This payment is separate from your original booking payment."
+msgstr "Klicken Sie auf die Schaltfläche unten, um die zusätzliche Zahlung für die zu Ihrer Buchung hinzugefügten Leistungen abzuschließen. Diese Zahlung ist von Ihrer ursprünglichen Buchungszahlung getrennt."
+
+msgid "Additional Payment"
+msgstr "Zusätzliche Zahlung"
+
+msgid "Please complete the additional payment for the services added to your booking"
+msgstr "Bitte schließen Sie die zusätzliche Zahlung für die zu Ihrer Buchung hinzugefügten Leistungen ab"
+
+msgid "Email Logs"
+msgstr "E-Mail-Protokolle"
+
+msgid "Overall Statistics"
+msgstr "Gesamtstatistiken"
+
+msgid "Total Logs"
+msgstr "Gesamtprotokolle"
+
+msgid "SMS Logs"
+msgstr "SMS-Protokolle"
+
+msgid "WhatsApp Logs"
+msgstr "WhatsApp-Protokolle"
+
+msgid "Next Reminder Check"
+msgstr "Nächste Erinnerungsprüfung"
+
+msgid "Not scheduled"
+msgstr "Nicht geplant"
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Event"
+msgstr "Ereignis"
+
+msgid "All Types"
+msgstr "Alle Typen"
+
+msgid "All Events"
+msgstr "Alle Ereignisse"
+
+msgid "Search by recipient, subject, or booking ID"
+msgstr "Suche nach Empfänger, Betreff oder Buchungs-ID"
+
+msgid "Delete Old Logs"
+msgstr "Alte Protokolle löschen"
+
+msgid "Delete logs older than:"
+msgstr "Protokolle älter als löschen:"
+
+msgid "30 days"
+msgstr "30 Tage"
+
+msgid "60 days"
+msgstr "60 Tage"
+
+msgid "90 days"
+msgstr "90 Tage"
+
+msgid "180 days"
+msgstr "180 Tage"
+
+msgid "1 year"
+msgstr "1 Jahr"
+
+msgid "Notification Logs"
+msgstr "Benachrichtigungsprotokolle"
+
+msgid "No logs found."
+msgstr "Keine Protokolle gefunden."
+
+msgid "Recipient"
+msgstr "Empfänger"
+
+msgid "Sent At"
+msgstr "Gesendet um"
+
+msgid "Manual Test"
+msgstr "Manueller Test"
+
+msgid "Test Reminder System"
+msgstr "Erinnerungssystem testen"
+
+msgid "Notification resent successfully."
+msgstr "Benachrichtigung erfolgreich erneut gesendet."
+
+msgid "Error resending notification"
+msgstr "Fehler beim erneuten Senden der Benachrichtigung"
+
+msgid "An error occurred while resending the notification"
+msgstr "Beim erneuten Senden der Benachrichtigung ist ein Fehler aufgetreten"
+
+msgid "Are you sure you want to delete this log entry?"
+msgstr "Möchten Sie diesen Protokolleintrag wirklich löschen?"
+
+msgid "Are you sure you want to delete old logs? This action cannot be undone."
+msgstr "Möchten Sie wirklich alte Protokolle löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+msgid "Cron Timing Explained:"
+msgstr "Cron-Zeitplanung erklärt:"
+
+msgid "The timing <code>*/5 * * * *</code> means the cron job runs every 5 minutes. The format is: <code>minute hour day month weekday</code>"
+msgstr "Die Zeitplanung <code>*/5 * * * *</code> bedeutet, dass der Cron-Job alle 5 Minuten ausgeführt wird. Das Format ist: <code>Minute Stunde Tag Monat Wochentag</code>"
+
+msgid "To change the timing, modify the first part:"
+msgstr "Um die Zeitplanung zu ändern, ändern Sie den ersten Teil:"
+
+msgid "Every 5 minutes (recommended)"
+msgstr "Alle 5 Minuten (empfohlen)"
+
+msgid "Every 15 minutes"
+msgstr "Alle 15 Minuten"
+
+msgid "Every hour (at minute 0)"
+msgstr "Jede Stunde (bei Minute 0)"
+
+msgid "Every 10 minutes"
+msgstr "Alle 10 Minuten"
+
+msgid "WordPress cron is disabled. Reminders will not be sent automatically. Please set up a system cron job on your server using the following command:"
+msgstr "WordPress Cron ist deaktiviert. Erinnerungen werden nicht automatisch gesendet. Bitte richten Sie einen System-Cron-Job auf Ihrem Server mit dem folgenden Befehl ein:"
+
+msgid "For more reliable delivery, consider setting up a system cron job on your server using the following command:"
+msgstr "Für eine zuverlässigere Zustellung sollten Sie einen System-Cron-Job auf Ihrem Server mit dem folgenden Befehl einrichten:"
+
+msgid "No extras available for the selected date and time."
+msgstr "Keine Extras für das ausgewählte Datum und die ausgewählte Uhrzeit verfügbar."
+
+
+
+
+
+
+msgid "Loading booking details…"
+msgstr "Buchungsdetails werden geladen…"
+
+msgid "Could not load booking details."
+msgstr "Buchungsdetails konnten nicht geladen werden."
+
+msgid "Network error. Please try again."
+msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
+
+msgid "Reference"
+msgstr "Referenz"
+
+msgid "Special Requests"
+msgstr "Besondere Wünsche"
+
+msgid "Admin Notes"
+msgstr "Admin-Notizen"
+
+msgid "Anonymous"
+msgstr "Anonym"

@@ -52,6 +52,12 @@
     /* Transitions */
     --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.hrb-paypal-warning{
+    margin-top: 20px;
+}
+.hrb-paypal-warning .hrb-alert-warning {
+    color:#000 !important;
+}
 .hrb-payment-method label {
     display: block !important;
 }
@@ -894,4 +900,53 @@
 
 .hrb-verification-alert strong {
     font-weight: 600;
+}
+
+/* Payment Method Selection Styling */
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label {
+    background: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label:hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label strong {
+    color: white !important;
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label p {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label .hrb-payment-method-content {
+    color: white !important;
+}
+
+.hrb-payment-method input[type="radio"]:checked + .hrb-radio-label .hrb-payment-method-content div {
+    color: white !important;
+}
+
+/* Smooth transition for payment method selection */
+.hrb-payment-method .hrb-radio-label {
+    transition: all 0.3s ease;
+}
+
+/* VAT Message Styles */
+.hrb-vat-message {
+    margin-top: 10px;
+    padding-top: 10px;
+    /* border-top: 1px solid #e9ecef; */
+    text-align: center;
+    color: #6c757d;
+}
+
+.hrb-vat-message small {
+    font-size: 0.85em;
+    font-style: italic;
 }

@@ -603,15 +603,16 @@ jQuery(document).ready(function($) {
         
         // Collect form data
         const formData = {
-            action: 'hrb_create_booking',
+            action: 'hrb_submit_booking',
             room_id: roomId,
             booking_date: form.find('[name="booking_date"]').val(),
             start_time: form.find('[name="start_time"]').val(),
-            duration: form.find('[name="duration"]').val(),
+            end_time: form.find('[name="end_time"]').val(),
             extra_people: form.find('[name="extra_people"]').val(),
-            customer_name: form.find('[name="customer_name"]').val(),
-            customer_email: form.find('[name="customer_email"]').val(),
-            customer_phone: form.find('[name="customer_phone"]').val(),
+            first_name: form.find('[name="customer_name"]').val(),
+            last_name: '', // Compact form doesn't have separate first/last name
+            email: form.find('[name="customer_email"]').val(),
+            phone: form.find('[name="customer_phone"]').val(),
             payment_method: form.find('[name="payment_method"]').val(),
             nonce: hrbAjax.nonce
         };

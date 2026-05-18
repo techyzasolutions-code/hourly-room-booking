@@ -39,7 +39,16 @@ $booking = null;
 if ($booking_ref) {
     global $wpdb;
     $booking = $wpdb->get_row($wpdb->prepare(
-        "SELECT b.*, r.name as room_name, r.description as room_description, c.first_name, c.last_name, c.email, c.phone, c.company
+        "SELECT b.*, r.name as room_name, r.description as room_description, 
+                CASE 
+                    WHEN b.is_anonymous = 1 THEN CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE '' END
+                    ELSE CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE c.first_name END
+                END as first_name,
+                CASE 
+                    WHEN b.is_anonymous = 1 THEN CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE '' END
+                    ELSE CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE c.last_name END
+                END as last_name,
+                c.email, c.phone, c.company
          FROM {$wpdb->prefix}hrb_bookings b
          JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
          JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
@@ -515,6 +524,17 @@ if ($booking_ref) {
     </div>
 
     <?php if ($booking): ?>
+        
+        <?php if ($booking && $booking->is_anonymous): ?>
+            <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin: 20px 40px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #92400e; margin-bottom: 10px;">
+                    <?php _e('Buchungs-ID:', 'hourly-room-booking'); ?> #<?php echo esc_html($booking->booking_reference); ?>
+                </div>
+                <div style="color: #92400e; font-weight: 500;">
+                    <?php _e('Bitte notiere oder speichere diese ID. Sie dient als einziger Nachweis deiner Buchung und wird nicht per E-Mail versendet.', 'hourly-room-booking'); ?>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="hrb-booking-info-grid">
             <!-- Booking Information -->
             <div class="hrb-info-card">
@@ -579,28 +599,41 @@ if ($booking_ref) {
 
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Duration', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours . ' ' . __('hours', 'hourly-room-booking')); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours . ' ' . __('Stunden', 'hourly-room-booking')); ?></span>
                 </div>
             </div>
-
+            <?php if (!$booking->is_anonymous || !empty($booking->first_name) || !empty($booking->email) || !empty($booking->phone) || !empty($booking->company)): ?>
             <!-- Customer Information -->
             <div class="hrb-info-card">
                 <h3><?php _e('Customer Information', 'hourly-room-booking'); ?></h3>
 
+                <?php if ($booking->is_anonymous): ?>
+                    <div class="hrb-detail-row">
+                        <span class="hrb-detail-label"><?php _e('Booking Type', 'hourly-room-booking'); ?>:</span>
+                        <span class="hrb-detail-value"><span class="hrb-badge hrb-badge-warning"><?php _e('Anonymous Booking', 'hourly-room-booking'); ?></span></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($booking->first_name)): ?>
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Name', 'hourly-room-booking'); ?>:</span>
-                    <span class="hrb-detail-value"><?php echo esc_html($booking->first_name . ' ' . $booking->last_name); ?></span>
+                    <span class="hrb-detail-value"><?php echo esc_html(trim($booking->first_name . ' ' . ($booking->last_name ?? ''))); ?></span>
                 </div>
+                <?php endif; ?>
 
+                <?php if (!empty($booking->email) && $booking->email !== 'anonymous@example.com'): ?>
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Email', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value"><?php echo esc_html($booking->email); ?></span>
                 </div>
+                <?php endif; ?>
 
+                <?php if (!empty($booking->phone)): ?>
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Phone', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value"><?php echo esc_html($booking->phone); ?></span>
                 </div>
+                <?php endif; ?>
 
                 <?php if (!empty($booking->company)): ?>
                 <div class="hrb-detail-row">
@@ -608,7 +641,15 @@ if ($booking_ref) {
                     <span class="hrb-detail-value"><?php echo esc_html($booking->company); ?></span>
                 </div>
                 <?php endif; ?>
+
+                <?php if ($booking->is_anonymous && empty($booking->first_name) && empty($booking->email) && empty($booking->phone) && empty($booking->company)): ?>
+                <div class="hrb-detail-row">
+                    <span class="hrb-detail-label"><?php _e('Contact Information', 'hourly-room-booking'); ?>:</span>
+                    <span class="hrb-detail-value"><?php _e('No contact information available for anonymous bookings', 'hourly-room-booking'); ?></span>
+                </div>
+                <?php endif; ?>
             </div>
+            <?php endif; ?>
 
             <!-- Payment Information -->
             <div class="hrb-info-card">
@@ -658,10 +699,15 @@ if ($booking_ref) {
                 <?php endif; ?>
 
 
+                <?php 
+                $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+                if ($tax_rate > 0 && $booking->tax_amount > 0): 
+                ?>
                 <div class="hrb-detail-row">
                     <span class="hrb-detail-label"><?php _e('Tax', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->tax_amount); ?></span>
                 </div>
+                <?php endif; ?>
 
                 <?php if ($booking->paypal_fee > 0): ?>
                 <div class="hrb-detail-row">
@@ -674,6 +720,15 @@ if ($booking_ref) {
                     <span class="hrb-detail-label"><?php _e('Total Amount', 'hourly-room-booking'); ?>:</span>
                     <span class="hrb-detail-value"><?php echo hrb_format_amount($booking->total_amount); ?></span>
                 </div>
+                
+                <?php 
+                $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+                if ($tax_rate == 0): 
+                ?>
+                <div class="hrb-vat-message">
+                    <small><?php _e('Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer.', 'hourly-room-booking'); ?></small>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Special Requests -->

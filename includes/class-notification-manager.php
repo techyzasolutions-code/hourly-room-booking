@@ -35,7 +35,7 @@ class HRB_Notification_Manager {
     /**
      * Send notification based on event
      */
-    public function send_notification($booking_id, $event) {
+    public function send_notification($booking_id, $event, $custom_data = array()) {
         $booking_manager = HRB_Booking_Manager::getInstance();
         $booking = $booking_manager->get_booking($booking_id);
         
@@ -43,11 +43,21 @@ class HRB_Notification_Manager {
             return new WP_Error('booking_not_found', __('Booking not found', 'hourly-room-booking'));
         }
         
+        // Skip notifications for anonymous bookings
+        if ($booking->is_anonymous) {
+            /* removed error_log - production cleanup */
+            return array(
+                'email' => 'skipped_anonymous',
+                'sms' => 'skipped_anonymous',
+                'whatsapp' => 'skipped_anonymous'
+            );
+        }
+        
         $notifications_sent = array();
         
         // Send email notification
         if (get_option('hrb_email_notifications', 1)) {
-            $email_result = $this->send_email_notification($booking, $event);
+            $email_result = $this->send_email_notification($booking, $event, $custom_data);
             $notifications_sent['email'] = $email_result;
         }
         
@@ -69,14 +79,19 @@ class HRB_Notification_Manager {
     /**
      * Send email notification
      */
-    public function send_email_notification($booking, $event) {
-        $template_data = $this->prepare_template_data($booking, $event);
+    public function send_email_notification($booking, $event, $custom_data = array()) {
+        // Validate email before proceeding
+        if (empty($booking->email) || !is_email($booking->email)) {
+            return new WP_Error('invalid_email', __('Invalid or empty email address', 'hourly-room-booking'));
+        }
+        
+        $template_data = $this->prepare_template_data($booking, $event, $custom_data);
         
         if (!$template_data) {
             return new WP_Error('template_error', __('Failed to prepare email template', 'hourly-room-booking'));
         }
         
-        $to = $booking->email;
+        $to = sanitize_email($booking->email);
         $subject = $template_data['subject'];
         $message = $this->generate_email_html($template_data);
         $headers = array(
@@ -84,12 +99,54 @@ class HRB_Notification_Manager {
             'From: ' . get_option('hrb_company_name', get_bloginfo('name')) . ' <' . get_option('hrb_company_email', get_option('admin_email')) . '>'
         );
         
-        // Attach invoice for booking confirmation and payment confirmation
+        // Attach invoice for booking confirmation, payment confirmation, and invoice regeneration
         $attachments = array();
-        if (in_array($event, array('booking_confirmation', 'payment_confirmation'))) {
-            $invoice_path = $this->get_or_generate_invoice($booking->id);
+        
+        if ($event === 'invoice_regenerated') {
+            // For invoice regeneration, always attach the invoice
+            // First check if invoice path was passed in custom_data (from regenerate_invoice)
+            $invoice_path = isset($custom_data['invoice_path']) ? $custom_data['invoice_path'] : null;
+            
             if ($invoice_path && file_exists($invoice_path)) {
+                // Use the path passed from regenerate_invoice (most recent)
                 $attachments[] = $invoice_path;
+            } else {
+                // Fallback: get invoice path from database
+                $invoice_generator = HRB_Invoice_Generator::getInstance();
+                $invoice = $invoice_generator->get_invoice_by_booking($booking->id);
+                if ($invoice && !empty($invoice->pdf_file_path) && file_exists($invoice->pdf_file_path)) {
+                    $attachments[] = $invoice->pdf_file_path;
+                }
+            }
+        } elseif (in_array($event, array('booking_confirmation', 'payment_confirmation'))) {
+            // Only attach invoice if it should exist based on payment method and status
+            $should_have_invoice = false;
+            
+            if ($booking->status === 'confirmed') {
+                // For PayPal payments, invoice should exist
+                if ($booking->payment_method === 'paypal') {
+                    $should_have_invoice = true;
+                }
+                // For cash/onsite payments, invoice should exist when status is 'paid' or 'completed'
+                elseif (in_array($booking->payment_method, ['onsite', 'cash']) && 
+                        in_array($booking->payment_status, ['paid', 'completed'])) {
+                    $should_have_invoice = true;
+                }
+                // For other payment methods, invoice should exist
+                elseif (!in_array($booking->payment_method, ['onsite', 'cash', 'paypal'])) {
+                    $should_have_invoice = true;
+                }
+            }
+            
+            if ($should_have_invoice) {
+                // Note: Invoice regeneration for additional payments is handled in payment handler
+                // before sending notification, so we don't need to regenerate here again
+                // This prevents double regeneration and ensures we use the already-updated invoice
+                
+                $invoice_path = $this->get_or_generate_invoice($booking->id);
+                if ($invoice_path && file_exists($invoice_path)) {
+                    $attachments[] = $invoice_path;
+                }
             }
         }
         
@@ -98,7 +155,16 @@ class HRB_Notification_Manager {
             $this->send_admin_notification($booking, $event);
         }
         
+        // Log email attempt
+        /* removed error_log - production cleanup */
+        
         $sent = wp_mail($to, $subject, $message, $headers, $attachments);
+        
+        if ($sent) {
+            /* removed error_log - production cleanup */
+        } else {
+            /* removed error_log - production cleanup */
+        }
         
         // Log notification
         $this->log_notification($booking->id, $booking->customer_id, 'email', $event, $to, $subject, $message, $sent ? 'sent' : 'failed');
@@ -135,7 +201,10 @@ class HRB_Notification_Manager {
         
         // Send to admin email if enabled
         if ($settings->get('hrb_admin_email_notifications', 1)) {
-            $admin_email = $settings->get('hrb_admin_email', get_option('admin_email'));
+            $admin_email = $settings->get('hrb_admin_email', '');
+            if (empty($admin_email)) {
+                $admin_email = get_option('admin_email');
+            }
             if (!empty($admin_email)) {
                 $this->send_admin_email($admin_email, $template_data, $booking, $event);
             }
@@ -269,7 +338,7 @@ class HRB_Notification_Manager {
     /**
      * Prepare template data for notifications
      */
-    private function prepare_template_data($booking, $event) {
+    private function prepare_template_data($booking, $event, $custom_data = array()) {
         global $wpdb;
         
         $room_manager = HRB_Room_Manager::getInstance();
@@ -319,8 +388,18 @@ class HRB_Notification_Manager {
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => $this->get_booking_status_label($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status),
+            'payment_status' => $this->get_payment_status_label($booking->id)
         );
+        
+        // Merge custom data into basic_data (custom data takes precedence)
+        if (!empty($custom_data) && is_array($custom_data)) {
+            // Format additional_amount if it's a numeric value (not already formatted)
+            if (isset($custom_data['additional_amount']) && is_numeric($custom_data['additional_amount'])) {
+                $custom_data['additional_amount'] = hrb_format_amount($custom_data['additional_amount']);
+            }
+            $basic_data = array_merge($basic_data, $custom_data);
+        }
         
         // Now create the full data with template variables replaced
         $data = array_merge($basic_data, array(
@@ -337,6 +416,69 @@ class HRB_Notification_Manager {
             array($data['heading'], $data['message']),
             $data['html_content']
         );
+
+        // Remove payment button if no payment link should be shown
+        if ($event === 'online_payment_pending' && empty($basic_data['payment_link'])) {
+            // Remove wrapping container that only holds the PayPal button (if present)
+            $data['html_content'] = preg_replace(
+                '/<div[^>]*>\s*<a[^>]*payment-button[^>]*>.*?<\/a>\s*<\/div>/is',
+                '',
+                $data['html_content']
+            );
+
+            // Remove any remaining anchors styled as payment buttons
+            $data['html_content'] = preg_replace(
+                '/<a[^>]*payment-button[^>]*>.*?<\/a>/is',
+                '',
+                $data['html_content']
+            );
+        }
+
+        // Ensure critical payment links are present even if template hasn't been updated
+        if ($event === 'online_payment_pending' && !empty($basic_data['payment_link'])) {
+            $payment_link = esc_url($basic_data['payment_link']);
+            $button_html = '<div style="text-align:center;margin:20px 0;">'
+                . '<a href="' . $payment_link . '" '
+                . 'style="display:inline-block;padding:15px 30px;background:linear-gradient(135deg,#0070ba,#005ea6);'
+                . 'color:#fff;text-decoration:none;border-radius:5px;font-weight:bold;font-size:16px;">'
+                . __('Jetzt mit PayPal bezahlen', 'hourly-room-booking')
+                . '</a></div>';
+
+            // Check if payment button already exists in the template
+            // Look for: payment-button class, payment link URL, or button text
+            $button_exists = (
+                strpos($data['html_content'], 'payment-button') !== false ||
+                strpos($data['html_content'], $payment_link) !== false ||
+                strpos($data['html_content'], __('Jetzt mit PayPal bezahlen', 'hourly-room-booking')) !== false ||
+                strpos($data['html_content'], 'Jetzt mit PayPal bezahlen') !== false
+            );
+
+            // Only add button if placeholder exists and button doesn't exist yet
+            if (strpos($data['html_content'], '{payment_link}') !== false) {
+                // Placeholder exists, it will be replaced by replace_template_variables
+                // Don't add duplicate button
+            } elseif (!$button_exists) {
+                // No placeholder and no button found - add button
+                if (stripos($data['html_content'], '</body>') !== false) {
+                    $data['html_content'] = preg_replace(
+                        '/<\/body>/i',
+                        $button_html . '</body>',
+                        $data['html_content'],
+                        1
+                    );
+                } else {
+                    $data['html_content'] .= $button_html;
+                }
+            }
+
+            if (strpos($data['message'], '{payment_link}') === false &&
+                strpos($data['message'], $payment_link) === false) {
+                $data['message'] .= "\n\n" . sprintf(
+                    __('Jetzt bezahlen: %s', 'hourly-room-booking'),
+                    $payment_link
+                );
+            }
+        }
         
         
         return $data;
@@ -376,6 +518,7 @@ class HRB_Notification_Manager {
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
             'booking_status' => $this->get_booking_status_label($booking->status),
+            'payment_status' => $this->get_payment_status_label($booking->id),
             'subject' => $template->subject,
             'heading' => $template->heading,
             'message' => $template->message,
@@ -422,7 +565,8 @@ class HRB_Notification_Manager {
                 '{company_phone}' => get_option('hrb_company_phone', ''),
                 '{booking_url}' => $booking_url,
                 '{cancel_url}' => $booking_url . '&action=cancel',
-                '{booking_status}' => $this->get_booking_status_label($booking->status)
+                '{booking_status}' => $this->get_booking_status_label($booking->status),
+                '{payment_status}' => $this->get_payment_status_label($booking->id)
             );
         }
         
@@ -454,7 +598,8 @@ class HRB_Notification_Manager {
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => $this->get_booking_status_label($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status),
+            'payment_status' => $this->get_payment_status_label($booking->id)
         );
         
         switch ($event) {
@@ -527,7 +672,8 @@ class HRB_Notification_Manager {
             'company_email' => get_option('hrb_company_email', get_option('admin_email')),
             'booking_url' => $booking_url,
             'cancel_url' => $booking_url . '&action=cancel',
-            'booking_status' => $this->get_booking_status_label($booking->status)
+            'booking_status' => $this->get_booking_status_label($booking->status),
+            'payment_status' => $this->get_payment_status_label($booking->id)
         );
         
         switch ($event) {
@@ -974,8 +1120,21 @@ class HRB_Notification_Manager {
             $booking_id
         ));
         
-        if ($invoice && !empty($invoice->pdf_file_path) && file_exists($invoice->pdf_file_path)) {
-            return $invoice->pdf_file_path;
+        if ($invoice) {
+            // Invoice exists, check if PDF exists
+            if (!empty($invoice->pdf_file_path) && file_exists($invoice->pdf_file_path)) {
+                return $invoice->pdf_file_path;
+            } else {
+                // Invoice exists but PDF is missing, try to generate PDF for existing invoice
+                $invoice_generator = HRB_Invoice_Generator::getInstance();
+                $pdf_path = $invoice_generator->generate_invoice_pdf($invoice->id);
+                
+                if (is_wp_error($pdf_path)) {
+                    return false;
+                }
+                
+                return $pdf_path;
+            }
         }
         
         // Create invoice if it doesn't exist
@@ -1017,6 +1176,25 @@ class HRB_Notification_Manager {
      */
     private function get_booking_status_label($status) {
         return hrb_get_booking_status_label($status);
+    }
+    
+    /**
+     * Get payment status label for a booking
+     *
+     * @since 1.0.0
+     * @param int $booking_id Booking ID
+     * @return string Translated payment status label or 'Pending'
+     */
+    private function get_payment_status_label($booking_id) {
+        $payment_manager = HRB_Payment_Manager::getInstance();
+        $payment = $payment_manager->get_payment_by_booking($booking_id);
+        
+        if ($payment && isset($payment->status)) {
+            return hrb_get_payment_status_label($payment->status);
+        }
+        
+        // Return default if no payment record exists
+        return hrb_get_payment_status_label('pending');
     }
 }
 ?>

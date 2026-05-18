@@ -49,6 +49,7 @@ class HRB_Database {
             price_extra_hour decimal(10,2) NOT NULL DEFAULT 0.00,
             images text,
             amenities text,
+            color varchar(7) NOT NULL DEFAULT '#3498db',
             is_active tinyint(1) NOT NULL DEFAULT 1,
             sort_order int(11) NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -104,6 +105,9 @@ class HRB_Database {
             admin_notes text NULL,
             created_by_admin tinyint(1) NOT NULL DEFAULT 0,
             cooldown_override tinyint(1) NOT NULL DEFAULT 0,
+            is_anonymous tinyint(1) NOT NULL DEFAULT 0,
+            first_name varchar(255) NULL,
+            last_name varchar(255) NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -127,6 +131,8 @@ class HRB_Database {
             refunded_amount decimal(10,2) NOT NULL DEFAULT 0.00,
             currency varchar(3) NOT NULL DEFAULT 'EUR',
             status varchar(20) NOT NULL DEFAULT 'pending',
+            is_additional_payment tinyint(1) NOT NULL DEFAULT 0,
+            payment_token varchar(64) NULL,
             refund_reason text NULL,
             gateway_response text NULL,
             processed_at datetime NULL,
@@ -135,7 +141,9 @@ class HRB_Database {
             KEY booking_id (booking_id),
             KEY transaction_id (transaction_id),
             KEY gateway_transaction_id (gateway_transaction_id),
-            KEY status (status)
+            KEY status (status),
+            KEY is_additional_payment (is_additional_payment),
+            KEY payment_token (payment_token)
         ) $charset_collate;";
         
         // Invoices table
@@ -260,6 +268,23 @@ class HRB_Database {
             KEY extra_time_slot (extra_id, booking_date, start_time, end_time),
             UNIQUE KEY booking_extra (booking_id, extra_id)
         ) $charset_collate;";
+
+        // Booking modifications table to track admin/staff changes to hours and extra people
+        $booking_modifications_table = $wpdb->prefix . 'hrb_booking_modifications';
+        $sql_booking_modifications = "CREATE TABLE $booking_modifications_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            booking_id int(11) NOT NULL,
+            modification_type varchar(20) NOT NULL,
+            original_value decimal(10,2) NOT NULL,
+            new_value decimal(10,2) NOT NULL,
+            additional_amount decimal(10,2) NOT NULL DEFAULT 0.00,
+            added_by_user_id int(11) NULL DEFAULT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY booking_id (booking_id),
+            KEY modification_type (modification_type),
+            KEY added_by_user_id (added_by_user_id)
+        ) $charset_collate;";
         
         // OTP verification table
         $otp_table = $wpdb->prefix . 'hrb_otp_verification';
@@ -314,6 +339,70 @@ class HRB_Database {
             UNIQUE KEY template_key_type (template_key, template_type)
         ) $charset_collate;";
 
+        // Room locks table
+        $room_locks_table = $wpdb->prefix . 'hrb_room_locks';
+        $sql_room_locks = "CREATE TABLE $room_locks_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            room_id int(11) NOT NULL,
+            start_datetime datetime NOT NULL,
+            end_datetime datetime NOT NULL,
+            reason text NULL,
+            created_by int(11) NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY room_id (room_id),
+            KEY start_datetime (start_datetime),
+            KEY end_datetime (end_datetime),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        
+        // Master locks table
+        $master_locks_table = $wpdb->prefix . 'hrb_master_locks';
+        $sql_master_locks = "CREATE TABLE $master_locks_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            start_datetime datetime NOT NULL,
+            end_datetime datetime NOT NULL,
+            reason text NULL,
+            created_by int(11) NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY start_datetime (start_datetime),
+            KEY end_datetime (end_datetime),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+
+        // Extra locks table
+        $extra_locks_table = $wpdb->prefix . 'hrb_extra_locks';
+        $sql_extra_locks = "CREATE TABLE $extra_locks_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            extra_id int(11) NOT NULL,
+            start_datetime datetime NOT NULL,
+            end_datetime datetime NOT NULL,
+            reason text NULL,
+            created_by int(11) NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY extra_id (extra_id),
+            KEY start_datetime (start_datetime),
+            KEY end_datetime (end_datetime),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        
+        // Master extra locks table
+        $master_extra_locks_table = $wpdb->prefix . 'hrb_master_extra_locks';
+        $sql_master_extra_locks = "CREATE TABLE $master_extra_locks_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            start_datetime datetime NOT NULL,
+            end_datetime datetime NOT NULL,
+            reason text NULL,
+            created_by int(11) NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY start_datetime (start_datetime),
+            KEY end_datetime (end_datetime),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+
         // Execute table creation with error logging
         $tables_to_create = [
             'rooms' => $sql_rooms,
@@ -327,7 +416,12 @@ class HRB_Database {
             'settings' => $sql_settings,
             'extras' => $sql_extras,
             'booking_extras' => $sql_booking_extras,
-            'email_templates' => $sql_email_templates
+            'booking_modifications' => $sql_booking_modifications,
+            'email_templates' => $sql_email_templates,
+            'room_locks' => $sql_room_locks,
+            'master_locks' => $sql_master_locks,
+            'extra_locks' => $sql_extra_locks,
+            'master_extra_locks' => $sql_master_extra_locks
         ];
 
         foreach ($tables_to_create as $table_name => $sql) {
@@ -347,18 +441,18 @@ class HRB_Database {
 
                 // Force log critical table creation failures even during activation
                 if (!$table_exists_after) {
-                    error_log("HRB Database CRITICAL: Failed to create {$table_name} table");
+                    /* removed error_log - avoid noisy logs in production */
                     if ($wpdb->last_error) {
-                        error_log("HRB Database SQL Error for {$table_name}: " . $wpdb->last_error);
-                        error_log("HRB Database SQL Query: " . $sql);
+                        /* removed error_log - avoid noisy logs in production */
+                        /* removed error_log - avoid noisy logs in production */
                     }
                 } else {
-                    error_log("HRB Database: {$table_name} table created successfully with direct SQL");
+                    /* removed error_log - avoid noisy logs in production */
                 }
             } else {
                 // Log success for debugging (skip during activation)
                 if (defined('WP_DEBUG') && WP_DEBUG && !defined('HRB_ACTIVATION_MODE')) {
-                    error_log("HRB Database: {$table_name} table created successfully with dbDelta");
+                    /* removed error_log - avoid noisy logs in production */
                 }
             }
         }
@@ -375,6 +469,9 @@ class HRB_Database {
         // Run migrations for existing installations
         self::add_template_type_column();
         self::add_missing_templates();
+        self::add_room_color_column();
+        self::add_payment_token_column();
+        self::update_email_templates_with_status();
 
         // Clean output buffer to prevent unexpected output
         if (ob_get_level()) {
@@ -421,6 +518,16 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$booking_extras_table} ADD COLUMN end_time time NOT NULL AFTER start_time");
             }
 
+            // Add added_by_admin column to track admin-added extras
+            if (!in_array('added_by_admin', $column_names)) {
+                $wpdb->query("ALTER TABLE {$booking_extras_table} ADD COLUMN added_by_admin tinyint(1) NOT NULL DEFAULT 0 AFTER end_time");
+            }
+
+            // Add added_by_user_id column to track which user (admin/staff) added the extra
+            if (!in_array('added_by_user_id', $column_names)) {
+                $wpdb->query("ALTER TABLE {$booking_extras_table} ADD COLUMN added_by_user_id int(11) NULL DEFAULT NULL AFTER added_by_admin");
+            }
+
             // Rename price to unit_price if it exists and unit_price doesn't
             if (in_array('price', $column_names) && !in_array('unit_price', $column_names)) {
                 $wpdb->query("ALTER TABLE {$booking_extras_table} CHANGE COLUMN price unit_price decimal(10,2) NOT NULL");
@@ -430,7 +537,54 @@ class HRB_Database {
             if (in_array('price', $column_names) && in_array('unit_price', $column_names)) {
                 $wpdb->query("ALTER TABLE {$booking_extras_table} DROP COLUMN price");
             }
+        }
 
+        // Check and create booking_modifications table if it doesn't exist
+        $booking_modifications_table = $wpdb->prefix . 'hrb_booking_modifications';
+        $modifications_table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$booking_modifications_table}'");
+        
+        if (!$modifications_table_exists) {
+            $charset_collate = $wpdb->get_charset_collate();
+            $sql_booking_modifications = "CREATE TABLE {$booking_modifications_table} (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                booking_id int(11) NOT NULL,
+                modification_type varchar(20) NOT NULL,
+                original_value decimal(10,2) NOT NULL,
+                new_value decimal(10,2) NOT NULL,
+                additional_amount decimal(10,2) NOT NULL DEFAULT 0.00,
+                added_by_user_id int(11) NULL DEFAULT NULL,
+                created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY booking_id (booking_id),
+                KEY modification_type (modification_type),
+                KEY added_by_user_id (added_by_user_id)
+            ) $charset_collate;";
+            $wpdb->query($sql_booking_modifications);
+        }
+
+        // Check and add is_additional_payment column to payments table if it doesn't exist
+        $payments_table = $wpdb->prefix . 'hrb_payments';
+        $payments_table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$payments_table}'");
+        
+        if ($payments_table_exists) {
+            $columns = $wpdb->get_results("SHOW COLUMNS FROM {$payments_table}");
+            $column_names = array_column($columns, 'Field');
+            
+            // Add is_additional_payment column if missing
+            if (!in_array('is_additional_payment', $column_names)) {
+                $wpdb->query("ALTER TABLE {$payments_table} ADD COLUMN is_additional_payment tinyint(1) NOT NULL DEFAULT 0 AFTER status");
+                $wpdb->query("ALTER TABLE {$payments_table} ADD INDEX is_additional_payment (is_additional_payment)");
+                
+                // Update existing records: set is_additional_payment = 1 for payments with ADD_ prefix in transaction_id
+                $wpdb->query("UPDATE {$payments_table} SET is_additional_payment = 1 WHERE transaction_id LIKE 'ADD_%%'");
+            }
+        }
+
+        // Continue with booking_extras table indexes if table exists
+        $booking_extras_table = $wpdb->prefix . 'hrb_booking_extras';
+        $extras_table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$booking_extras_table}'");
+        
+        if ($extras_table_exists) {
             // Add indexes for time slot queries
             $indexes = $wpdb->get_results("SHOW INDEX FROM {$booking_extras_table}");
             $index_names = array_column($indexes, 'Key_name');
@@ -447,7 +601,7 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$booking_extras_table} ADD INDEX extra_time_slot (extra_id, booking_date, start_time, end_time)");
             }
 
-            error_log("HRB Database: Fixed booking_extras table structure with time slot columns");
+            /* removed error_log - avoid noisy logs in production */
         }
 
         // Fix payments table
@@ -456,7 +610,7 @@ class HRB_Database {
 
         if ($table_exists) {
             // Check if columns exist and add missing ones
-            $columns = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM %s", $payments_table));
+            $columns = $wpdb->get_results("SHOW COLUMNS FROM {$payments_table}");
             $column_names = array_column($columns, 'Field');
 
             // Add gateway_transaction_id column if missing
@@ -480,7 +634,7 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$payments_table} ADD COLUMN refund_reason text NULL AFTER status");
             }
 
-            error_log("HRB Database: Fixed payments table structure");
+            /* removed error_log - avoid noisy logs in production */
         }
 
         // Fix extras table - Add stock management columns
@@ -489,7 +643,7 @@ class HRB_Database {
 
         if ($table_exists) {
             // Check if columns exist and add missing ones
-            $columns = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM %s", $extras_table));
+            $columns = $wpdb->get_results("SHOW COLUMNS FROM {$extras_table}");
             $column_names = array_column($columns, 'Field');
 
             // Add stock_quantity column if missing
@@ -503,7 +657,7 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$extras_table} ADD COLUMN track_stock tinyint(1) NOT NULL DEFAULT 1 AFTER stock_quantity");
             }
 
-            error_log("HRB Database: Fixed extras table structure with stock management");
+            /* removed error_log - avoid noisy logs in production */
         }
 
         // Fix rooms table - Add new pricing columns
@@ -512,7 +666,7 @@ class HRB_Database {
 
         if ($table_exists) {
             // Check if columns exist and add missing ones
-            $columns = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM %s", $rooms_table));
+            $columns = $wpdb->get_results("SHOW COLUMNS FROM {$rooms_table}");
             $column_names = array_column($columns, 'Field');
 
             // Add new pricing columns if missing
@@ -537,8 +691,9 @@ class HRB_Database {
                 $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN external_link varchar(500) NULL AFTER amenities");
             }
 
-            error_log("HRB Database: Fixed rooms table structure with new pricing columns and external link");
+            /* removed error_log - avoid noisy logs in production */
         }
+
 
         return true;
     }
@@ -774,8 +929,12 @@ class HRB_Database {
                     {payment_method}
                 </div>
                 <div class="detail-row">
-                    <span class="label">Status:</span>
+                    <span class="label">Booking Status:</span>
                     {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
                 </div>
             </div>
             
@@ -784,6 +943,61 @@ class HRB_Database {
             </p>
         </div>
         
+        <div class="footer">
+            <p>Thank you for choosing {company_name}!</p>
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
+            'invoice_regenerated_user' => array(
+                'template_name' => 'Updated Invoice (User)',
+                'template_type' => 'user',
+                'subject' => 'Updated Invoice - {booking_reference}',
+                'heading' => 'Updated Invoice',
+                'message' => 'Your invoice has been updated. Please find the updated invoice attached to this email.',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0073aa; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .message-box { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .booking-details { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: inline-block; width: 150px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{company_name}</h1>
+            <h2>{heading}</h2>
+        </div>
+        <div class="content">
+            <div class="message-box">
+                <p>Dear {customer_first_name},</p>
+                <p>{message}</p>
+            </div>
+            <div class="booking-details">
+                <h3>Invoice Details</h3>
+                <div class="detail-row">
+                    <span class="label">Booking Reference:</span>
+                    <strong>{booking_reference}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Amount:</span>
+                    <strong>{total_amount}</strong>
+                </div>
+            </div>
+        </div>
         <div class="footer">
             <p>Thank you for choosing {company_name}!</p>
             <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
@@ -834,12 +1048,36 @@ class HRB_Database {
                     <strong>{booking_reference}</strong>
                 </div>
                 <div class="detail-row">
+                    <span class="label">Room:</span>
+                    {room_name}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    {booking_date}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Time:</span>
+                    {start_time} - {end_time}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Duration:</span>
+                    {duration}
+                </div>
+                <div class="detail-row">
                     <span class="label">Amount Paid:</span>
                     <strong>{total_amount}</strong>
                 </div>
                 <div class="detail-row">
                     <span class="label">Payment Method:</span>
                     {payment_method}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Booking Status:</span>
+                    {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
                 </div>
             </div>
             
@@ -1048,8 +1286,16 @@ class HRB_Database {
                     <strong>{total_amount}</strong>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Status:</span>
+                    <span class="label">Payment Method:</span>
+                    {payment_method}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Booking Status:</span>
                     {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
                 </div>
             </div>
             
@@ -1357,74 +1603,73 @@ class HRB_Database {
     public static function check_booking_conflict($room_id, $booking_date, $start_time, $end_time, $exclude_booking_id = null) {
         global $wpdb;
 
-        $exclude_sql = '';
-
         // Get cooldown minutes setting (default 30 minutes)
-        $cooldown_minutes = 30; // Hardcode for now, will be configurable later
+        $cooldown_minutes = 30;
         if (function_exists('get_option')) {
             $cooldown_minutes = intval(get_option('hrb_cooldown_minutes', 30));
         }
 
-        // Calculate time with cooldown buffer
-        $start_with_cooldown = date('H:i:s', strtotime($start_time) - ($cooldown_minutes * 60));
-        $end_with_cooldown = date('H:i:s', strtotime($end_time) + ($cooldown_minutes * 60));
+        // Build date range (previous, current, next day) to handle cross-midnight bookings
+        $date_obj     = new DateTime($booking_date);
+        $prev_day_str = $date_obj->modify('-1 day')->format('Y-m-d');
+        $date_obj->modify('+1 day'); // back to original
+        $current_str  = $booking_date;
+        $next_day_str = $date_obj->modify('+1 day')->format('Y-m-d');
 
-        // For cooldown check, we need to check if existing bookings end too close to our start
-        // or if our booking ends too close to existing bookings start
-        $cooldown_params = array($room_id, $booking_date, $start_time, $start_time, $cooldown_minutes, $end_time, $cooldown_minutes, $end_time);
-
-        if ($exclude_booking_id) {
-            $exclude_sql = ' AND id != %d';
-            $cooldown_params[] = $exclude_booking_id;
-        }
-
-        // Check for direct overlap (always blocked)
-        // Parameters: room_id, booking_date, new_start, new_start, new_end, new_end, new_start, new_end
-        $direct_params = array($room_id, $booking_date, $start_time, $start_time, $end_time, $end_time, $start_time, $end_time);
-        if ($exclude_booking_id) {
-            $direct_params[] = $exclude_booking_id;
-        }
-
-        $direct_conflict = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
+        $bookings = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, booking_date, start_time, end_time, cooldown_override
+             FROM {$wpdb->prefix}hrb_bookings
              WHERE room_id = %d
-             AND booking_date = %s
-             AND status NOT IN ('cancelled', 'no_show')
-             AND (
-                 (start_time <= %s AND end_time > %s) OR
-                 (start_time < %s AND end_time >= %s) OR
-                 (start_time >= %s AND end_time <= %s)
-             )
-             $exclude_sql",
-            $direct_params
+             AND booking_date IN (%s, %s, %s)
+             AND status NOT IN ('cancelled', 'no_show')",
+            $room_id,
+            $prev_day_str,
+            $current_str,
+            $next_day_str
         ));
 
-        // If direct conflict exists, return immediately
-        if ($direct_conflict > 0) {
-            return true;
+        // Prepare slot datetimes
+        $slot_start = new DateTime("{$current_str} {$start_time}");
+        $slot_end   = new DateTime("{$current_str} {$end_time}");
+        if ($slot_end <= $slot_start) {
+            $slot_end->modify('+1 day'); // crosses midnight
         }
 
-        // Check for cooldown conflicts (unless admin overrides)
-        // Cooldown applies: new booking starts too close to existing booking end time
-        $cooldown_conflict = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
-             WHERE room_id = %d
-             AND booking_date = %s
-             AND status NOT IN ('cancelled', 'no_show')
-             AND cooldown_override = 0
-             AND (
-                 -- New booking starts too close to existing booking end (within cooldown period)
-                 (TIME_TO_SEC(%s) >= TIME_TO_SEC(end_time) AND TIME_TO_SEC(%s) < TIME_TO_SEC(end_time) + (%d * 60)) OR
-                 -- New booking ends too close to existing booking start (within cooldown period)
-                 (TIME_TO_SEC(%s) > TIME_TO_SEC(start_time) - (%d * 60) AND TIME_TO_SEC(%s) <= TIME_TO_SEC(start_time))
-             )
-             $exclude_sql",
-            $cooldown_params
-        ));
-        
-        
+        foreach ($bookings as $booking) {
+            if ($exclude_booking_id && intval($booking->id) === intval($exclude_booking_id)) {
+                continue;
+            }
 
-        return ($cooldown_conflict > 0);
+            $booking_start = new DateTime("{$booking->booking_date} {$booking->start_time}");
+            $booking_end   = new DateTime("{$booking->booking_date} {$booking->end_time}");
+            if ($booking_end <= $booking_start) {
+                $booking_end->modify('+1 day'); // crosses midnight
+            }
+
+            // Direct overlap: existing_start < new_end AND existing_end > new_start
+            if ($booking_start < $slot_end && $booking_end > $slot_start) {
+                return true;
+            }
+
+            // Cooldown checks if not overridden
+            if (empty($booking->cooldown_override)) {
+                // After existing
+                $booking_end_cd = clone $booking_end;
+                $booking_end_cd->modify("+{$cooldown_minutes} minutes");
+                if ($slot_start >= $booking_end && $slot_start < $booking_end_cd) {
+                    return true;
+                }
+
+                // Before existing
+                $booking_start_cd = clone $booking_start;
+                $booking_start_cd->modify("-{$cooldown_minutes} minutes");
+                if ($slot_end > $booking_start_cd && $slot_end <= $booking_start) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
     
     /**
@@ -1434,7 +1679,7 @@ class HRB_Database {
         global $wpdb;
         
         do {
-            $reference = 'HRB-' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $reference = 'HRB-' . str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT) . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $exists = $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings WHERE booking_reference = %s",
                 $reference
@@ -1487,6 +1732,61 @@ class HRB_Database {
         
         // Define missing templates
         $missing_templates = array(
+            'invoice_regenerated_user' => array(
+                'template_name' => 'Updated Invoice (User)',
+                'template_type' => 'user',
+                'subject' => 'Updated Invoice - {booking_reference}',
+                'heading' => 'Updated Invoice',
+                'message' => 'Your invoice has been updated. Please find the updated invoice attached to this email.',
+                'html_content' => '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0073aa; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .message-box { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .booking-details { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: inline-block; width: 150px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{company_name}</h1>
+            <h2>{heading}</h2>
+        </div>
+        <div class="content">
+            <div class="message-box">
+                <p>Dear {customer_first_name},</p>
+                <p>{message}</p>
+            </div>
+            <div class="booking-details">
+                <h3>Invoice Details</h3>
+                <div class="detail-row">
+                    <span class="label">Booking Reference:</span>
+                    <strong>{booking_reference}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Amount:</span>
+                    <strong>{total_amount}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Thank you for choosing {company_name}!</p>
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>'
+            ),
             'booking_reminder_user' => array(
                 'template_name' => 'Booking Reminder (User)',
                 'template_type' => 'user',
@@ -1684,6 +1984,18 @@ class HRB_Database {
                     <span class="detail-label">Total Amount:</span>
                     <span class="detail-value">{total_amount}</span>
                 </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{payment_method}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Booking Status:</span>
+                    <span class="detail-value">{booking_status}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Status:</span>
+                    <span class="detail-value">{payment_status}</span>
+                </div>
             </div>
             
             <p>
@@ -1782,6 +2094,859 @@ class HRB_Database {
                 );
             }
         }
+        
+        // Add new PayPal payment templates
+        self::add_paypal_payment_templates();
+        
     }
+    
+    /**
+     * Add PayPal payment templates
+     */
+    public static function add_paypal_payment_templates() {
+        global $wpdb;
+        
+        $templates_table = $wpdb->prefix . 'hrb_email_templates';
+        
+        // Template 1: Online Payment Pending
+        $online_payment_template = array(
+            'template_key' => 'online_payment_pending',
+            'template_name' => 'Online Payment',
+            'template_type' => 'user',
+            'subject' => 'PayPal-Zahlung ausstehend - Buchung {booking_reference}',
+            'heading' => 'PayPal-Zahlung ausstehend',
+            'message' => 'Die Zahlung über Paypal ist noch ausstehend. Sollte diese nicht innerhalb der nächsten 15min durchgeführt werden, wird Ihre Buchung auf Grund fehlender Zahlung storniert.',
+            'html_content' => '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal-Zahlung ausstehend</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #0070ba, #005ea6); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .payment-button { display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #0070ba, #005ea6); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; font-size: 16px; }
+        .payment-button:hover { background: linear-gradient(135deg, #005ea6, #004d8f); }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PayPal-Zahlung ausstehend</h1>
+        </div>
+        <div class="content">
+            <p>Sehr geehrte*r {customer_name},</p>
+            
+            <div class="warning">
+                <strong>⚠️ Wichtiger Hinweis:</strong><br>
+                Die Zahlung über PayPal ist noch ausstehend. Sollte diese nicht innerhalb der nächsten 15 Minuten durchgeführt werden, wird Ihre Buchung auf Grund fehlender Zahlung storniert.
+            </div>
+            
+            <p><strong>Buchungsdetails:</strong></p>
+            <ul>
+                <li><strong>Buchungsnummer:</strong> {booking_reference}</li>
+                <li><strong>Datum:</strong> {booking_date}</li>
+                <li><strong>Zeit:</strong> {start_time} - {end_time}</li>
+                <li><strong>Raum:</strong> {room_name}</li>
+                <li><strong>Betrag:</strong> {total_amount} €</li>
+            </ul>
+            
+            <p>Bitte führen Sie die PayPal-Zahlung so schnell wie möglich durch, um Ihre Buchung zu bestätigen.</p>
+            
+            <div style="text-align: center;">
+                <a href="{payment_link}" class="payment-button">Jetzt mit PayPal bezahlen</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Dies ist eine automatische Benachrichtigung von {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
+        );
+        
+        $existing_online_template = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, html_content FROM {$templates_table} WHERE template_key = %s LIMIT 1",
+            'online_payment_pending'
+        ));
+        
+        if ($existing_online_template) {
+            if (strpos($existing_online_template->html_content, '{payment_link}') === false) {
+                $wpdb->update(
+                    $templates_table,
+                    array('html_content' => $online_payment_template['html_content']),
+                    array('id' => $existing_online_template->id),
+                    array('%s'),
+                    array('%d')
+                );
+            }
+        } else {
+            $wpdb->insert($templates_table, $online_payment_template);
+        }
+        
+        // Template 2: Payment Timeout Cancellation
+        $payment_timeout_template = array(
+            'template_key' => 'payment_timeout_cancellation',
+            'template_name' => 'Payment Timeout Cancellation',
+            'template_type' => 'user',
+            'subject' => 'Ihre Buchung wurde storniert – fehlende PayPal-Zahlung',
+            'heading' => 'Buchung storniert - Zahlung nicht rechtzeitig erfolgt',
+            'message' => 'Sehr geehrte*r [Name], leider konnten wir innerhalb der vorgesehenen Frist keine abgeschlossene PayPal-Zahlung zu Ihrer Buchung feststellen. Da unser System das Zimmer nur für 15 Minuten reserviert, wurde Ihre Buchung automatisch storniert, da die Zahlung nicht rechtzeitig durchgeführt wurde. Sollten Sie weiterhin Interesse an einer Buchung haben, können Sie gerne eine neue Reservierung über unser System vornehmen. Bei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung. Mit freundlichen Grüßen',
+            'html_content' => '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buchung storniert - Zahlung nicht rechtzeitig erfolgt</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #dc3545, #c82333); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .info-box { background: #e9ecef; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Buchung storniert</h1>
+        </div>
+        <div class="content">
+            <p>Sehr geehrte*r {customer_name},</p>
+            
+            <div class="info-box">
+                <strong>❌ Buchung storniert</strong><br>
+                Leider konnten wir innerhalb der vorgesehenen Frist keine abgeschlossene PayPal-Zahlung zu Ihrer Buchung feststellen.
+            </div>
+            
+            <p>Da unser System das Zimmer nur für 15 Minuten reserviert, wurde Ihre Buchung automatisch storniert, da die Zahlung nicht rechtzeitig durchgeführt wurde.</p>
+            
+            <p><strong>Stornierte Buchungsdetails:</strong></p>
+            <ul>
+                <li><strong>Buchungsnummer:</strong> {booking_reference}</li>
+                <li><strong>Datum:</strong> {booking_date}</li>
+                <li><strong>Zeit:</strong> {start_time} - {end_time}</li>
+                <li><strong>Raum:</strong> {room_name}</li>
+                <li><strong>Betrag:</strong> {total_amount} €</li>
+            </ul>
+            
+            <p>Sollten Sie weiterhin Interesse an einer Buchung haben, können Sie gerne eine neue Reservierung über unser System vornehmen.</p>
+            
+            <p>Bei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.</p>
+            
+            <p>Mit freundlichen Grüßen<br>
+            {company_name}</p>
+        </div>
+        <div class="footer">
+            <p>Dies ist eine automatische Benachrichtigung von {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
+        );
+        
+        // Template 3: PayPal Payment Required (when payment method is changed to PayPal)
+        $paypal_payment_required_template = array(
+            'template_key' => 'paypal_payment_required_user',
+            'template_name' => 'PayPal Payment Required',
+            'template_type' => 'user',
+            'subject' => 'PayPal-Zahlung erforderlich - Buchung {booking_reference}',
+            'heading' => 'PayPal-Zahlung erforderlich',
+            'message' => 'Ihre Buchung wurde auf PayPal-Zahlung umgestellt. Bitte führen Sie die Zahlung über den unten stehenden Link durch.',
+            'html_content' => '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal-Zahlung erforderlich</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #0070ba, #005ea6); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .payment-button { display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #0070ba, #005ea6); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; font-size: 16px; }
+        .payment-button:hover { background: linear-gradient(135deg, #005ea6, #004d8f); }
+        .info-box { background: #e7f3ff; border-left: 4px solid #0070ba; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PayPal-Zahlung erforderlich</h1>
+        </div>
+        <div class="content">
+            <p>Sehr geehrte*r {customer_name},</p>
+            
+            <p>Ihre Buchung wurde auf PayPal-Zahlung umgestellt. Bitte führen Sie die Zahlung über den unten stehenden Link durch.</p>
+            
+            <div class="booking-details">
+                <h3>Buchungsdetails</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Buchungsnummer:</span>
+                    <span class="detail-value">{booking_reference}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Raum:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Datum:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Zeit:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Dauer:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Betrag:</span>
+                    <span class="detail-value"><strong>{total_amount}</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Zahlungsmethode:</span>
+                    <span class="detail-value">{payment_method}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Buchungsstatus:</span>
+                    <span class="detail-value">{booking_status}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Zahlungsstatus:</span>
+                    <span class="detail-value">{payment_status}</span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>ℹ️ Wichtiger Hinweis:</strong><br>
+                Bitte führen Sie die PayPal-Zahlung so schnell wie möglich durch, um Ihre Buchung zu bestätigen.
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{payment_link}" class="payment-button">Jetzt mit PayPal bezahlen</a>
+            </div>
+            
+            <p>Falls Sie Fragen haben, kontaktieren Sie uns bitte unter {company_email} oder {company_phone}.</p>
+        </div>
+        <div class="footer">
+            <p>Dies ist eine automatische Benachrichtigung von {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
+        );
+        
+        // Template 4: Additional Payment Required (when admin adds services to already-paid booking)
+        $additional_payment_required_template = array(
+            'template_key' => 'additional_payment_required_user',
+            'template_name' => 'Additional Payment Required',
+            'template_type' => 'user',
+            'subject' => 'Zusätzliche Zahlung erforderlich - Buchung {booking_reference}',
+            'heading' => 'Zusätzliche Zahlung erforderlich',
+            'message' => 'Ihre Buchung wurde um zusätzliche Dienstleistungen erweitert. Bitte führen Sie die Zahlung für die zusätzlichen Leistungen über den unten stehenden Link durch.',
+            'html_content' => '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zusätzliche Zahlung erforderlich</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #ffc107, #ff9800); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .payment-button { display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #0070ba, #005ea6); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; font-size: 16px; }
+        .payment-button:hover { background: linear-gradient(135deg, #005ea6, #004d8f); }
+        .info-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .amount-highlight { background: #fff3cd; padding: 10px; border-radius: 5px; text-align: center; margin: 15px 0; font-size: 1.2em; font-weight: bold; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Zusätzliche Zahlung erforderlich</h1>
+        </div>
+        <div class="content">
+            <p>Sehr geehrte*r {customer_name},</p>
+            
+            <p>Ihre Buchung wurde um zusätzliche Dienstleistungen erweitert. Bitte führen Sie die Zahlung für die zusätzlichen Leistungen über den unten stehenden Link durch.</p>
+            
+            <div class="booking-details">
+                <h3>Buchungsdetails</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Buchungsnummer:</span>
+                    <span class="detail-value">{booking_reference}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Raum:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Datum:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Zeit:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+            </div>
+            
+            <div class="amount-highlight">
+                Zusätzlicher Betrag: {additional_amount}
+            </div>
+            
+            <div class="booking-details" style="margin-top: 20px;">
+                <h3>Zusätzliche Leistungen:</h3>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                    {added_services}
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    Die oben genannten Leistungen wurden zu Ihrer Buchung hinzugefügt. Bitte führen Sie die Zahlung für diese zusätzlichen Leistungen durch.
+                </p>
+            </div>
+            
+            <div class="info-box">
+                <strong>ℹ️ Wichtiger Hinweis:</strong><br>
+                Bitte führen Sie die PayPal-Zahlung für die zusätzlichen Leistungen so schnell wie möglich durch.
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{payment_link}" class="payment-button">Jetzt zusätzliche Zahlung durchführen</a>
+            </div>
+            
+            <p>Falls Sie Fragen haben, kontaktieren Sie uns bitte unter {company_email} oder {company_phone}.</p>
+        </div>
+        <div class="footer">
+            <p>Dies ist eine automatische Benachrichtigung von {company_name}.</p>
+        </div>
+    </div>
+</body>
+</html>'
+        );
+        
+        // Insert templates if they don't exist
+        $templates_to_add = array(
+            'online_payment_pending' => $online_payment_template,
+            'payment_timeout_cancellation' => $payment_timeout_template,
+            'paypal_payment_required_user' => $paypal_payment_required_template,
+            'additional_payment_required_user' => $additional_payment_required_template
+        );
+        
+        foreach ($templates_to_add as $key => $template) {
+            // Check if template already exists
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $templates_table WHERE template_key = %s AND template_type = %s",
+                $key, $template['template_type']
+            ));
+            
+            if (!$exists) {
+                $wpdb->insert(
+                    $templates_table,
+                    array(
+                        'template_key' => $template['template_key'],
+                        'template_name' => $template['template_name'],
+                        'template_type' => $template['template_type'],
+                        'subject' => $template['subject'],
+                        'heading' => $template['heading'],
+                        'message' => $template['message'],
+                        'html_content' => $template['html_content'],
+                        'is_active' => 1
+                    ),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                );
+            }
+        }
+    }
+    
+    /**
+     * Update email templates to include booking status and payment status
+     */
+    public static function update_email_templates_with_status() {
+        global $wpdb;
+        $templates_table = $wpdb->prefix . 'hrb_email_templates';
+        
+        // Updated Booking Modified template (non-user version)
+        $booking_modified_html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #17a2b8; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: inline-block; width: 150px; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{company_name}</h1>
+            <h2>{heading}</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hello {customer_first_name},</p>
+            <p>{message}</p>
+            
+            <div class="booking-details">
+                <h3>Updated Booking Details</h3>
+                <div class="detail-row">
+                    <span class="label">Booking Reference:</span>
+                    <strong>{booking_reference}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Room:</span>
+                    {room_name}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    {booking_date}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Time:</span>
+                    {start_time} - {end_time}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Duration:</span>
+                    {duration}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Amount:</span>
+                    <strong>{total_amount}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Method:</span>
+                    {payment_method}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Booking Status:</span>
+                    {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button">View Updated Booking</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions about these changes, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Updated Booking Modified User template
+        $booking_modified_user_html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Modified</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #3498db; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .content { padding: 20px 0; }
+        .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .detail-label { font-weight: bold; color: #555; }
+        .detail-value { color: #333; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .modified { background: #3498db; color: white; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Updated</h1>
+            <p>Booking Reference: {booking_reference}</p>
+        </div>
+        
+        <div class="content">
+            <div class="modified">
+                <strong>Booking Modified</strong>
+            </div>
+            
+            <div class="booking-details">
+                <h3>Updated Booking Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Room:</span>
+                    <span class="detail-value">{room_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{booking_date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">{start_time} - {end_time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">{duration}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">{total_amount}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{payment_method}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Booking Status:</span>
+                    <span class="detail-value">{booking_status}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Status:</span>
+                    <span class="detail-value">{payment_status}</span>
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Updated Booking</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions about these changes, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Updated Payment Confirmation template
+        $payment_confirmation_html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #28a745; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: inline-block; width: 150px; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{company_name}</h1>
+            <h2>{heading}</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hello {customer_first_name},</p>
+            <p>{message}</p>
+            
+            <div class="booking-details">
+                <h3>Payment Details</h3>
+                <div class="detail-row">
+                    <span class="label">Booking Reference:</span>
+                    <strong>{booking_reference}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Room:</span>
+                    {room_name}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    {booking_date}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Time:</span>
+                    {start_time} - {end_time}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Duration:</span>
+                    {duration}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Amount Paid:</span>
+                    <strong>{total_amount}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Method:</span>
+                    {payment_method}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Booking Status:</span>
+                    {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button">View Booking Details</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for your payment!</p>
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Updated Booking Confirmation template
+        $booking_confirmation_html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0073aa; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; display: inline-block; width: 150px; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #0073aa; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{company_name}</h1>
+            <h2>{heading}</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hello {customer_first_name},</p>
+            <p>{message}</p>
+            
+            <div class="booking-details">
+                <h3>Booking Details</h3>
+                <div class="detail-row">
+                    <span class="label">Booking Reference:</span>
+                    <strong>{booking_reference}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Room:</span>
+                    {room_name}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    {booking_date}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Time:</span>
+                    {start_time} - {end_time}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Duration:</span>
+                    {duration}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Amount:</span>
+                    <strong>{total_amount}</strong>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Method:</span>
+                    {payment_method}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Booking Status:</span>
+                    {booking_status}
+                </div>
+                <div class="detail-row">
+                    <span class="label">Payment Status:</span>
+                    {payment_status}
+                </div>
+            </div>
+            
+            <p>
+                <a href="{booking_url}" class="button">View Booking Details</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for choosing {company_name}!</p>
+            <p>If you have any questions, please contact us at {company_email} or {company_phone}</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Update templates
+        $templates_to_update = array(
+            array(
+                'key' => 'booking_confirmation_user',
+                'type' => 'user',
+                'html' => $booking_confirmation_html
+            ),
+            array(
+                'key' => 'booking_modified',
+                'type' => null, // This template might not have template_type
+                'html' => $booking_modified_html
+            ),
+            array(
+                'key' => 'booking_modified_user',
+                'type' => 'user',
+                'html' => $booking_modified_user_html
+            ),
+            array(
+                'key' => 'payment_confirmation_user',
+                'type' => 'user',
+                'html' => $payment_confirmation_html
+            )
+        );
+        
+        foreach ($templates_to_update as $template) {
+            // Check if template exists - try with template_type first, then without
+            $exists = false;
+            $where = array();
+            $where_format = array();
+            
+            if ($template['type']) {
+                // Check with template_type
+                $exists = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $templates_table WHERE template_key = %s AND template_type = %s",
+                    $template['key'], $template['type']
+                ));
+                if ($exists) {
+                    $where = array(
+                        'template_key' => $template['key'],
+                        'template_type' => $template['type']
+                    );
+                    $where_format = array('%s', '%s');
+                }
+            }
+            
+            // If not found with type, try without template_type (for legacy templates)
+            if (!$exists && $template['key'] === 'booking_modified') {
+                $exists = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $templates_table WHERE template_key = %s AND (template_type IS NULL OR template_type = '')",
+                    $template['key']
+                ));
+                if ($exists) {
+                    $where = array('template_key' => $template['key']);
+                    $where_format = array('%s');
+                }
+            }
+            
+            if ($exists) {
+                // Update existing template
+                $wpdb->update(
+                    $templates_table,
+                    array('html_content' => $template['html']),
+                    $where,
+                    array('%s'),
+                    $where_format
+                );
+            }
+        }
+    }
+    
+    /**
+     * Add color column to existing rooms table
+     */
+    public static function add_room_color_column() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'hrb_rooms';
+        
+        // Check if color column exists
+        $column_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'color'",
+            DB_NAME, $table_name
+        ));
+        
+        if (empty($column_exists)) {
+            // Add the color column
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN color varchar(7) NOT NULL DEFAULT '#3498db' AFTER amenities");
+        }
+    }
+    
+    /**
+     * Add payment_token column to payments table
+     */
+    public static function add_payment_token_column() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'hrb_payments';
+        
+        // Check if payment_token column exists
+        $column_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'payment_token'",
+            DB_NAME, $table_name
+        ));
+        
+        if (empty($column_exists)) {
+            // Add the payment_token column
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN payment_token varchar(64) NULL AFTER is_additional_payment");
+            
+            // Add index for payment_token
+            $wpdb->query("ALTER TABLE $table_name ADD INDEX payment_token (payment_token)");
+            
+            // Generate tokens for existing pending additional payments
+            $pending_payments = $wpdb->get_results(
+                "SELECT id FROM {$table_name} 
+                WHERE status = 'pending' 
+                AND transaction_id LIKE 'ADD_%%' 
+                AND payment_token IS NULL"
+            );
+            
+            foreach ($pending_payments as $payment) {
+                $token = wp_generate_password(32, false);
+                $wpdb->update(
+                    $table_name,
+                    array('payment_token' => $token),
+                    array('id' => $payment->id),
+                    array('%s'),
+                    array('%d')
+                );
+            }
+        }
+    }
+    
 }
 ?>

@@ -8,9 +8,26 @@
 /* ==========================================================================
    Dashboard Styles
    ========================================================================== */
-   .hrb-actions form {
+
+.hrb-page-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.hrb-page-actions .page-title-action {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.hrb-actions form {
     margin: 0;
 }
+
 .notice.notice-warning {
     margin-bottom: 25px;
 }
@@ -18,6 +35,7 @@
 .notice.notice-success {
     margin-bottom: 25px;
 }
+
 .widefat thead tr th {
     /* color: #fff; */
     background: #fff;
@@ -92,6 +110,7 @@
     font-size: 12px;
     font-weight: 500;
 }
+
 .hrb-admin-dashboard {
     margin: 0;
 }
@@ -133,10 +152,21 @@
     opacity: 0.7;
 }
 
-.hrb-stat-today .hrb-stat-icon { color: #007cba; }
-.hrb-stat-revenue .hrb-stat-icon { color: #00a32a; }
-.hrb-stat-rooms .hrb-stat-icon { color: #d63638; }
-.hrb-stat-pending .hrb-stat-icon { color: #dba617; }
+.hrb-stat-today .hrb-stat-icon {
+    color: #007cba;
+}
+
+.hrb-stat-revenue .hrb-stat-icon {
+    color: #00a32a;
+}
+
+.hrb-stat-rooms .hrb-stat-icon {
+    color: #d63638;
+}
+
+.hrb-stat-pending .hrb-stat-icon {
+    color: #dba617;
+}
 
 .hrb-stat-content {
     flex: 1;
@@ -565,6 +595,7 @@
 
 .hrb-modal-body {
     padding: 20px;
+    
 }
 
 .hrb-modal-footer {
@@ -622,8 +653,13 @@
 }
 
 @keyframes hrb-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* ==========================================================================
@@ -725,6 +761,7 @@ table.widefat {
     padding: 20px 16px;
     border-bottom: 2px solid #e5e7eb;
 }
+
 .hrb-table-container {
     background: white;
     border-radius: 12px;
@@ -895,6 +932,8 @@ table.widefat {
     padding: 12px;
     border-radius: 4px;
     border: 1px solid #c3c4c7;
+    display: flex;
+    justify-content: space-between;
 }
 
 .hrb-admin-summary .hrb-loading-message,
@@ -907,4 +946,445 @@ table.widefat {
 
 .hrb-admin-summary .hrb-error-message {
     color: #d63638;
+}
+
+/* ==========================================================================
+   Time Slot Styles for Admin
+   ========================================================================== */
+
+.hrb-time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.hrb-time-slot {
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.hrb-time-slot:hover {
+    border-color: #0073aa;
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.15);
+}
+
+.hrb-time-slot.selected {
+    border-color: #0073aa;
+    background: #f0f8ff;
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.2);
+    opacity: 1 !important; /* Ensure selected slots are always visible */
+}
+
+.hrb-time-slot.unavailable {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-color: #dee2e6;
+}
+
+/* Ensure selected class takes priority over unavailable */
+.hrb-time-slot.unavailable.selected,
+.hrb-time-slot.selected {
+    background: #f0f8ff !important;
+    border-color: #0073aa !important;
+    color: #0073aa !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.2) !important;
+}
+
+.hrb-time-slot-time {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.hrb-time-slot-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.hrb-no-slots {
+    text-align: center;
+    padding: 20px;
+    color: #646970;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e1e5e9;
+}
+
+/* ==========================================================================
+   Extras Styles for Admin (Matching Frontend)
+   ========================================================================== */
+
+/* Extras styling for admin - horizontal layout */
+.hrb-extra-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+span.stockInfo
+ {
+    flex: none;
+    font-weight: 600;
+    color: #059669;
+    font-size: 14px;
+    background: #d1fae5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #10b981;
+    position: absolute;
+    right: 75px;
+    top: -9px;
+}
+.hrb-extra-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* overflow: hidden; */
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.hrb-extra-item:hover {
+    border-color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    transform: translateY(-1px);
+}
+
+.hrb-extra-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.hrb-extra-item input[type="checkbox"]:checked ~ .hrb-extra-content {
+    background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+    border-color: #6366f1;
+}
+
+.hrb-extra-item input[type="checkbox"]:checked ~ .hrb-extra-content .hrb-extra-icon {
+    border-color: #6366f1;
+    background: #f0f8ff;
+}
+
+.hrb-extra-content {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.hrb-extra-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hrb-extra-icon {
+    width: 36px;
+    height: 36px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #6366f1;
+    flex-shrink: 0;
+}
+
+.hrb-extra-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.hrb-extra-title {
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: 0.025em;
+    flex: 1;
+}
+
+.hrb-extra-price {
+    flex: none;
+    font-weight: 600;
+    color: #059669;
+    font-size: 14px;
+    background: #d1fae5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #10b981;
+    position: absolute;
+     right: -12px;
+     top: -9px;
+
+}
+
+.hrb-extra-description {
+    color: #6b7280;
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.4;
+    font-style: italic;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border-radius: 4px;
+    border-left: 2px solid #6366f1;
+}
+
+.hrb-no-extras {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   Anonymous Booking Modal Styles for Admin (Matching Frontend)
+   ========================================================================== */
+
+/* Modal Styles - Anonymous Booking Modal Only */
+#hrb-anonymous-modal.hrb-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+#hrb-anonymous-modal.hrb-modal.show {
+    display: flex;
+}
+
+#hrb-anonymous-modal .hrb-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+#hrb-anonymous-modal .hrb-modal-content {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+    margin: auto;
+    transform: translateY(0);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+#hrb-anonymous-modal .hrb-modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #e1e5e9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #1d2327;
+}
+
+#hrb-anonymous-modal .hrb-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#hrb-anonymous-modal .hrb-modal-close {
+    background: none;
+    border: none;
+    color: #646970;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+#hrb-anonymous-modal .hrb-modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+#hrb-anonymous-modal .hrb-modal-body {
+    padding: 20px 25px;
+    line-height: 1.6;
+    flex: 1;
+    overflow-y: auto;
+}
+
+#hrb-anonymous-modal .hrb-modal-body p {
+    margin-bottom: 15px;
+}
+
+#hrb-anonymous-modal .hrb-modal-body ul {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+#hrb-anonymous-modal .hrb-modal-body li {
+    margin-bottom: 8px;
+}
+
+#hrb-anonymous-modal .hrb-modal-footer {
+    padding: 20px 25px;
+    border-top: 1px solid #e1e5e9;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background: #f8f9fa;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* Button Styles */
+.hrb-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.hrb-btn-primary {
+    background: #0073aa;
+    color: white;
+}
+
+.hrb-btn-primary:hover {
+    background: #005a87;
+    color: white;
+}
+
+.hrb-btn-secondary {
+    background: #f0f0f1;
+    color: #1d2327;
+    border: 1px solid #c3c4c7;
+}
+
+.hrb-btn-secondary:hover {
+    background: #e0e0e0;
+    color: #1d2327;
+}
+
+/* Anonymous Option Styles */
+.hrb-anonymous-option {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+}
+
+.hrb-anonymous-option label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+}
+
+.hrb-anonymous-option input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.hrb-customer-details {
+    transition: opacity 0.3s ease;
+}
+
+.hrb-customer-details.hidden {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Responsive adjustments for anonymous modal */
+@media (max-height: 600px) {
+    #hrb-anonymous-modal .hrb-modal-content {
+        max-height: 95vh;
+        margin: 10px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body {
+        padding: 15px 20px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-footer {
+        padding: 15px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #hrb-anonymous-modal .hrb-modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-header {
+        padding: 15px 20px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body {
+        padding: 15px 20px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
 }

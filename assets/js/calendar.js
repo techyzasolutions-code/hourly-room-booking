@@ -35,7 +35,7 @@
         initializeCalendar: function(calendarId) {
             var $calendar = $('#' + calendarId);
             if (!$calendar.length) {
-                console.error('Calendar element not found:', calendarId);
+                /* removed debug console.error */
                 return;
             }
 
@@ -232,7 +232,7 @@
                                 </div>
                                 <div class="hrb-info-row">
                                     <strong>${hrbCalendar.strings.amount || 'Amount'}:</strong>
-                                    <span>¬${parseFloat(props.totalAmount).toFixed(2)}</span>
+                                    <span>ï¿½${parseFloat(props.totalAmount).toFixed(2)}</span>
                                 </div>
                                 ${props.extraPeople > 0 ? `
                                 <div class="hrb-info-row">
@@ -260,7 +260,7 @@
         buildTooltipText: function(props) {
             var text = `${props.customerName}\n`;
             text += `${props.roomName}\n`;
-            text += `¬${parseFloat(props.totalAmount).toFixed(2)}\n`;
+            text += `ï¿½${parseFloat(props.totalAmount).toFixed(2)}\n`;
             text += `${this.getStatusText(props.status)}`;
 
             return text;
@@ -341,12 +341,12 @@
                     if (response.success) {
                         callback(response.data);
                     } else {
-                        console.error('Error getting time slots:', response.data);
+                        /* removed debug console.error */
                         callback([]);
                     }
                 },
                 error: function() {
-                    console.error('AJAX error getting time slots');
+                    /* removed debug console.error */
                     callback([]);
                 }
             });

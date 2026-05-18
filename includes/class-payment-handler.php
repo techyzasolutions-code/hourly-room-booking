@@ -39,6 +39,10 @@ class HRB_Payment_Handler {
         add_action('wp_ajax_hrb_get_payment_details', array($this, 'get_payment_details'));
         add_action('wp_ajax_hrb_get_payment_refund_info', array($this, 'get_payment_refund_info'));
         add_action('wp_ajax_hrb_process_refund', array($this, 'process_refund_ajax'));
+        
+        // PayPal order creation for existing bookings
+        add_action('wp_ajax_hrb_create_paypal_order_for_existing_booking', array($this, 'create_paypal_order_for_existing_booking'));
+        add_action('wp_ajax_nopriv_hrb_create_paypal_order_for_existing_booking', array($this, 'create_paypal_order_for_existing_booking'));
     }
     
     /**
@@ -91,7 +95,7 @@ class HRB_Payment_Handler {
      */
     public function create_paypal_order() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -100,6 +104,9 @@ class HRB_Payment_Handler {
         if (!$booking_data) {
             wp_send_json_error(__('Invalid booking data', 'hourly-room-booking'));
         }
+        
+        // Check if this is an anonymous booking
+        $is_anonymous = isset($booking_data['is_anonymous']) && $booking_data['is_anonymous'] === '1';
         
         // Calculate total amount including PayPal fee
         $booking_manager = HRB_Booking_Manager::getInstance();
@@ -161,14 +168,27 @@ class HRB_Payment_Handler {
         
         // Create customer first
         global $wpdb;
-        $customer_data = array(
-            'first_name' => sanitize_text_field($booking_data['first_name']),
-            'last_name' => sanitize_text_field($booking_data['last_name']),
-            'email' => sanitize_email($booking_data['email']),
-            'phone' => sanitize_text_field($booking_data['phone']),
-            'company' => sanitize_text_field($booking_data['company']),
-            'country' => 'DE'
-        );
+        
+        // Handle anonymous bookings
+        if ($is_anonymous) {
+            $customer_data = array(
+                'first_name' => 'Anonymous',
+                'last_name' => 'User',
+                'email' => 'anonymous@example.com',
+                'phone' => '0000000000',
+                'company' => '',
+                'country' => 'DE'
+            );
+        } else {
+            $customer_data = array(
+                'first_name' => sanitize_text_field($booking_data['first_name']),
+                'last_name' => sanitize_text_field($booking_data['last_name']),
+                'email' => sanitize_email($booking_data['email']),
+                'phone' => sanitize_text_field($booking_data['phone']),
+                'company' => isset($booking_data['company']) ? sanitize_text_field($booking_data['company']) : '',
+                'country' => 'DE'
+            );
+        }
         
         // Check if customer exists
         $customer = $wpdb->get_row($wpdb->prepare(
@@ -202,6 +222,8 @@ class HRB_Payment_Handler {
         
         // Create a temporary booking record to store the PayPal order ID
         $booking_data['customer_id'] = $customer_id;
+        $booking_data['is_anonymous'] = $is_anonymous;
+        
         $booking_manager = HRB_Booking_Manager::getInstance();
         $temp_booking_id = $booking_manager->create_booking($booking_data);
         
@@ -226,6 +248,7 @@ class HRB_Payment_Handler {
         }
         
         // Record pending PayPal payment using centralized method
+        // Store the PayPal fee in the payment record for accurate tracking
         $payment_manager = HRB_Payment_Manager::getInstance();
         $payment_id = $payment_manager->create_payment(
             $temp_booking_id,
@@ -234,9 +257,242 @@ class HRB_Payment_Handler {
             HRB_Currency_Manager::getInstance()->get_currency_code(),
             array(
                 'gateway_transaction_id' => $order['id'],
-                'status' => 'pending'
+                'status' => 'pending',
+                'fees' => $pricing['paypal_fee'] // Store PayPal fee in payment record
             )
         );
+        
+        wp_send_json_success(array(
+            'order_id' => $order['id'],
+            'approval_url' => $this->get_approval_url($order['links'])
+        ));
+    }
+    
+    /**
+     * Create PayPal order for existing booking
+     */
+    public function create_paypal_order_for_existing_booking() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_die(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        $booking_id = intval($_POST['booking_id']);
+        
+        if (!$booking_id) {
+            wp_send_json_error(__('Invalid booking ID', 'hourly-room-booking'));
+        }
+        
+        // Get booking details
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            wp_send_json_error(__('Booking not found', 'hourly-room-booking'));
+        }
+        
+        // Get room details
+        global $wpdb;
+        $room = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_rooms WHERE id = %d",
+            $booking->room_id
+        ));
+        
+        if (!$room) {
+            wp_send_json_error(__('Room not found', 'hourly-room-booking'));
+        }
+        
+        // Check if this is an additional payment (payment_token parameter in request)
+        $payment_token = isset($_POST['payment_token']) ? sanitize_text_field($_POST['payment_token']) : null;
+        $is_additional_payment = false;
+        
+        // Get payment record by token if provided (secure - token cannot be easily guessed)
+        $payment_record = null;
+        $payment_amount = $booking->total_amount;
+        
+        if (!empty($payment_token)) {
+            // Get payment record by token and verify it belongs to this booking
+            $payment_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_payments 
+                 WHERE payment_token = %s AND booking_id = %d AND status = 'pending'
+                 LIMIT 1",
+                $payment_token,
+                $booking_id
+            ));
+            
+            if (!$payment_record) {
+                wp_send_json_error(__('Invalid payment link. Please use the payment link from your email or contact support.', 'hourly-room-booking'));
+            }
+            
+            // Check if this is an additional payment (has ADD_ prefix in transaction_id)
+            $is_additional_payment = (!empty($payment_record->transaction_id) && strpos($payment_record->transaction_id, 'ADD_') === 0);
+            
+            // Get amount from database, not from request (security)
+            $payment_amount = floatval($payment_record->amount);
+            
+            // Check if payment is already completed (prevent multiple payments)
+            $completed_payment = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}hrb_payments 
+                 WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'completed'
+                 AND (transaction_id IS NULL OR transaction_id NOT LIKE 'ADD_%%')
+                 LIMIT 1",
+                $booking_id
+            ));
+            
+            if ($completed_payment && !$is_additional_payment) {
+                wp_send_json_error(__('Payment has already been completed for this booking. Please contact support if you have any questions.', 'hourly-room-booking'));
+            }
+        } else {
+            // No token provided - check if there's already a completed payment
+            $completed_payment = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}hrb_payments 
+                 WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'completed'
+                 AND (transaction_id IS NULL OR transaction_id NOT LIKE 'ADD_%%')
+                 LIMIT 1",
+                $booking_id
+            ));
+            
+            if ($completed_payment) {
+                wp_send_json_error(__('Payment has already been completed for this booking. Please contact support if you have any questions.', 'hourly-room-booking'));
+            }
+        }
+        
+        $access_token = $this->get_paypal_access_token();
+        if (is_wp_error($access_token)) {
+            wp_send_json_error($access_token->get_error_message());
+        }
+        
+        $api_url = $this->get_paypal_api_url();
+        
+        // Prepare order description
+        if ($is_additional_payment) {
+            $description = sprintf(
+                __('Additional payment for booking: %s on %s', 'hourly-room-booking'),
+                $room->name,
+                date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date))
+            );
+        } else {
+            $description = sprintf(
+                __('Room booking: %s on %s', 'hourly-room-booking'),
+                $room->name,
+                date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date))
+            );
+        }
+        
+        // Prepare order data
+        $order_data = array(
+            'intent' => 'CAPTURE',
+            'purchase_units' => array(
+                array(
+                    'reference_id' => 'hrb_booking_' . $booking_id . ($is_additional_payment ? '_additional' : ''),
+                    'amount' => array(
+                        'currency_code' => HRB_Currency_Manager::getInstance()->get_paypal_currency(),
+                        'value' => number_format($payment_amount, 2, '.', '')
+                    ),
+                    'description' => $description
+                )
+            ),
+            'application_context' => array(
+                'brand_name' => get_option('hrb_company_name', get_bloginfo('name')),
+                'landing_page' => 'NO_PREFERENCE',
+                'user_action' => 'PAY_NOW',
+                'return_url' => site_url('/booking-success/'),
+                'cancel_url' => site_url('/booking-cancelled/?token=' . uniqid())
+            )
+        );
+        
+        $response = wp_remote_post($api_url . '/v2/checkout/orders', array(
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $access_token,
+                'PayPal-Request-Id' => uniqid()
+            ),
+            'body' => json_encode($order_data),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error($response->get_error_message());
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $order = json_decode($body, true);
+        
+        if (!isset($order['id'])) {
+            wp_send_json_error(__('Failed to create PayPal order', 'hourly-room-booking'));
+        }
+        
+        // Check if there's an existing pending payment record for this booking
+        global $wpdb;
+        
+        if ($payment_record) {
+            // Use the payment record found by token (for both initial and additional payments)
+            $existing_payment = $payment_record;
+        } else {
+            // No token provided - find existing pending payment
+            $existing_payment = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_payments 
+                 WHERE booking_id = %d 
+                 AND payment_method = 'paypal' 
+                 AND status = 'pending'
+                 AND (transaction_id IS NULL OR transaction_id NOT LIKE 'ADD_%%')
+                 ORDER BY id DESC
+                 LIMIT 1",
+                $booking_id
+            ));
+        }
+        
+        if ($existing_payment) {
+            // Update existing payment record with new PayPal order ID
+            $update_result = $wpdb->update(
+                $wpdb->prefix . 'hrb_payments',
+                array(
+                    'gateway_transaction_id' => $order['id'],
+                    'gateway_response' => json_encode($order)
+                ),
+                array('id' => $existing_payment->id),
+                array('%s', '%s'),
+                array('%d')
+            );
+            
+            if ($update_result === false) {
+                wp_send_json_error(__('Failed to update payment record', 'hourly-room-booking'));
+            }
+        } else {
+            // Record pending PayPal payment for existing booking (only if no existing payment)
+            // Use the correct payment amount (additional or full)
+            $payment_manager = HRB_Payment_Manager::getInstance();
+            // Generate unique payment token for additional payments
+            $payment_token = null;
+            if ($is_additional_payment) {
+                $payment_token = wp_generate_password(32, false);
+            }
+            
+            // Calculate PayPal fee: if payment_amount includes fee, extract it
+            // PayPal fee is typically 3% of base amount, so: amount = base + fee, fee = amount - base
+            // where base = amount / 1.03
+            $base_amount = $payment_amount / 1.03;
+            $paypal_fee = $payment_amount - $base_amount;
+            
+            $payment_id = $payment_manager->create_payment(
+                $booking_id,
+                $payment_amount, // Use calculated payment amount (additional or full)
+                'paypal',
+                HRB_Currency_Manager::getInstance()->get_currency_code(),
+                array(
+                    'gateway_transaction_id' => $order['id'],
+                    'status' => 'pending',
+                    'transaction_id' => $is_additional_payment ? ('ADD_' . time() . '_' . $booking_id) : null,
+                    'is_additional_payment' => $is_additional_payment ? 1 : 0,
+                    'payment_token' => $payment_token,
+                    'fees' => $paypal_fee // Store PayPal fee
+                )
+            );
+            
+            if (is_wp_error($payment_id)) {
+                wp_send_json_error(__('Failed to create payment record', 'hourly-room-booking'));
+            }
+        }
         
         wp_send_json_success(array(
             'order_id' => $order['id'],
@@ -249,7 +505,7 @@ class HRB_Payment_Handler {
      */
     public function capture_paypal_payment() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -297,7 +553,7 @@ class HRB_Payment_Handler {
             if ($existing_completed) {
                 // Payment already captured, just return success
                 wp_send_json_success(array(
-                    'message' => __('Payment already completed', 'hourly-room-booking'),
+                    'message' => __('Payment Already Completed', 'hourly-room-booking'),
                     'transaction_id' => $capture_result['id']
                 ));
                 return;
@@ -312,49 +568,185 @@ class HRB_Payment_Handler {
             ));
             
             if ($payment_id) {
+                // Get existing payment to preserve is_additional_payment flag
+                $existing_payment = $wpdb->get_row($wpdb->prepare(
+                    "SELECT is_additional_payment FROM {$wpdb->prefix}hrb_payments WHERE id = %d",
+                    $payment_id
+                ));
+                
+                // Extract amount and calculate fees
+                $captured_amount = floatval($capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value']);
+                
+                // Try to extract fees from PayPal response (seller_receivable_breakdown)
+                $paypal_fee = 0;
+                if (isset($capture_result['purchase_units'][0]['payments']['captures'][0]['seller_receivable_breakdown'])) {
+                    $breakdown = $capture_result['purchase_units'][0]['payments']['captures'][0]['seller_receivable_breakdown'];
+                    if (isset($breakdown['paypal_fee']['value'])) {
+                        $paypal_fee = floatval($breakdown['paypal_fee']['value']);
+                    } elseif (isset($breakdown['platform_fees'][0]['amount']['value'])) {
+                        $paypal_fee = floatval($breakdown['platform_fees'][0]['amount']['value']);
+                    }
+                }
+                
+                // If fees not in response, calculate from stored payment record or estimate
+                if ($paypal_fee == 0) {
+                    // Get the original payment to see if fees were stored
+                    $original_payment = $wpdb->get_row($wpdb->prepare(
+                        "SELECT fees, amount FROM {$wpdb->prefix}hrb_payments WHERE id = %d",
+                        $payment_id
+                    ));
+                    if ($original_payment && $original_payment->fees > 0) {
+                        $paypal_fee = floatval($original_payment->fees);
+                    } else {
+                        // Estimate: PayPal fee is typically 3% of the amount (excluding fee)
+                        // So if amount = base + fee, then fee = amount - base, where base = amount / 1.03
+                        $base_amount = $captured_amount / 1.03;
+                        $paypal_fee = $captured_amount - $base_amount;
+                    }
+                }
+                
+                $update_data = array(
+                    'transaction_id' => $capture_result['id'],
+                    'amount' => $captured_amount,
+                    'currency' => $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['currency_code'],
+                    'status' => 'completed',
+                    'fees' => $paypal_fee, // Store PayPal fee
+                    'gateway_response' => json_encode($capture_result),
+                    'processed_at' => current_time('mysql')
+                );
+                
+                $format = array('%s', '%f', '%s', '%s', '%f', '%s', '%s');
+                
+                // Preserve is_additional_payment flag if it exists
+                if ($existing_payment && isset($existing_payment->is_additional_payment)) {
+                    $update_data['is_additional_payment'] = $existing_payment->is_additional_payment;
+                    $format[] = '%d';
+                }
+                
                 // Update existing payment
                 $wpdb->update(
                     $wpdb->prefix . 'hrb_payments',
-                    array(
-                        'transaction_id' => $capture_result['id'],
-                        'amount' => $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value'],
-                        'currency' => $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['currency_code'],
-                        'status' => 'completed',
-                        'gateway_response' => json_encode($capture_result),
-                        'processed_at' => current_time('mysql')
-                    ),
+                    $update_data,
                     array('id' => $payment_id),
-                    array('%s', '%f', '%s', '%s', '%s', '%s'),
+                    $format,
                     array('%d')
                 );
             } else {
                 // Fallback: create new payment if none found
+                // Calculate fees same way as above
+                $captured_amount = floatval($capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value']);
+                $paypal_fee = 0;
+                if (isset($capture_result['purchase_units'][0]['payments']['captures'][0]['seller_receivable_breakdown'])) {
+                    $breakdown = $capture_result['purchase_units'][0]['payments']['captures'][0]['seller_receivable_breakdown'];
+                    if (isset($breakdown['paypal_fee']['value'])) {
+                        $paypal_fee = floatval($breakdown['paypal_fee']['value']);
+                    } elseif (isset($breakdown['platform_fees'][0]['amount']['value'])) {
+                        $paypal_fee = floatval($breakdown['platform_fees'][0]['amount']['value']);
+                    }
+                }
+                if ($paypal_fee == 0) {
+                    // Estimate: PayPal fee is typically 3% of the amount (excluding fee)
+                    $base_amount = $captured_amount / 1.03;
+                    $paypal_fee = $captured_amount - $base_amount;
+                }
+                
                 $payment_manager = HRB_Payment_Manager::getInstance();
                 $payment_id = $payment_manager->create_payment(
                     $booking_id,
-                    $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['value'],
+                    $captured_amount,
                     'paypal',
                     $capture_result['purchase_units'][0]['payments']['captures'][0]['amount']['currency_code'],
                     array(
                         'gateway_transaction_id' => $capture_result['id'],
                         'status' => 'completed',
+                        'fees' => $paypal_fee, // Store PayPal fee
                         'gateway_response' => json_encode($capture_result),
-                        'processed_at' => current_time('mysql')
+                        'processed_at' => current_time('mysql'),
+                        'is_additional_payment' => 0 // Default to 0 for new payments (not additional)
                     )
                 );
             }
             
             if ($payment_id && !is_wp_error($payment_id)) {
-                // Update booking status - both confirmed and paid
+                // Get current booking to preserve is_anonymous field
                 $booking_manager = HRB_Booking_Manager::getInstance();
-                $booking_manager->update_booking($booking_id, array(
+                $current_booking = $booking_manager->get_booking($booking_id);
+                
+                // Check if this is an additional payment
+                $is_additional_payment = false;
+                if ($existing_payment && isset($existing_payment->is_additional_payment)) {
+                    $is_additional_payment = ($existing_payment->is_additional_payment == 1);
+                } else {
+                    // Check the payment record directly
+                    $payment_check = $wpdb->get_row($wpdb->prepare(
+                        "SELECT is_additional_payment FROM {$wpdb->prefix}hrb_payments WHERE id = %d",
+                        $payment_id
+                    ));
+                    if ($payment_check && isset($payment_check->is_additional_payment)) {
+                        $is_additional_payment = ($payment_check->is_additional_payment == 1);
+                    }
+                }
+               
+                // Update booking status - both confirmed and paid, preserving is_anonymous
+                $update_data = array(
                     'status' => 'confirmed',
                     'payment_status' => 'completed',
                     'payment_method' => 'paypal'
-                ), false); // Don't send notification during payment processing
+                );
                 
-                // Send confirmation notification
-                $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+                // Preserve is_anonymous field if it exists
+                if (isset($current_booking->is_anonymous)) {
+                    $update_data['is_anonymous'] = $current_booking->is_anonymous;
+                }
+                
+                $booking_manager->update_booking($booking_id, $update_data, false); // Don't send notification during payment processing
+                
+                // Update booking table's total_amount and paypal_fee from payment records (source of truth)
+                // This ensures consistency when additional services are added later
+                $completed_payments_total = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
+                    WHERE booking_id = %d AND status IN ('completed', 'paid')",
+                    $booking_id
+                ));
+                $pending_payments_total = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
+                    WHERE booking_id = %d AND status = 'pending'",
+                    $booking_id
+                ));
+                $total_amount_from_payments = $completed_payments_total + $pending_payments_total;
+                
+                // PayPal fee is sum of all fees in payment records
+                $total_fees_from_payments = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COALESCE(SUM(fees), 0) FROM {$wpdb->prefix}hrb_payments 
+                    WHERE booking_id = %d",
+                    $booking_id
+                ));
+                
+                // Update booking with accurate totals from payment records
+                $booking_manager->update_booking($booking_id, [
+                    'total_amount' => $total_amount_from_payments,
+                    'paypal_fee' => $total_fees_from_payments
+                ], false);
+                
+                // For additional payments: regenerate invoice (which sends updated invoice email)
+                // Skip payment_confirmation email since updated invoice email is already sent
+                // For original payments: send both payment_confirmation and booking_confirmation
+                if ($is_additional_payment) {
+                    // Regenerate invoice with updated total (this will send updated invoice email automatically)
+                    $invoice_generator = HRB_Invoice_Generator::getInstance();
+                    $invoice_result = $invoice_generator->regenerate_invoice($booking_id);
+                    
+                    if (is_wp_error($invoice_result)) {
+                        // Continue anyway - invoice regeneration failure shouldn't block payment completion
+                    }
+                    
+                    // Don't send payment_confirmation email - updated invoice email is sufficient
+                    // The updated invoice email already confirms the payment
+                } else {
+                    // For original payments, send both notifications
+                    $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+                    $booking_manager->send_booking_notification($booking_id, 'booking_confirmation');
+                }
             }
             
             wp_send_json_success(array(
@@ -364,11 +756,20 @@ class HRB_Payment_Handler {
         } else {
             // Payment failed - update both booking and payment status to failed
             $booking_manager = HRB_Booking_Manager::getInstance();
-            $booking_manager->update_booking($booking_id, array(
+            $current_booking = $booking_manager->get_booking($booking_id);
+            
+            $update_data = array(
                 'status' => 'failed',
                 'payment_status' => 'failed',
                 'payment_method' => 'paypal'
-            ), false); // Don't send notification during payment processing
+            );
+            
+            // Preserve is_anonymous field if it exists
+            if (isset($current_booking->is_anonymous)) {
+                $update_data['is_anonymous'] = $current_booking->is_anonymous;
+            }
+            
+            $booking_manager->update_booking($booking_id, $update_data, false); // Don't send notification during payment processing
             
             // Update payment record to failed
             global $wpdb;
@@ -487,8 +888,8 @@ class HRB_Payment_Handler {
             'payment_method' => 'onsite'
         ), false); // Don't send notification during payment processing
         
-        // Send confirmation notification after status update
-        $booking_manager->send_booking_notification($booking_id, 'booking_confirmation');
+        // Note: booking_confirmation email is already sent by create_booking method
+        // No need to send duplicate email here
         
         return $payment_id;
     }
@@ -726,21 +1127,78 @@ class HRB_Payment_Handler {
      */
     public function mark_payment_completed() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_die('Security check failed');
         }
 
         // Check admin permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_payments')) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'hourly-room-booking')]);
         }
 
         $payment_id = intval($_POST['payment_id']);
         $payment_manager = HRB_Payment_Manager::getInstance();
-
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        
+        // Get payment record to find booking_id and old status
+        $payment = $payment_manager->get_payment($payment_id);
+        if (!$payment) {
+            wp_send_json_error(['message' => __('Payment not found', 'hourly-room-booking')]);
+        }
+        
+        $booking_id = $payment->booking_id;
+        $old_payment_status = $payment->status;
+        
+        // Update payment status
         $result = $payment_manager->update_payment_status($payment_id, 'completed');
-
+        
         if ($result) {
+            // Sync payment status to booking table
+            $booking_manager->update_booking($booking_id, array(
+                'payment_status' => 'completed'
+            ), false); // Don't send notification during update
+            
+            // Get updated booking
+            $booking = $booking_manager->get_booking($booking_id);
+            
+            if ($booking) {
+                // Normalize payment status values for comparison
+                $new_payment_status_normalized = 'completed';
+                $old_payment_status_normalized = strtolower(trim($old_payment_status));
+                
+                // If payment status changed to paid/completed, generate invoice and send payment confirmation email
+                $paid_statuses = ['paid', 'completed'];
+                if (in_array($new_payment_status_normalized, $paid_statuses) && 
+                    !in_array($old_payment_status_normalized, $paid_statuses)) {
+                    
+                    // Ensure booking status is confirmed (required for invoice and email)
+                    if ($booking->status !== 'confirmed') {
+                        $booking_manager->update_booking($booking_id, array('status' => 'confirmed'), false);
+                        $booking = $booking_manager->get_booking($booking_id);
+                    }
+                    
+                    // Generate invoice if it doesn't exist
+                    $invoice_generator = HRB_Invoice_Generator::getInstance();
+                    $existing_invoice = $invoice_generator->get_invoice_by_booking($booking_id);
+                    
+                    if (!$existing_invoice) {
+                        $invoice_id = $booking_manager->create_invoice($booking_id);
+                        if (!is_wp_error($invoice_id)) {
+                            // Generate PDF for the invoice
+                            $invoice_generator->generate_invoice_pdf($invoice_id);
+                        }
+                    } else {
+                        // Ensure PDF exists
+                        if (empty($existing_invoice->pdf_file_path)) {
+                            $invoice_generator->generate_invoice_pdf($existing_invoice->id);
+                        }
+                    }
+                    
+                    // Send payment confirmation email
+                    $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+                }
+            }
+            
             wp_send_json_success(['message' => __('Payment marked as completed', 'hourly-room-booking')]);
         } else {
             wp_send_json_error(['message' => __('Failed to update payment status', 'hourly-room-booking')]);
@@ -752,12 +1210,12 @@ class HRB_Payment_Handler {
      */
     public function cancel_payment_ajax() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_die('Security check failed');
         }
 
         // Check admin permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_payments')) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'hourly-room-booking')]);
         }
 
@@ -778,12 +1236,12 @@ class HRB_Payment_Handler {
      */
     public function get_payment_details() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_die('Security check failed');
         }
 
         // Check admin permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_payments')) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'hourly-room-booking')]);
         }
 
@@ -801,7 +1259,7 @@ class HRB_Payment_Handler {
         $html .= '<table class="form-table">';
         $html .= '<tr><th>' . __('Transaction ID', 'hourly-room-booking') . '</th><td>' . esc_html($payment->transaction_id) . '</td></tr>';
         $html .= '<tr><th>' . __('Booking ID', 'hourly-room-booking') . '</th><td>#' . $payment->booking_id . '</td></tr>';
-        $html .= '<tr><th>' . __('Customer', 'hourly-room-booking') . '</th><td>' . esc_html($payment->customer_name) . '</td></tr>';
+        $html .= '<tr><th>' . __('Customer', 'hourly-room-booking') . '</th><td>' . hrb_display_customer_info($payment, 'name_email') . '</td></tr>';
         $html .= '<tr><th>' . __('Room', 'hourly-room-booking') . '</th><td>' . esc_html($payment->room_name) . '</td></tr>';
         $html .= '<tr><th>' . __('Amount', 'hourly-room-booking') . '</th><td>' . $currency_symbol . number_format($payment->amount, 2) . '</td></tr>';
         // Get admin instance for translation methods
@@ -827,12 +1285,12 @@ class HRB_Payment_Handler {
      */
     public function get_payment_refund_info() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_die('Security check failed');
         }
 
         // Check admin permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_payments')) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'hourly-room-booking')]);
         }
 
@@ -858,7 +1316,7 @@ class HRB_Payment_Handler {
         }
 
         // Check admin permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_payments')) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'hourly-room-booking')]);
         }
 
@@ -963,6 +1421,16 @@ class HRB_Payment_Handler {
             }
             
             if ($payment_id && !is_wp_error($payment_id)) {
+                // Check if this is an additional payment
+                $is_additional_payment = false;
+                $payment_check = $wpdb->get_row($wpdb->prepare(
+                    "SELECT is_additional_payment FROM {$wpdb->prefix}hrb_payments WHERE id = %d",
+                    $payment_id
+                ));
+                if ($payment_check && isset($payment_check->is_additional_payment)) {
+                    $is_additional_payment = ($payment_check->is_additional_payment == 1);
+                }
+                
                 // Update booking status - both confirmed and paid
                 $booking_manager = HRB_Booking_Manager::getInstance();
                 $booking_manager->update_booking($booking_id, array(
@@ -971,8 +1439,25 @@ class HRB_Payment_Handler {
                     'payment_method' => 'paypal'
                 ), false); // Don't send notification during payment processing
                 
-                // Send confirmation notification
-                $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+                // For additional payments: regenerate invoice (which sends updated invoice email)
+                // Skip payment_confirmation email since updated invoice email is already sent
+                // For original payments: send both payment_confirmation and booking_confirmation
+                if ($is_additional_payment) {
+                    // Regenerate invoice with updated total (this will send updated invoice email automatically)
+                    $invoice_generator = HRB_Invoice_Generator::getInstance();
+                    $invoice_result = $invoice_generator->regenerate_invoice($booking_id);
+                    
+                    if (is_wp_error($invoice_result)) {
+                        // Continue anyway - invoice regeneration failure shouldn't block payment completion
+                    }
+                    
+                    // Don't send payment_confirmation email - updated invoice email is sufficient
+                    // The updated invoice email already confirms the payment
+                } else {
+                    // For original payments, send both notifications
+                    $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+                    $booking_manager->send_booking_notification($booking_id, 'booking_confirmation');
+                }
             }
             
             return true;

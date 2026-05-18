@@ -11,7 +11,7 @@ class Helpers
     /**
      * print_r wrapper for html/cli output
      *
-     * Wraps print_r() output in < pre > tags if the current sapi is not 'cli'.
+     * wraps print_r() output in < pre > tags if the current sapi is not 'cli'.
      * Returns the output string instead of displaying it if $return is true.
      *
      * @param mixed $mixed variable or expression to display

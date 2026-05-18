@@ -310,6 +310,24 @@ msgstr "Default Booking Duration"
 msgid "Delete Booking"
 msgstr "Delete Booking"
 
+msgid "This action cannot be undone."
+msgstr "This action cannot be undone."
+
+msgid "Mark Payment as Completed"
+msgstr "Mark Payment as Completed"
+
+msgid "Mark Completed"
+msgstr "Mark Completed"
+
+msgid "This action should only be done after receiving the actual cash payment."
+msgstr "This action should only be done after receiving the actual cash payment."
+
+msgid "Cancel Payment"
+msgstr "Cancel Payment"
+
+msgid "Keep Payment"
+msgstr "Keep Payment"
+
 msgid "Delete Room"
 msgstr "Delete Room"
 
@@ -745,6 +763,15 @@ msgstr "Sorted by %s (%s)"
 
 msgid "Special Requests"
 msgstr "Special Requests"
+
+msgid "Admin Notes"
+msgstr "Admin Notes"
+
+msgid "Enter any additional notes, extra payments, services, or other information about this booking..."
+msgstr "Enter any additional notes, extra payments, services, or other information about this booking..."
+
+msgid "Use this field to add notes about extra payments, services, or any other information for internal use."
+msgstr "Use this field to add notes about extra payments, services, or any other information for internal use."
 
 msgid "Start Time"
 msgstr "Start Time"
@@ -1240,6 +1267,51 @@ msgstr "Are you sure you want to delete this customer?"
 msgid "This will also delete all their bookings and cannot be undone."
 msgstr "This will also delete all their bookings and cannot be undone."
 
+msgid "Cannot delete customer. Customer has"
+msgstr "Cannot delete customer. Customer has"
+
+msgid "active booking(s). Please cancel or complete all bookings first."
+msgstr "active booking(s). Please cancel or complete all bookings first."
+
+msgid "Error checking customer bookings."
+msgstr "Error checking customer bookings."
+
+msgid "Customer deleted successfully."
+msgstr "Customer deleted successfully."
+
+msgid "Cannot Delete Customer"
+msgstr "Cannot Delete Customer"
+
+msgid "Delete Customer"
+msgstr "Delete Customer"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Download Invoice"
+msgstr "Download Invoice"
+
+msgid "Color"
+msgstr "Color"
+
+msgid "Room Color"
+msgstr "Room Color"
+
+msgid "Choose a color for this room to help identify it in the calendar and booking views."
+msgstr "Choose a color for this room to help identify it in the calendar and booking views."
+
+msgid "Events colored by room"
+msgstr "Events colored by room"
+
 msgid "Are you sure you want to cancel this payment?"
 msgstr "Are you sure you want to cancel this payment?"
 
@@ -1368,3 +1440,330 @@ msgstr "Today"
 
 msgid "PayPal Fees"
 msgstr "PayPal Fees"
+
+msgid "Print Booking Details"
+msgstr "Print Booking Details"
+
+msgid "Bitte wählen Sie einen Raum aus"
+msgstr "Please select a room"
+
+msgid "Bitte wählen Sie ein Buchungsdatum aus"
+msgstr "Please select a booking date"
+
+msgid "Bitte wählen Sie eine Dauer aus"
+msgstr "Please select a duration"
+
+msgid "Bitte wählen Sie eine Zeitspanne aus"
+msgstr "Please select a time slot"
+
+msgid "Bitte geben Sie Ihren Vornamen ein"
+msgstr "Please enter your first name"
+
+msgid "Bitte geben Sie Ihre E-Mail-Adresse ein"
+msgstr "Please enter your email address"
+
+msgid "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+msgstr "Please enter a valid email address"
+
+msgid "Print"
+msgstr "Print"
+
+msgid "Online Payment"
+msgstr "Online Payment"
+
+msgid "Payment Timeout Cancellation"
+msgstr "Payment Timeout Cancellation"
+
+msgid "Important:"
+msgstr "Important:"
+
+msgid "After clicking Complete Booking, please complete the PayPal payment immediately. Otherwise, the process may be cancelled."
+msgstr "After clicking Complete Booking, please complete the PayPal payment immediately. Otherwise, the process may be cancelled."
+
+msgid "All rooms are currently occupied"
+msgstr "All rooms are currently occupied"
+
+msgid "All rooms that can be booked online are currently occupied for the selected time period."
+msgstr "All rooms that can be booked online are currently occupied for the selected time period."
+
+msgid "Please call us at the following number and we will see what we can do for you:"
+msgstr "Please call us at the following number and we will see what we can do for you:"
+
+msgid "Phone number not configured"
+msgstr "Phone number not configured"
+
+msgid "Unavailable"
+msgstr "Unavailable"
+
+msgid "This room is not available for the selected time period."
+msgstr "This room is not available for the selected time period."
+
+msgid "Call to Check"
+msgstr "Call to Check"
+
+msgid "Available Rooms (%d of %d)"
+msgstr "Available Rooms (%d of %d)"
+
+msgid "Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer."
+msgstr "Prices include statutory VAT."
+
+msgid "Confirm Action"
+msgstr "Confirm Action"
+
+msgid "Confirm Time Slot Change"
+msgstr "Confirm Time Slot Change"
+
+msgid "Original time:"
+msgstr "Original time:"
+
+msgid "New time:"
+msgstr "New time:"
+
+msgid "Are you sure you want to change the time slot?"
+msgstr "Are you sure you want to change the time slot?"
+
+msgid "Already Paid"
+msgstr "Already Paid"
+
+msgid "Original booking payment"
+msgstr "Original booking payment"
+
+msgid "Additional Services Paid"
+msgstr "Additional Services Paid"
+
+msgid "Payment for additional services"
+msgstr "Payment for additional services"
+
+msgid "Outstanding Payment Required"
+msgstr "Outstanding Payment Required"
+
+msgid "For additional services"
+msgstr "For additional services"
+
+msgid "Amount including 3% PayPal Fee"
+msgstr "Amount including 3% PayPal Fee"
+
+msgid "Send Payment Link"
+msgstr "Send Payment Link"
+
+msgid "Regenerate Invoice"
+msgstr "Regenerate Invoice"
+
+msgid "Added by Admin"
+msgstr "Added by Admin"
+
+msgid "Added by %s"
+msgstr "Added by %s"
+
+msgid "Payment link email sent successfully"
+msgstr "Payment link email sent successfully"
+
+msgid "Invoice regenerated and sent via email successfully"
+msgstr "Invoice regenerated and sent via email successfully"
+
+msgid "Mark Payment as Complete"
+msgstr "Mark Payment as Complete"
+
+msgid "Mark as Complete"
+msgstr "Mark as Complete"
+
+msgid "Confirm Payment Completion"
+msgstr "Confirm Payment Completion"
+
+msgid "Are you sure you want to mark this additional payment as complete?"
+msgstr "Are you sure you want to mark this additional payment as complete?"
+
+msgid "This will update the payment status to \"completed\"."
+msgstr "This will update the payment status to \"completed\"."
+
+msgid "Outstanding Amount:"
+msgstr "Outstanding Amount:"
+
+msgid "Total Paid"
+msgstr "Total Paid"
+
+msgid "Original Payment"
+msgstr "Original Payment"
+
+msgid "Successfully marked %d payment(s) as complete"
+msgstr "Successfully marked %d payment(s) as complete"
+
+msgid "New Services"
+msgstr "New Services"
+
+msgid "To Be Paid"
+msgstr "To Be Paid"
+
+msgid "New Amount to Pay"
+msgstr "New Amount to Pay"
+
+msgid "Master Locked"
+msgstr "Master Locked"
+
+msgid "Room Locked"
+msgstr "Room Locked"
+
+msgid "Invalid payment link. Please use the payment link from your email or contact support."
+msgstr "Invalid payment link. Please use the payment link from your email or contact support."
+
+msgid "Payment Link Error"
+msgstr "Payment Link Error"
+
+msgid "If you received this link via email, please use that exact link. If the problem persists, please contact support."
+msgstr "If you received this link via email, please use that exact link. If the problem persists, please contact support."
+
+msgid "Payment Already Completed"
+msgstr "Payment Already Completed"
+
+msgid "Payment has already been completed for this booking. Please contact support if you have any questions."
+msgstr "Payment has already been completed for this booking. Please contact support if you have any questions."
+
+msgid "Your payment has been successfully processed. If you have any questions, please contact support."
+msgstr "Your payment has been successfully processed. If you have any questions, please contact support."
+
+msgid "Additional Payment Required:"
+msgstr "Additional Payment Required:"
+
+msgid "Note:"
+msgstr "Note:"
+
+msgid "This payment is for additional services added to your booking after the original payment was completed."
+msgstr "This payment is for additional services added to your booking after the original payment was completed."
+
+msgid "Amount to Pay:"
+msgstr "Amount to Pay:"
+
+msgid "Complete Additional Payment"
+msgstr "Complete Additional Payment"
+
+msgid "Click the button below to complete the additional payment for the services added to your booking. This payment is separate from your original booking payment."
+msgstr "Click the button below to complete the additional payment for the services added to your booking. This payment is separate from your original booking payment."
+
+msgid "Additional Payment"
+msgstr "Additional Payment"
+
+msgid "Please complete the additional payment for the services added to your booking"
+msgstr "Please complete the additional payment for the services added to your booking"
+
+msgid "Email Logs"
+msgstr "Email Logs"
+
+msgid "Overall Statistics"
+msgstr "Overall Statistics"
+
+msgid "Total Logs"
+msgstr "Total Logs"
+
+msgid "SMS Logs"
+msgstr "SMS Logs"
+
+msgid "WhatsApp Logs"
+msgstr "WhatsApp Logs"
+
+msgid "Next Reminder Check"
+msgstr "Next Reminder Check"
+
+msgid "Not scheduled"
+msgstr "Not scheduled"
+
+msgid "Filters"
+msgstr "Filters"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Event"
+msgstr "Event"
+
+msgid "All Types"
+msgstr "All Types"
+
+msgid "All Events"
+msgstr "All Events"
+
+msgid "Search by recipient, subject, or booking ID"
+msgstr "Search by recipient, subject, or booking ID"
+
+msgid "Delete Old Logs"
+msgstr "Delete Old Logs"
+
+msgid "Delete logs older than:"
+msgstr "Delete logs older than:"
+
+msgid "30 days"
+msgstr "30 days"
+
+msgid "60 days"
+msgstr "60 days"
+
+msgid "90 days"
+msgstr "90 days"
+
+msgid "180 days"
+msgstr "180 days"
+
+msgid "1 year"
+msgstr "1 year"
+
+msgid "Notification Logs"
+msgstr "Notification Logs"
+
+msgid "No logs found."
+msgstr "No logs found."
+
+msgid "Recipient"
+msgstr "Recipient"
+
+msgid "Sent At"
+msgstr "Sent At"
+
+msgid "Manual Test"
+msgstr "Manual Test"
+
+msgid "Test Reminder System"
+msgstr "Test Reminder System"
+
+msgid "Notification resent successfully."
+msgstr "Notification resent successfully."
+
+msgid "Error resending notification"
+msgstr "Error resending notification"
+
+msgid "An error occurred while resending the notification"
+msgstr "An error occurred while resending the notification"
+
+msgid "Are you sure you want to delete this log entry?"
+msgstr "Are you sure you want to delete this log entry?"
+
+msgid "Are you sure you want to delete old logs? This action cannot be undone."
+msgstr "Are you sure you want to delete old logs? This action cannot be undone."
+
+msgid "Cron Timing Explained:"
+msgstr "Cron Timing Explained:"
+
+msgid "The timing <code>*/5 * * * *</code> means the cron job runs every 5 minutes. The format is: <code>minute hour day month weekday</code>"
+msgstr "The timing <code>*/5 * * * *</code> means the cron job runs every 5 minutes. The format is: <code>minute hour day month weekday</code>"
+
+msgid "To change the timing, modify the first part:"
+msgstr "To change the timing, modify the first part:"
+
+msgid "Every 5 minutes (recommended)"
+msgstr "Every 5 minutes (recommended)"
+
+msgid "Every 15 minutes"
+msgstr "Every 15 minutes"
+
+msgid "Every hour (at minute 0)"
+msgstr "Every hour (at minute 0)"
+
+msgid "Every 10 minutes"
+msgstr "Every 10 minutes"
+
+msgid "WordPress cron is disabled. Reminders will not be sent automatically. Please set up a system cron job on your server using the following command:"
+msgstr "WordPress cron is disabled. Reminders will not be sent automatically. Please set up a system cron job on your server using the following command:"
+
+msgid "For more reliable delivery, consider setting up a system cron job on your server using the following command:"
+msgstr "For more reliable delivery, consider setting up a system cron job on your server using the following command:"
+
+msgid "No extras available for the selected date and time."
+msgstr "No extras available for the selected date and time."

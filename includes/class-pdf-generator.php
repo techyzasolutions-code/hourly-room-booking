@@ -69,9 +69,9 @@ class HRB_PDF_Generator {
     public function generate_invoice_html($booking_id) {
         global $wpdb;
         
-        // Get booking data
+        // Get booking data with first_name and last_name from booking table
         $booking = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}hrb_bookings WHERE id = %d",
+            "SELECT b.* FROM {$wpdb->prefix}hrb_bookings b WHERE b.id = %d",
             $booking_id
         ));
         
@@ -115,6 +115,9 @@ class HRB_PDF_Generator {
         $invoice_number = 'INV-' . date('Y') . '-' . str_pad($booking->id, 4, '0', STR_PAD_LEFT);
         $booking_date = date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date));
         $due_date = date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date . ' +30 days'));
+        
+        // Get customer information using helper function
+        $customer_info = hrb_get_invoice_customer_info($booking, $customer);
         
         $html = '<!DOCTYPE html>
 <html>
@@ -252,10 +255,10 @@ class HRB_PDF_Generator {
         </div>
         <div class="bill-to">
             <h3>Rechnungsempfänger:</h3>
-            <p><strong>' . esc_html($customer->first_name ?? '') . ' ' . esc_html($customer->last_name ?? '') . '</strong></p>
-            <p>' . esc_html($customer->email ?? '') . '</p>
-            <p>Tel: ' . esc_html($customer->phone ?? '') . '</p>
-            <p>' . esc_html($customer->address ?? '') . '</p>
+            <p><strong>' . esc_html($customer_info['name']) . '</strong></p>
+            ' . (!empty($customer_info['email']) ? '<p>' . esc_html($customer_info['email']) . '</p>' : '') . '
+            ' . (!empty($customer_info['phone']) ? '<p>Tel: ' . esc_html($customer_info['phone']) . '</p>' : '') . '
+            ' . (!empty($customer_info['address']) ? '<p>' . esc_html($customer_info['address']) . '</p>' : '') . '
         </div>
     </div>
 
@@ -302,14 +305,39 @@ class HRB_PDF_Generator {
             </tr>';
         }
 
-        // Add PayPal fee as separate line item if payment method is PayPal
-        if ($booking->payment_method === 'paypal' && $booking->paypal_fee > 0) {
+        // Get PayPal fees from payment records (same as price breakdown)
+        // Check payment records for fees, not booking payment_method (since payment method can be changed)
+        $payment_handler = HRB_Payment_Handler::getInstance();
+        $all_payments = $payment_handler->get_booking_payments($booking->id);
+        $total_paypal_fees = 0;
+        
+        foreach ($all_payments as $payment) {
+            // Handle fees that might be NULL, empty string, or 0
+            $payment_fees = 0;
+            if (isset($payment->fees)) {
+                if ($payment->fees !== null && $payment->fees !== '' && $payment->fees !== false) {
+                    $payment_fees = floatval($payment->fees);
+                }
+            }
+            if ($payment_fees > 0) {
+                $total_paypal_fees += $payment_fees;
+            }
+        }
+        
+        // Fallback to booking table if no fees in payment records
+        if ($total_paypal_fees == 0 && $booking->paypal_fee > 0) {
+            $total_paypal_fees = floatval($booking->paypal_fee);
+        }
+        
+        // Show PayPal fee if any payment record has fees (regardless of booking payment_method)
+        // This handles cases where payment method was switched or changed
+        if ($total_paypal_fees > 0) {
             $html .= '<tr>
                 <td>PayPal Gebühren (3%)</td>
                 <td>-</td>
                 <td>-</td>
                 <td>1x</td>
-                <td>' . esc_html(hrb_format_amount($booking->paypal_fee)) . '</td>
+                <td>' . esc_html(hrb_format_amount($total_paypal_fees)) . '</td>
             </tr>';
         }
 
@@ -319,11 +347,12 @@ class HRB_PDF_Generator {
     <div class="totals">
         <p>Netto: ' . esc_html(hrb_format_amount($booking->base_price + $booking->extras_price + $booking->extra_people_price)) . '</p>';
         
-        if ($booking->tax_amount > 0) {
-            $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+        $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+        if ($tax_rate > 0 && $booking->tax_amount > 0) {
             $html .= '<p>zzgl. ' . esc_html($tax_rate) . '% MwSt.: ' . esc_html(hrb_format_amount($booking->tax_amount)) . '</p>';
         }
         
+        // Use booking total_amount (which should be synced from payment records)
         $html .= '<p class="total-row">Gesamt: ' . esc_html(hrb_format_amount($booking->total_amount)) . '</p>
         <p class="total-row"><strong>Gesamtbetrag: ' . esc_html(hrb_format_amount($booking->total_amount)) . '</strong></p>
     </div>

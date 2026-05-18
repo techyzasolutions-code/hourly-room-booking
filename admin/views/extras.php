@@ -1144,10 +1144,29 @@ function closeExtraModal() {
 }
 
 function deleteExtra(extraId, extraName) {
-    if (confirm('<?php _e('Are you sure you want to delete this extra?', 'hourly-room-booking'); ?>\n\n' + extraName)) {
-        document.getElementById('delete-extra-id').value = extraId;
-        document.getElementById('delete-extra-form').submit();
-    }
+    // Use custom alert dialog with danger type
+    window.hrbShowAlertDialog(
+        <?php echo json_encode(__('Are you sure you want to delete this extra?', 'hourly-room-booking')); ?>,
+        {
+            warningMessage: <?php echo json_encode(__('This action cannot be undone.', 'hourly-room-booking')); ?>,
+            title: <?php echo json_encode(__('Delete Extra', 'hourly-room-booking')); ?>,
+            details: [
+                {
+                    label: <?php echo json_encode(__('Extra:', 'hourly-room-booking')); ?>,
+                    value: extraName,
+                    class: 'original'
+                }
+            ],
+            confirmText: <?php echo json_encode(__('Delete', 'hourly-room-booking')); ?>,
+            cancelText: <?php echo json_encode(__('Cancel', 'hourly-room-booking')); ?>,
+            type: 'danger'
+        },
+        function() {
+            // User confirmed - submit the form
+            document.getElementById('delete-extra-id').value = extraId;
+            document.getElementById('delete-extra-form').submit();
+        }
+    );
 }
 
 function toggleStockQuantity() {

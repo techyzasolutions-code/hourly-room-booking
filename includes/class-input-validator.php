@@ -74,9 +74,15 @@ class HRB_Input_Validator {
             }
         }
         
-        // Validate time logic
+        // Validate time logic (allow cross-midnight when end time < start time)
         if (!empty($sanitized['start_time']) && !empty($sanitized['end_time'])) {
-            if (strtotime($sanitized['start_time']) >= strtotime($sanitized['end_time'])) {
+            $start_ts = strtotime($sanitized['start_time']);
+            $end_ts   = strtotime($sanitized['end_time']);
+            if ($end_ts <= $start_ts) {
+                // Treat as next-day end time
+                $end_ts = strtotime('+1 day', $end_ts);
+            }
+            if ($end_ts <= $start_ts) {
                 $errors->add('time_logic_invalid', __('End time must be after start time', 'hourly-room-booking'));
             }
         }
@@ -278,6 +284,15 @@ class HRB_Input_Validator {
                 }
             }
         }
+        
+        // Color validation
+        $sanitized['color'] = isset($data['color']) ? sanitize_hex_color($data['color']) : '#3498db';
+        if (empty($sanitized['color'])) {
+            $sanitized['color'] = '#3498db'; // Default color if invalid
+        }
+        
+        // External link validation
+        $sanitized['external_link'] = isset($data['external_link']) ? esc_url_raw($data['external_link']) : '';
         
         if (!empty($errors->get_error_messages())) {
             return $errors;

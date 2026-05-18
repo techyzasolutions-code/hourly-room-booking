@@ -85,13 +85,16 @@ class HRB_Ajax_Handler {
         
         add_action('wp_ajax_hrb_get_room_price_range', array($this, 'get_room_price_range'));
         add_action('wp_ajax_nopriv_hrb_get_room_price_range', array($this, 'get_room_price_range'));
+        
+        add_action('wp_ajax_hrb_get_locked_dates', array($this, 'get_locked_dates'));
+        add_action('wp_ajax_nopriv_hrb_get_locked_dates', array($this, 'get_locked_dates'));
     }
     
     /**
      * Check room availability
      */
     public function check_availability() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -121,7 +124,7 @@ class HRB_Ajax_Handler {
      * Calculate booking price
      */
     public function calculate_price() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -132,7 +135,7 @@ class HRB_Ajax_Handler {
             'end_time' => sanitize_text_field($_POST['end_time']),
             'extra_people' => intval($_POST['extra_people']),
             'extras' => isset($_POST['extras']) ? $_POST['extras'] : array(),
-            'payment_method' => sanitize_text_field($_POST['payment_method'])
+            'payment_method' => isset($_POST['payment_method']) ? sanitize_text_field($_POST['payment_method']) : 'onsite'
         );
         
         $booking_manager = HRB_Booking_Manager::getInstance();
@@ -145,7 +148,7 @@ class HRB_Ajax_Handler {
      * Search available rooms
      */
     public function search_rooms() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -160,15 +163,46 @@ class HRB_Ajax_Handler {
         
         $room_manager = HRB_Room_Manager::getInstance();
 
-        $rooms = $room_manager->search_rooms($filters);
+        // Get all rooms instead of filtering by availability
+        $rooms = $room_manager->get_all_rooms();
         
         // Get currency symbol from settings
         $settings = HRB_Settings::getInstance();
         $currency_symbol = $settings->get('hrb_currency_symbol', '€');
 
         $results = array();
+        global $wpdb;
+        
         foreach ($rooms as $room) {
             $amenities = $room_manager->get_room_amenities($room->id);
+            
+            // Check availability if date/time filters are provided
+            $is_available = true;
+            if (!empty($filters['date'])) {
+                // Check if there are any available time slots for this room on this date
+                // Use default duration of 2 hours to check availability
+                $check_duration = 2;
+                $all_slots = $this->generate_available_time_slots($room->id, $filters['date'], $check_duration, 0);
+                
+                // Check if there's at least one available slot
+                $has_available_slot = false;
+                foreach ($all_slots as $slot) {
+                    if (!empty($slot['available'])) {
+                        $has_available_slot = true;
+                        break;
+                    }
+                }
+                
+                // If no time slots are available (due to master lock or other reasons), mark as unavailable
+                if (!$has_available_slot) {
+                    $is_available = false;
+                } else {
+                    // If time filters are provided, check specific time slot
+                    if (!empty($filters['start_time']) && !empty($filters['end_time'])) {
+                        $is_available = $room_manager->is_room_available($room->id, $filters['date'], $filters['start_time'], $filters['end_time']);
+                    }
+                }
+            }
             
             // Check if we have duration filter
             $duration = isset($filters['duration']) ? intval($filters['duration']) : 0;
@@ -194,7 +228,8 @@ class HRB_Ajax_Handler {
                 'formatted_price' => $formatted_price, // Use formatted price
                 'amenities' => $amenities,
                 'images' => $room_manager->get_room_images($room->id),
-                'external_link' => $room->external_link ?? ''
+                'external_link' => $room->external_link ?? '',
+                'is_available' => $is_available // Add availability status
             );
         }
         
@@ -205,7 +240,7 @@ class HRB_Ajax_Handler {
      * Get room price for specific duration
      */
     public function get_room_price_for_duration() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -245,7 +280,7 @@ class HRB_Ajax_Handler {
      * Get room price range
      */
     public function get_room_price_range() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -269,7 +304,7 @@ class HRB_Ajax_Handler {
      * Load more rooms for pagination
      */
     public function load_more_rooms() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -422,7 +457,7 @@ class HRB_Ajax_Handler {
      * Get calendar events for room calendar
      */
     public function get_calendar_events() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_calendar_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_calendar_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -490,22 +525,65 @@ class HRB_Ajax_Handler {
      * Submit booking
      */
     public function submit_booking() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        // Start output buffering to prevent any output before JSON response
+        ob_start();
+        
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            ob_end_clean();
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
+        // Check if this is an anonymous booking
+        $is_anonymous = isset($_POST['is_anonymous']) && $_POST['is_anonymous'] === '1';
 
         // Validate and sanitize input using the new validator
         $validator = HRB_Input_Validator::getInstance();
         
         $booking_data = $validator->validate_booking_data($_POST);
         if (is_wp_error($booking_data)) {
+            ob_end_clean();
             wp_send_json_error($booking_data->get_error_message());
         }
         
-        $customer_data = $validator->validate_customer_data($_POST);
-        if (is_wp_error($customer_data)) {
-            wp_send_json_error($customer_data->get_error_message());
+        // Add anonymous flag to booking data
+        $booking_data['is_anonymous'] = $is_anonymous;
+        
+        // For anonymous bookings, skip customer data validation
+        if ($is_anonymous) {
+            // Validate that first_name is provided for anonymous bookings (same as admin)
+            $provided_name = sanitize_text_field($_POST['first_name'] ?? '');
+            
+            if (empty($provided_name)) {
+                ob_end_clean();
+                wp_send_json_error(__('Name is required for anonymous bookings.', 'hourly-room-booking'));
+            }
+            
+            // Create minimal customer data for anonymous bookings
+            $customer_data = array(
+                'first_name' => 'Anonymous',
+                'last_name' => 'User',
+                'email' => 'anonymous@example.com', // Placeholder email
+                'phone' => '0000000000', // Placeholder phone
+                'company' => '',
+                'address' => '',
+                'city' => '',
+                'postal_code' => '',
+                'country' => 'DE'
+            );
+            
+            // Store the actual booking name in booking data
+            $booking_data['first_name'] = $provided_name;
+            $booking_data['last_name'] = sanitize_text_field($_POST['last_name'] ?? '');
+        } else {
+            $customer_data = $validator->validate_customer_data($_POST);
+            if (is_wp_error($customer_data)) {
+                ob_end_clean();
+                wp_send_json_error($customer_data->get_error_message());
+            }
+            
+            // Store customer name in booking data for regular bookings too
+            $booking_data['first_name'] = $customer_data['first_name'];
+            $booking_data['last_name'] = $customer_data['last_name'];
         }
         
         // OTP verification has been removed - skip this check
@@ -520,58 +598,82 @@ class HRB_Ajax_Handler {
             $customer = null;
             $current_user_id = is_user_logged_in() ? get_current_user_id() : null;
 
-            if ($current_user_id) {
-                // For logged-in users, first check by wp_user_id
+            if ($is_anonymous) {
+                // For anonymous bookings, use the single anonymous customer
                 $customer = $wpdb->get_row($wpdb->prepare(
-                    "SELECT * FROM {$wpdb->prefix}hrb_customers WHERE wp_user_id = %d",
-                    $current_user_id
+                    "SELECT * FROM {$wpdb->prefix}hrb_customers WHERE email = %s",
+                    'anonymous@example.com'
                 ));
-            }
-
-            // If no customer found by user ID, check by email (for both logged-in and guest users)
-            if (!$customer) {
+            } else {
+                // ALWAYS check by email FIRST (from form input) to ensure we use the correct customer record
+                // This ensures that if user changes email in form, we find/update the correct customer
                 $customer = $wpdb->get_row($wpdb->prepare(
                     "SELECT * FROM {$wpdb->prefix}hrb_customers WHERE email = %s",
                     $customer_data['email']
                 ));
+                
+                // If no customer found by email, and user is logged in, check by wp_user_id as fallback
+                // This handles cases where user changes email but we still want to link to their account
+                if (!$customer && $current_user_id) {
+                    $customer = $wpdb->get_row($wpdb->prepare(
+                        "SELECT * FROM {$wpdb->prefix}hrb_customers WHERE wp_user_id = %d",
+                        $current_user_id
+                    ));
+                }
             }
 
             if ($customer) {
                 $customer_id = $customer->id;
 
-                // Prepare update data
-                $update_data = $customer_data;
+                // IMPORTANT: Always use form input data (customer_data from $_POST), NOT the cached customer record
+                // This ensures the booking uses the details entered in the form, not old cached data
+                // customer_data from validator contains: first_name, last_name, email, phone, company (5 fields)
+                $update_data = array(
+                    'first_name' => $customer_data['first_name'],
+                    'last_name' => $customer_data['last_name'],
+                    'email' => $customer_data['email'],
+                    'phone' => $customer_data['phone'],
+                    'company' => $customer_data['company']
+                );
 
                 // If this is a logged-in user and the customer record doesn't have wp_user_id, add it
                 if ($current_user_id && empty($customer->wp_user_id)) {
                     $update_data['wp_user_id'] = $current_user_id;
                 }
 
-                // Update customer info
-                $update_format = array('%s', '%s', '%s', '%s', '%s');
+                // Build format array to match the fields we're updating
+                // Only update the fields from form input: first_name, last_name, email, phone, company
+                $update_format = array('%s', '%s', '%s', '%s', '%s'); // 5 string fields
                 if (isset($update_data['wp_user_id'])) {
-                    $update_format[] = '%d';
+                    $update_format[] = '%d'; // Add wp_user_id format if present
                 }
 
-                $wpdb->update(
+                // Update customer info with form input data (this overwrites old cached data)
+                $update_result = $wpdb->update(
                     $wpdb->prefix . 'hrb_customers',
                     $update_data,
                     array('id' => $customer_id),
                     $update_format,
                     array('%d')
                 );
-
+                
+                
             } else {
                 // Create new customer
-                $new_customer_data = array_merge($customer_data, array('country' => 'DE'));
+                if ($is_anonymous) {
+                    // Create the single anonymous customer
+                    $new_customer_data = $customer_data;
+                } else {
+                    $new_customer_data = array_merge($customer_data, array('country' => 'DE'));
 
-                // Add wp_user_id for logged-in users
-                if ($current_user_id) {
-                    $new_customer_data['wp_user_id'] = $current_user_id;
+                    // Add wp_user_id for logged-in users
+                    if ($current_user_id) {
+                        $new_customer_data['wp_user_id'] = $current_user_id;
+                    }
                 }
 
                 $insert_format = array('%s', '%s', '%s', '%s', '%s', '%s');
-                if ($current_user_id) {
+                if ($current_user_id && !$is_anonymous) {
                     $insert_format[] = '%d';
                 }
 
@@ -626,26 +728,13 @@ class HRB_Ajax_Handler {
             
             $wpdb->query('COMMIT');
 
-            // Save booking-specific user meta for logged-in users
-            if (is_user_logged_in()) {
-                $user_id = get_current_user_id();
-
-                // Save booking-specific meta fields for future auto-fill
-                update_user_meta($user_id, 'hrb_booking_first_name', $customer_data['first_name']);
-                update_user_meta($user_id, 'hrb_booking_last_name', $customer_data['last_name']);
-                update_user_meta($user_id, 'hrb_booking_email', $customer_data['email']);
-                update_user_meta($user_id, 'hrb_booking_phone', $customer_data['phone']);
-
-                // Only save company if it's not empty
-                if (!empty($customer_data['company'])) {
-                    update_user_meta($user_id, 'hrb_booking_company', $customer_data['company']);
-                }
-
-            }
-
+     
             // Get the created booking
             $booking = $booking_manager->get_booking($booking_id);
 
+            // Clean output buffer before sending JSON response
+            ob_end_clean();
+            
             wp_send_json_success(array(
                 'booking_id' => $booking_id,
                 'booking_reference' => $booking->booking_reference,
@@ -657,6 +746,7 @@ class HRB_Ajax_Handler {
             
         } catch (Exception $e) {
             $wpdb->query('ROLLBACK');
+            ob_end_clean();
             wp_send_json_error('Booking failed: ' . $e->getMessage());
         }
     }
@@ -665,7 +755,7 @@ class HRB_Ajax_Handler {
      * Send OTP verification
      */
     public function send_otp() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -691,7 +781,7 @@ class HRB_Ajax_Handler {
      * Verify OTP code
      */
     public function verify_otp() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -741,7 +831,7 @@ class HRB_Ajax_Handler {
      * Get booking form for modal
      */
     public function get_booking_form() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_booking_form_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_booking_form_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -796,7 +886,7 @@ class HRB_Ajax_Handler {
      * Get room details for modal
      */
     public function get_room_details_modal() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_room_details_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_room_details_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1049,13 +1139,16 @@ class HRB_Ajax_Handler {
      * Get available time slots for a room and date
      */
     public function get_available_time_slots() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
         $room_id = intval($_POST['room_id']);
         $date = sanitize_text_field($_POST['date']);
         $duration = floatval($_POST['duration']);
+        $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;
+        // Check if is_admin parameter is passed (can be 'true' string or boolean true)
+        $is_admin_param = isset($_POST['is_admin']) && ($_POST['is_admin'] === 'true' || $_POST['is_admin'] === true || $_POST['is_admin'] === '1' || $_POST['is_admin'] === 1);
 
         if (empty($room_id) || empty($date) || empty($duration)) {
             wp_send_json_error(__('Missing required parameters', 'hourly-room-booking'));
@@ -1067,7 +1160,7 @@ class HRB_Ajax_Handler {
         }
 
         $room_manager = HRB_Room_Manager::getInstance();
-        $available_slots = $this->generate_available_time_slots($room_id, $date, $duration);
+        $available_slots = $this->generate_available_time_slots($room_id, $date, $duration, $booking_id, $is_admin_param);
 
         wp_send_json_success(array(
             'slots' => $available_slots,
@@ -1078,12 +1171,31 @@ class HRB_Ajax_Handler {
     /**
      * Generate available time slots for a given date and duration
      */
-    private function generate_available_time_slots($room_id, $date, $duration) {
+    public function generate_available_time_slots($room_id, $date, $duration, $booking_id = 0, $is_admin_param = false) {
         $available_slots = array();
+        global $wpdb;
+
+        // Query room locks for the selected room and date
+        $room_locks = $wpdb->get_results($wpdb->prepare(
+            "SELECT start_datetime, end_datetime 
+             FROM {$wpdb->prefix}hrb_room_locks 
+             WHERE room_id = %d AND start_datetime <= %s AND end_datetime >= %s",
+            $room_id, $date . ' 23:59:59', $date . ' 00:00:00'
+        ));
+
+        // Query master locks for the date
+        $master_locks = $wpdb->get_results($wpdb->prepare(
+            "SELECT start_datetime, end_datetime 
+             FROM {$wpdb->prefix}hrb_master_locks 
+             WHERE start_datetime <= %s AND end_datetime >= %s",
+            $date . ' 23:59:59', $date . ' 00:00:00'
+        ));
+
 
         // Get booking time range from settings
         $booking_start_time = get_option('hrb_booking_start_time', '08:00');
         $booking_end_time = get_option('hrb_booking_end_time', '20:00');
+        
         
         // Parse start and end times
         $start_hour = intval(substr($booking_start_time, 0, 2));
@@ -1107,53 +1219,130 @@ class HRB_Ajax_Handler {
         $is_today = ($date === $today);
         
         
+        
         for ($hour = $start_hour; $hour <= $end_hour; $hour++) {
             // Check both :00 and :30 minute slots
             foreach (['00', '30'] as $minute) {
+                $start_minutes = ($hour * 60) + intval($minute);
+                // If start is at or beyond end, skip
+                if ($start_minutes >= $booking_end_minutes) {
+                    continue;
+                }
+
                 $start_time = sprintf('%02d:%s:00', $hour, $minute);
-                
+
                 // Check if this time slot has already passed (for today only)
                 $slot_time = sprintf('%02d:%s', $hour, $minute);
                 $is_past_time = $is_today && ($slot_time < $current_time);
                 
                 
-                $end_time_timestamp = strtotime($start_time) + ($duration * 3600);
-                $end_time = date('H:i:s', $end_time_timestamp);
+                $slot_end_minutes = $start_minutes + ($duration * 60);
 
-                // Check if booking ends within the allowed time range
-                $end_time_formatted = date('H:i', $end_time_timestamp);
-                $end_time_hour = intval(substr($end_time_formatted, 0, 2));
-                $end_time_minute = intval(substr($end_time_formatted, 3, 2));
-                $slot_end_minutes = $end_time_hour * 60 + $end_time_minute;
-                
-                // Check if slot ends after the configured end time
-                if ($slot_end_minutes > $booking_end_minutes) {
-                    continue;
-                }
-                
-                // Check if slot crosses midnight (invalid)
-                if ($end_time_hour < $hour || ($end_time_hour == $hour && $end_time_minute < intval($minute))) {
+                // Allow crossing midnight when booking end time is 24:00
+                $allow_cross_midnight = ($booking_end_minutes === 1440);
+
+                // Check if slot ends after the configured end time (only block if not allowed to cross)
+                if (!$allow_cross_midnight && $slot_end_minutes > $booking_end_minutes) {
                     continue;
                 }
 
-                // Check if this slot is available (including cooldown periods)
-                $is_available = $this->is_slot_available_with_cooldown($room_id, $date, $start_time, $end_time);
+                // Build end time string (support crossing midnight)
+                if ($slot_end_minutes >= 1440) {
+                    $end_minutes_overflow = $slot_end_minutes - 1440;
+                    $end_hour_slot = intdiv($end_minutes_overflow, 60);
+                    $end_minute_slot = $end_minutes_overflow % 60;
+                    $end_time = sprintf('%02d:%02d:00', $end_hour_slot, $end_minute_slot);
+                    $end_time_display = sprintf('%02d:%02d', $end_hour_slot, $end_minute_slot);
+                } else {
+                    $end_hour_slot = intdiv($slot_end_minutes, 60);
+                    $end_minute_slot = $slot_end_minutes % 60;
+                    $end_time = sprintf('%02d:%02d:00', $end_hour_slot, $end_minute_slot);
+                    $end_time_display = sprintf('%02d:%02d', $end_hour_slot, $end_minute_slot);
+                }
+
+                $start_time_display = sprintf('%02d:%02d', intdiv($start_minutes, 60), $start_minutes % 60);
+
+                // Check if this slot is locked
+                $is_locked = false;
+                $lock_type = null; // 'master' or 'room'
+
+                // Check master locks with proper datetime overlap
+                foreach ($master_locks as $lock) {
+                    $slot_start_datetime = $date . ' ' . $start_time;
+                    $slot_end_datetime = $date . ' ' . $end_time;
+                    
+                    // Simple datetime overlap check
+                    if ($slot_start_datetime < $lock->end_datetime && $slot_end_datetime > $lock->start_datetime) {
+                        $is_locked = true;
+                        $lock_type = 'master';
+                        break;
+                    }
+                }
+                
+                // Check room-specific locks (only if not already locked by master)
+                if (!$is_locked) {
+                    foreach ($room_locks as $lock) {
+                        $slot_start_datetime = $date . ' ' . $start_time;
+                        $slot_end_datetime = $date . ' ' . $end_time;
+                        
+                        // Simple datetime overlap check
+                        if ($slot_start_datetime < $lock->end_datetime && $slot_end_datetime > $lock->start_datetime) {
+                            $is_locked = true;
+                            $lock_type = 'room';
+                            break;
+                        }
+                    }
+                }
+
+                // Check if request is from admin (admin can book locked rooms)
+                // Must have both: is_admin parameter AND admin capabilities (security check)
+                $has_admin_cap = current_user_can('hrb_manage_bookings') || current_user_can('manage_options');
+                $is_admin_request = $is_admin_param && $has_admin_cap;
+                
+                // Check if this slot is available - use cooldown-aware checking
+                // Exclude current booking from conflict check if editing
+                $exclude_booking_id = ($booking_id > 0) ? $booking_id : 0;
+                $is_available = $this->is_slot_available_with_cooldown_excluding_booking($room_id, $date, $start_time, $end_time, $exclude_booking_id);
+                
+                // If slot is locked, mark as unavailable for frontend, but allow admin to see and book it
+                // For admin, locked slots are still available (they can override locks)
+                // Frontend users cannot bypass locks even if they try to pass is_admin parameter
+                if ($is_locked && !$is_admin_request) {
+                    $is_available = false;
+                }
+                // Note: For admin, even if locked, $is_available remains true (if no real conflicts)
                 
                 // If it's a past time slot, mark it as unavailable
                 if ($is_past_time) {
                     $is_available = false;
                 }
                 
+                // Check if this is the current booking's time slot
+                $is_current_booking_slot = false;
+                if ($booking_id > 0) {
+                    global $wpdb;
+                    $current_booking = $wpdb->get_row($wpdb->prepare(
+                        "SELECT start_time, end_time FROM {$wpdb->prefix}hrb_bookings WHERE id = %d",
+                        $booking_id
+                    ));
+                    
+                    if ($current_booking && 
+                        $current_booking->start_time === $start_time && 
+                        $current_booking->end_time === $end_time) {
+                        $is_current_booking_slot = true;
+                    }
+                }
+                
                 $slot_data = array(
                     'start_time' => $start_time,
                     'end_time' => $end_time,
-                    'display_start' => date('H:i', strtotime($start_time)),
-                    'display_end' => date('H:i', strtotime($end_time)),
-                    'label' => sprintf('%s - %s',
-                        date('H:i', strtotime($start_time)),
-                        date('H:i', strtotime($end_time))
-                    ),
-                    'available' => $is_available
+                    'display_start' => $start_time_display,
+                    'display_end' => $end_time_display,
+                    'label' => sprintf('%s - %s', $start_time_display, $end_time_display),
+                    'available' => $is_available,
+                    'is_current_booking' => $is_current_booking_slot,
+                    'is_locked' => $is_locked,
+                    'lock_type' => $lock_type // 'master' or 'room' or null
                 );
                 
                 // Add all slots (both available and unavailable)
@@ -1163,69 +1352,165 @@ class HRB_Ajax_Handler {
 
         // Restore original timezone
         date_default_timezone_set($original_timezone);
-
+        
         return $available_slots;
     }
 
     /**
      * Check if a time slot is available including cooldown periods
      */
-    private function is_slot_available_with_cooldown($room_id, $date, $start_time, $end_time) {
+    private function is_slot_available_with_cooldown($room_id, $date, $start_time, $end_time, $exclude_booking_id = 0) {
         global $wpdb;
 
         // Get cooldown minutes from settings
         $cooldown_minutes = intval(get_option('hrb_cooldown_minutes', 30));
 
-        // Check for direct time conflicts first
-        $direct_conflict = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
+        // Build date range to fetch potentially overlapping bookings (previous, current, and next day for cross-midnight)
+        $date_obj = new DateTime($date);
+        $prev_day = clone $date_obj;
+        $prev_day->modify('-1 day');
+        $next_day = clone $date_obj;
+        $next_day->modify('+1 day');
+        $date_str = $date_obj->format('Y-m-d');
+        $prev_day_str = $prev_day->format('Y-m-d');
+        $next_day_str = $next_day->format('Y-m-d');
+
+        // Fetch bookings for previous, current, and next day (to account for cross-midnight bookings)
+        $bookings = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, booking_date, start_time, end_time 
+             FROM {$wpdb->prefix}hrb_bookings
              WHERE room_id = %d
-             AND booking_date = %s
-             AND status NOT IN ('cancelled', 'no_show')
-             AND (
-                 (start_time < %s AND end_time > %s) OR
-                 (start_time < %s AND end_time > %s) OR
-                 (start_time >= %s AND start_time < %s)
-             )",
-            $room_id, $date, $end_time, $start_time, $start_time, $end_time, $start_time, $end_time
+             AND booking_date IN (%s, %s, %s)
+             AND status NOT IN ('cancelled', 'no_show')",
+            $room_id,
+            $prev_day_str,
+            $date_str,
+            $next_day_str
         ));
 
-        if ($direct_conflict > 0) {
-            return false;
+        // Prepare slot start/end as datetimes
+        $slot_start_dt = new DateTime("{$date_str} {$start_time}");
+        $slot_end_dt = new DateTime("{$date_str} {$end_time}");
+        if ($slot_end_dt <= $slot_start_dt) {
+            // crosses midnight
+            $slot_end_dt->modify('+1 day');
         }
 
-        // Check for cooldown conflicts after existing bookings end
-        $cooldown_conflict_after = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
-             WHERE room_id = %d
-             AND booking_date = %s
-             AND status NOT IN ('cancelled', 'no_show')
-             AND TIME_TO_SEC(%s) >= TIME_TO_SEC(end_time)
-             AND TIME_TO_SEC(%s) < TIME_TO_SEC(end_time) + (%d * 60)",
-            $room_id, $date, $start_time, $start_time, $cooldown_minutes
+        foreach ($bookings as $booking) {
+            if ($exclude_booking_id > 0 && intval($booking->id) === intval($exclude_booking_id)) {
+                continue;
+            }
+
+            $booking_start_dt = new DateTime("{$booking->booking_date} {$booking->start_time}");
+            $booking_end_dt = new DateTime("{$booking->booking_date} {$booking->end_time}");
+            if ($booking_end_dt <= $booking_start_dt) {
+                // booking crosses midnight
+                $booking_end_dt->modify('+1 day');
+            }
+
+            // Direct overlap: existing_start < new_end AND existing_end > new_start
+            if ($booking_start_dt < $slot_end_dt && $booking_end_dt > $slot_start_dt) {
+                return false;
+            }
+
+            // Cooldown after existing booking
+            $booking_end_with_cooldown = clone $booking_end_dt;
+            $booking_end_with_cooldown->modify("+{$cooldown_minutes} minutes");
+            if ($slot_start_dt >= $booking_end_dt && $slot_start_dt < $booking_end_with_cooldown) {
+                return false;
+            }
+
+            // Cooldown before existing booking
+            $booking_start_with_cooldown = clone $booking_start_dt;
+            $booking_start_with_cooldown->modify("-{$cooldown_minutes} minutes");
+            if ($slot_end_dt > $booking_start_with_cooldown && $slot_end_dt <= $booking_start_dt) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
+    /**
+     * wrapper function for backward compatibility
+     */
+    private function is_slot_available_with_cooldown_excluding_booking($room_id, $date, $start_time, $end_time, $exclude_booking_id = 0) {
+        return $this->is_slot_available_with_cooldown($room_id, $date, $start_time, $end_time, $exclude_booking_id);
+    }
+
+    /**
+     * Get locked dates for a room
+     */
+    public function get_locked_dates() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_die(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        $room_id = intval($_POST['room_id']);
+        global $wpdb;
+        
+        // Get room locks
+        $room_locks = $wpdb->get_results($wpdb->prepare(
+            "SELECT start_datetime, end_datetime 
+             FROM {$wpdb->prefix}hrb_room_locks 
+             WHERE room_id = %d",
+            $room_id
         ));
-
-        // Check for cooldown conflicts before existing bookings start
-        // New booking ends too close to existing booking start
-        $cooldown_conflict_before = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings
-             WHERE room_id = %d
-             AND booking_date = %s
-             AND status NOT IN ('cancelled', 'no_show')
-             AND TIME_TO_SEC(%s) > TIME_TO_SEC(start_time) - (%d * 60)
-             AND TIME_TO_SEC(%s) <= TIME_TO_SEC(start_time)",
-            $room_id, $date, $end_time, $cooldown_minutes, $end_time
-        ));
-
-
-        return ($cooldown_conflict_after == 0 && $cooldown_conflict_before == 0);
+        
+        // Get master locks
+        $master_locks = $wpdb->get_results(
+            "SELECT start_datetime, end_datetime 
+             FROM {$wpdb->prefix}hrb_master_locks"
+        );
+        
+        // Format response
+        $disabled_dates = array();
+        
+        // Process room locks
+        foreach ($room_locks as $lock) {
+            $start = strtotime($lock->start_datetime);
+            $end = strtotime($lock->end_datetime);
+            
+            // Extract date and time components
+            $start_date = date('Y-m-d', $start);
+            $end_date = date('Y-m-d', $end);
+            $start_time = date('H:i:s', $start);
+            $end_time = date('H:i:s', $end);
+            
+            // If all-day lock, add entire date range
+            if ($start_time === '00:00:00' && $end_time === '23:59:59') {
+                for ($date = $start; $date <= $end; $date += 86400) {
+                    $disabled_dates[] = date('Y-m-d', $date);
+                }
+            } else {
+                // Partial day lock - only disable if start_time is 00:00 and end_time is 23:59
+                // Otherwise, date remains selectable but time slots will be unavailable
+                if ($start_time === '00:00:00' && $end_time === '23:59:59') {
+                    for ($date = $start; $date <= $end; $date += 86400) {
+                        $disabled_dates[] = date('Y-m-d', $date);
+                    }
+                }
+            }
+        }
+        
+        // Process master locks (always disable entire dates)
+        foreach ($master_locks as $lock) {
+            $start = strtotime($lock->start_datetime);
+            $end = strtotime($lock->end_datetime);
+            
+            for ($date = $start; $date <= $end; $date += 86400) {
+                $disabled_dates[] = date('Y-m-d', $date);
+            }
+        }
+        
+        wp_send_json_success(array('disabled_dates' => array_unique($disabled_dates)));
     }
 
     /**
      * Send verification code
      */
     public function send_verification_code() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1312,7 +1597,7 @@ class HRB_Ajax_Handler {
      * Verify code
      */
     public function verify_code() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1373,7 +1658,7 @@ class HRB_Ajax_Handler {
      * Check if customer is already verified
      */
     public function check_verification_status() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1408,7 +1693,7 @@ class HRB_Ajax_Handler {
      * Clear email verification for current session
      */
     public function clear_verification() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1433,7 +1718,7 @@ class HRB_Ajax_Handler {
      * Get available extras based on stock for a specific date and time
      */
     public function get_available_extras() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
 
@@ -1446,15 +1731,20 @@ class HRB_Ajax_Handler {
             wp_send_json_error(__('Missing required parameters', 'hourly-room-booking'));
         }
 
+        // Check if this is an admin request (admin can book inactive extras and bypass locks)
+        $is_admin_request = current_user_can('manage_options') || current_user_can('hrb_manage_bookings');
+        $include_inactive = $is_admin_request;
+        $allow_locked = $is_admin_request;
+
         // Use the new stock management system
         $stock_manager = HRB_Extra_Stock_Manager::getInstance();
-        $available_extras = $stock_manager->get_available_extras($booking_date, $start_time, $end_time);
+        $available_extras = $stock_manager->get_available_extras($booking_date, $start_time, $end_time, $include_inactive, $booking_id, $allow_locked);
 
         // If we're editing a booking, mark which extras are already selected
         if ($booking_id > 0) {
             $extras_manager = HRB_Extras::getInstance();
             $selected_extras = $extras_manager->get_booking_extras($booking_id);
-            $selected_extra_ids = array_column($selected_extras, 'extra_id');
+            $selected_extra_ids = array_column($selected_extras, 'id');
             
             // Add is_selected flag to each extra
             foreach ($available_extras as &$extra) {
@@ -1473,7 +1763,7 @@ class HRB_Ajax_Handler {
      */
     public function get_room_pricing() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
             return;
         }
@@ -1510,7 +1800,7 @@ class HRB_Ajax_Handler {
      */
     public function get_room_pricing_data() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
             return;
         }
@@ -1544,13 +1834,13 @@ class HRB_Ajax_Handler {
      */
     public function save_settings() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
             return;
         }
         
         // Check user permissions
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }

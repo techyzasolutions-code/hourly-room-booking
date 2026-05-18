@@ -33,9 +33,10 @@ class HRB_Extra_Stock_Manager {
      * @param string $start_time Start time in H:i:s format
      * @param string $end_time End time in H:i:s format
      * @param int $quantity Required quantity
+     * @param int $exclude_booking_id Optional booking ID to exclude from availability check (for editing)
      * @return array Availability status and available quantity
      */
-    public function check_availability(int $extra_id, string $booking_date, string $start_time, string $end_time, int $quantity = 1): array {
+    public function check_availability(int $extra_id, string $booking_date, string $start_time, string $end_time, int $quantity = 1, int $exclude_booking_id = 0, bool $bypass_locks = false): array {
         // Get extra details
         $extra = $this->get_extra_details($extra_id);
         if (!$extra) {
@@ -44,6 +45,41 @@ class HRB_Extra_Stock_Manager {
                 'available_quantity' => 0,
                 'reason' => 'Extra not found'
             ];
+        }
+        
+        // Check for extra locks (unless bypassing locks for admin)
+        $booking_start_datetime = $booking_date . ' ' . $start_time;
+        $booking_end_datetime = $booking_date . ' ' . $end_time;
+        
+        if (!$bypass_locks) {
+            $extra_locked = $this->wpdb->get_var($this->wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->wpdb->prefix}hrb_extra_locks 
+                 WHERE extra_id = %d AND start_datetime <= %s AND end_datetime >= %s",
+                $extra_id, $booking_end_datetime, $booking_start_datetime
+            ));
+            
+            if ($extra_locked > 0) {
+                return [
+                    'available' => false,
+                    'available_quantity' => 0,
+                    'reason' => 'Extra is locked for this time period'
+                ];
+            }
+            
+            // Check for master extra locks
+            $master_locked = $this->wpdb->get_var($this->wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->wpdb->prefix}hrb_master_extra_locks 
+                 WHERE start_datetime <= %s AND end_datetime >= %s",
+                $booking_end_datetime, $booking_start_datetime
+            ));
+            
+            if ($master_locked > 0) {
+                return [
+                    'available' => false,
+                    'available_quantity' => 0,
+                    'reason' => 'All extras are locked for this time period'
+                ];
+            }
         }
         
         // If stock tracking is disabled, always available
@@ -66,7 +102,7 @@ class HRB_Extra_Stock_Manager {
         }
         
         // Get currently booked quantity for this time slot
-        $booked_quantity = $this->get_booked_quantity($extra_id, $booking_date, $start_time, $end_time);
+        $booked_quantity = $this->get_booked_quantity($extra_id, $booking_date, $start_time, $end_time, $exclude_booking_id);
         
         // Calculate available quantity
         $available_quantity = $total_stock - $booked_quantity;
@@ -86,17 +122,20 @@ class HRB_Extra_Stock_Manager {
      * @param string $booking_date Date in Y-m-d format
      * @param string $start_time Start time in H:i:s format
      * @param string $end_time End time in H:i:s format
+     * @param bool $include_inactive Whether to include inactive extras (for admin bookings)
+     * @param int $exclude_booking_id Optional booking ID to exclude from availability check (for editing)
      * @return array Available extras with availability info
      */
-    public function get_available_extras(string $booking_date, string $start_time, string $end_time): array {
+    public function get_available_extras(string $booking_date, string $start_time, string $end_time, bool $include_inactive = false, int $exclude_booking_id = 0, bool $allow_locked = false): array {
         $extras_table = $this->wpdb->prefix . 'hrb_extras';
         
-        // Get all active extras
-        $extras = $this->wpdb->get_results($this->wpdb->prepare("
+        // Build query - include inactive if requested (for admin)
+        $where_clause = $include_inactive ? '1=1' : 'is_active = 1';
+        $extras = $this->wpdb->get_results("
             SELECT * FROM {$extras_table} 
-            WHERE is_active = 1 
+            WHERE {$where_clause} 
             ORDER BY sort_order ASC, name ASC
-        "));
+        ");
         
         $available_extras = [];
         
@@ -106,10 +145,31 @@ class HRB_Extra_Stock_Manager {
                 $booking_date, 
                 $start_time, 
                 $end_time, 
-                1
+                1,
+                $exclude_booking_id,
+                $allow_locked
             );
             
-            if ($availability['available']) {
+            // Include extra if:
+            // For frontend: active + available (passes all checks: stock, locks, timing)
+            // For admin: available (passes locks/timing checks) AND (active OR include_inactive is true)
+            // Note: For admin with inactive extras, we still check locks (timing validation) but may allow even if stock issues
+            if ($include_inactive && !$extra->is_active) {
+                // Admin booking inactive extra: still check locks (timing validation) but skip stock validation
+                // If locked, don't include it (timing conflict still applies)
+                if ($availability['available']) {
+                    // Available means no locks - include it (stock check skipped for inactive extras from admin)
+                    $should_include = true;
+                } else {
+                    // Locked or other issues - don't include (timing validation still applies)
+                    $should_include = false;
+                }
+            } else {
+                // Normal case: active extra or frontend booking - must pass all validations (active + available)
+                $should_include = $extra->is_active && $availability['available'];
+            }
+            
+            if ($should_include) {
                 $available_extras[] = [
                     'id' => $extra->id,
                     'name' => $extra->name,
@@ -119,7 +179,8 @@ class HRB_Extra_Stock_Manager {
                     'track_stock' => (bool) $extra->track_stock,
                     'available_quantity' => $availability['available_quantity'],
                     'total_stock' => $availability['total_stock'],
-                    'sort_order' => intval($extra->sort_order)
+                    'sort_order' => intval($extra->sort_order),
+                    'is_active' => (bool) $extra->is_active
                 ];
             }
         }
@@ -174,13 +235,21 @@ class HRB_Extra_Stock_Manager {
      * @param string $booking_date Date in Y-m-d format
      * @param string $start_time Start time in H:i:s format
      * @param string $end_time End time in H:i:s format
+     * @param int $exclude_booking_id Optional booking ID to exclude from count (for editing)
      * @return int Booked quantity
      */
-    private function get_booked_quantity(int $extra_id, string $booking_date, string $start_time, string $end_time): int {
+    private function get_booked_quantity(int $extra_id, string $booking_date, string $start_time, string $end_time, int $exclude_booking_id = 0): int {
         $booking_extras_table = $this->wpdb->prefix . 'hrb_booking_extras';
         $bookings_table = $this->wpdb->prefix . 'hrb_bookings';
         
         // Check for overlapping time slots, only count confirmed/pending bookings
+        // Exclude the specified booking ID if provided (for editing bookings)
+        $exclude_condition = $exclude_booking_id > 0 ? 'AND be.booking_id != %d' : '';
+        $params = [$extra_id, $booking_date, $end_time, $start_time, $end_time, $start_time, $start_time, $end_time];
+        if ($exclude_booking_id > 0) {
+            $params[] = $exclude_booking_id;
+        }
+        
         $booked_quantity = $this->wpdb->get_var($this->wpdb->prepare("
             SELECT COALESCE(SUM(be.quantity), 0) 
             FROM {$booking_extras_table} be
@@ -193,7 +262,8 @@ class HRB_Extra_Stock_Manager {
                 (be.start_time < %s AND be.end_time > %s) OR  -- Overlaps with end
                 (be.start_time >= %s AND be.end_time <= %s)   -- Completely within
             )
-        ", $extra_id, $booking_date, $end_time, $start_time, $end_time, $start_time, $start_time, $end_time));
+            {$exclude_condition}
+        ", $params));
         
         return intval($booked_quantity);
     }

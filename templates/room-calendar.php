@@ -242,7 +242,7 @@ jQuery(document).ready(function($) {
     setTimeout(function() {
         // Check if FullCalendar is loaded
         if (typeof FullCalendar === 'undefined') {
-            console.error('FullCalendar library is not loaded');
+            /* removed debug console.error */
             $('#hrb-room-calendar-<?php echo $room_id; ?>').html('<div class="hrb-error" style="padding: 20px; text-align: center; color: #dc3545;"><?php _e('Calendar library failed to load. Please refresh the page.', 'hourly-room-booking'); ?></div>');
             return;
         }
@@ -330,12 +330,12 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     callback(response.data.events);
                 } else {
-                    console.error('Failed to load calendar events:', response.data);
+                    /* removed debug console.error */
                     callback([]);
                 }
             },
             error: function() {
-                console.error('AJAX error loading calendar events');
+                /* removed debug console.error */
                 callback([]);
             }
         });

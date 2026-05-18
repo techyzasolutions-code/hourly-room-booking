@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Hourly Room Booking System
- * Plugin URI: https://yoursite.com/
+ * Plugin URI: https://mme-pro.de
  * Description: Professional room booking system with hourly slots, payment integration, and comprehensive management features.
- * Version: 1.0.0
- * Author: Shivam Sharma
+ * Version: 1.2.0
+ * Author: MME Pro
  * Requires at least: 5.0
  * Tested up to: 6.3
  * Requires PHP: 7.4
@@ -16,8 +16,8 @@
  * 
  * @package HourlyRoomBooking
  * @version 1.0.0
- * @author Shivam Sharma
- * @copyright 2024 Your Company
+ * @author MME Pro
+ * @copyright © 2025 MME Pro. All rights reserved
  * @license GPL-2.0-or-later
  */
 
@@ -28,8 +28,8 @@ if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
 
-// Start session for email verification
-if (!session_id()) {
+// Start session for email verification (only if not already started)
+if (!session_id() && !headers_sent()) {
     session_start();
 }
 
@@ -44,7 +44,7 @@ if (defined('HRB_VERSION')) {
  * These constants are used throughout the plugin for consistency
  * and to avoid magic strings in the codebase.
  */
-define('HRB_VERSION', '1.0.0');
+define('HRB_VERSION', '1.2.0');
 define('HRB_MIN_PHP_VERSION', '7.4');
 define('HRB_MIN_WP_VERSION', '5.0');
 define('HRB_PLUGIN_FILE', __FILE__);
@@ -343,6 +343,9 @@ final class HourlyRoomBooking {
      */
     public function init_components(): void {
         try {
+            // Add custom cron intervals
+            add_filter('cron_schedules', [$this, 'add_custom_cron_intervals']);
+            
             // Initialize components in dependency order
             $this->components['database']     = HRB_Database::getInstance();
             $this->components['room_manager'] = HRB_Room_Manager::getInstance();
@@ -364,6 +367,23 @@ final class HourlyRoomBooking {
         } catch (Exception $e) {
             $this->handle_component_error($e);
         }
+    }
+    
+    /**
+     * Add custom cron intervals
+     * 
+     * @since 1.0.0
+     * @param array $schedules Existing cron schedules
+     * @return array Modified cron schedules
+     */
+    public function add_custom_cron_intervals($schedules): array {
+        // Add 5-minute interval for PayPal payment cleanup
+        $schedules['hrb_five_minutes'] = array(
+            'interval' => 5 * MINUTE_IN_SECONDS,
+            'display'  => __('Every 5 Minutes', 'hourly-room-booking')
+        );
+        
+        return $schedules;
     }
     
     /**
@@ -419,7 +439,7 @@ final class HourlyRoomBooking {
                 'hrb-frontend',
                 HRB_ASSETS_URL . 'css/frontend.css',
                 [],
-                '1.1.19'
+                HRB_VERSION
             );
         }
 
@@ -432,7 +452,7 @@ final class HourlyRoomBooking {
                 'hrb-calendar',
                 HRB_ASSETS_URL . 'css/calendar.css',
                 [],
-                '1.1.19'
+                HRB_VERSION
             );
         }
 
@@ -465,18 +485,17 @@ final class HourlyRoomBooking {
                 'hrb-calendar',
                 HRB_ASSETS_URL . 'js/calendar.js',
                 ['jquery', 'fullcalendar'],
-                '1.1.18',
+                HRB_VERSION,
                 true
             );
         }
 
-        //HRB_VERSION
         if (file_exists($js_file)) {
             wp_enqueue_script(
                 'hrb-frontend',
                 HRB_ASSETS_URL . 'js/frontend.js',
                 ['jquery', 'fullcalendar'],
-                '1.1.19',
+                HRB_VERSION,
                 true
             );
 
@@ -519,17 +538,16 @@ final class HourlyRoomBooking {
                 'hrb-admin',
                 HRB_PLUGIN_URL . 'admin/assets/css/admin.css',
                 [],
-                '1.1.3'
+                HRB_VERSION
             );
         }
-        //HRB_VERSION
         
         if (file_exists($js_file)) {
             wp_enqueue_script(
                 'hrb-admin',
                 HRB_PLUGIN_URL . 'admin/assets/js/admin.js',
                 ['jquery'],
-                '1.1.3',
+                HRB_VERSION,
                 true
             );
             
@@ -687,6 +705,7 @@ final class HourlyRoomBooking {
         add_rewrite_rule('^booking-details/?$', 'index.php?hrb_page=booking-details', 'top');
         add_rewrite_rule('^booking-success/?$', 'index.php?hrb_page=booking-success', 'top');
         add_rewrite_rule('^booking-cancelled/?$', 'index.php?hrb_page=booking-cancelled', 'top');
+        add_rewrite_rule('^paypal-payment/?$', 'index.php?hrb_page=paypal-payment', 'top');
     }
 
     /**
@@ -698,6 +717,7 @@ final class HourlyRoomBooking {
         // Clear scheduled hooks
         wp_clear_scheduled_hook('hrb_cleanup_expired_bookings');
         wp_clear_scheduled_hook('hrb_send_booking_reminders');
+        wp_clear_scheduled_hook('hrb_cleanup_incomplete_payments');
         
         // Clear rewrite rules
         flush_rewrite_rules();
@@ -802,6 +822,183 @@ function hrb_init(): HourlyRoomBooking {
  */
 function hrb(): HourlyRoomBooking {
     return HourlyRoomBooking::getInstance();
+}
+
+/**
+ * Display customer information with anonymous booking handling
+ * 
+ * @since 1.0.0
+ * @param array|object $booking_data Booking data containing customer info and is_anonymous flag
+ * @param string $format Display format: 'name_only', 'name_email', 'full', 'booking_reference'
+ * @return string HTML formatted customer information
+ */
+function hrb_display_customer_info($booking_data, $format = 'name_email') {
+    // Handle both array and object data
+    $is_anonymous = false;
+    $customer_name = '';
+    $customer_email = '';
+    $customer_phone = '';
+    $booking_reference = '';
+    
+    if (is_array($booking_data)) {
+        $is_anonymous = isset($booking_data['is_anonymous']) && $booking_data['is_anonymous'];
+        $customer_name = $booking_data['customer_name'] ?? '';
+        $customer_email = $booking_data['customer_email'] ?? '';
+        $customer_phone = $booking_data['customer_phone'] ?? '';
+        $booking_reference = $booking_data['booking_reference'] ?? '';
+    } else {
+        $is_anonymous = isset($booking_data->is_anonymous) && $booking_data->is_anonymous;
+        $customer_name = $booking_data->customer_name ?? '';
+        $customer_email = $booking_data->customer_email ?? '';
+        $customer_phone = $booking_data->customer_phone ?? '';
+        $booking_reference = $booking_data->booking_reference ?? '';
+    }
+    
+    if ($is_anonymous) {
+        // Check if we have customer information for anonymous bookings
+        $has_name = !empty($customer_name);
+        $has_email = !empty($customer_email) && $customer_email !== 'anonymous@example.com';
+        $has_phone = !empty($customer_phone);
+        
+        if ($has_name || $has_email || $has_phone) {
+            // Show available information for anonymous bookings
+            switch ($format) {
+                case 'name_only':
+                    return '<strong>' . esc_html($customer_name ?: __('Anonymous', 'hourly-room-booking')) . '</strong>';
+                case 'name_email':
+                    $output = '<strong>' . esc_html($customer_name ?: __('Anonymous', 'hourly-room-booking')) . '</strong>';
+                    // Add anonymous badge below the name
+                    $output .= '<br><span class="hrb-badge hrb-badge-warning" style="display: inline-block; margin-top: 4px; font-size: 11px; padding: 2px 6px;">' . __('Anonymous', 'hourly-room-booking') . '</span>';
+                    if ($has_email) {
+                        $output .= '<br><small>' . esc_html($customer_email) . '</small>';
+                    }
+                    return $output;
+                case 'full':
+                    $output = '<strong>' . esc_html($customer_name ?: __('Anonymous', 'hourly-room-booking')) . '</strong>';
+                    // Add anonymous badge below the name
+                    $output .= '<br><span class="hrb-badge hrb-badge-warning" style="display: inline-block; margin-top: 4px; font-size: 11px; padding: 2px 6px;">' . __('Anonymous', 'hourly-room-booking') . '</span>';
+                    if ($has_email) {
+                        $output .= '<br><small>' . esc_html($customer_email) . '</small>';
+                    }
+                    // Don't show phone for anonymous bookings
+                    return $output;
+                case 'booking_reference':
+                    $output = '<strong>' . esc_html($customer_name ?: __('Anonymous', 'hourly-room-booking')) . '</strong>';
+                    if ($has_email) {
+                        $output .= '<br><small>' . esc_html($customer_email) . '</small>';
+                    }
+                    $output .= '<br><small>' . sprintf(__('Booking ID: %s', 'hourly-room-booking'), $booking_reference) . '</small>';
+                    return $output;
+                default:
+                    return '<strong>' . esc_html($customer_name ?: __('Anonymous', 'hourly-room-booking')) . '</strong>';
+            }
+        } else {
+            // No customer information available
+            switch ($format) {
+                case 'name_only':
+                    return '<strong>' . __('Anonymous', 'hourly-room-booking') . '</strong>';
+                case 'name_email':
+                    return '<strong>' . __('Anonymous', 'hourly-room-booking') . '</strong><br><small>' . __('No contact information available', 'hourly-room-booking') . '</small>';
+                case 'full':
+                    return '<strong>' . __('Anonymous', 'hourly-room-booking') . '</strong><br><small>' . __('No contact information available', 'hourly-room-booking') . '</small>';
+                case 'booking_reference':
+                    return '<strong>' . __('Anonymous', 'hourly-room-booking') . '</strong><br><small>' . sprintf(__('Booking ID: %s', 'hourly-room-booking'), $booking_reference) . '</small>';
+                default:
+                    return '<strong>' . __('Anonymous', 'hourly-room-booking') . '</strong>';
+            }
+        }
+    } else {
+        switch ($format) {
+            case 'name_only':
+                return '<strong>' . esc_html($customer_name) . '</strong>';
+            case 'name_email':
+                return '<strong>' . esc_html($customer_name) . '</strong><br><small>' . esc_html($customer_email) . '</small>';
+            case 'full':
+                $output = '<strong>' . esc_html($customer_name) . '</strong>';
+                if ($customer_email) {
+                    $output .= '<br><small>' . esc_html($customer_email) . '</small>';
+                }
+                if ($customer_phone) {
+                    $output .= '<br><small>' . esc_html($customer_phone) . '</small>';
+                }
+                return $output;
+            case 'booking_reference':
+                $output = '<strong>' . esc_html($customer_name) . '</strong>';
+                if ($customer_email) {
+                    $output .= '<br><small>' . esc_html($customer_email) . '</small>';
+                }
+                if ($booking_reference) {
+                    $output .= '<br><small>' . sprintf(__('Booking ID: %s', 'hourly-room-booking'), $booking_reference) . '</small>';
+                }
+                return $output;
+            default:
+                return '<strong>' . esc_html($customer_name) . '</strong>';
+        }
+    }
+}
+
+/**
+ * Get customer information for invoice display
+ * Handles anonymous bookings by showing name from booking table
+ * 
+ * @param object|array $booking Booking object or array
+ * @param object|array $customer Customer object or array (optional)
+ * @return array Array with 'name', 'email', 'phone' keys
+ */
+function hrb_get_invoice_customer_info($booking, $customer = null) {
+    // Handle both array and object
+    $is_anonymous = false;
+    $booking_first_name = '';
+    $booking_last_name = '';
+    
+    if (is_array($booking)) {
+        $is_anonymous = isset($booking['is_anonymous']) && $booking['is_anonymous'];
+        $booking_first_name = $booking['first_name'] ?? '';
+        $booking_last_name = $booking['last_name'] ?? '';
+    } else {
+        $is_anonymous = isset($booking->is_anonymous) && $booking->is_anonymous;
+        $booking_first_name = $booking->first_name ?? '';
+        $booking_last_name = $booking->last_name ?? '';
+    }
+    
+    if ($is_anonymous) {
+        // For anonymous bookings, use name from booking table
+        $name = trim(($booking_first_name ?? '') . ' ' . ($booking_last_name ?? ''));
+        if (empty($name) || $name === '0' || $name === '0 ') {
+            $name = __('Anonymous', 'hourly-room-booking');
+        }
+        
+        return array(
+            'name' => $name,
+            'email' => '', // Don't show email for anonymous bookings
+            'phone' => '',  // Don't show phone for anonymous bookings
+            'address' => '' // Don't show address for anonymous bookings
+        );
+    } else {
+        // For regular bookings, use customer table data
+        if (is_array($customer)) {
+            $first_name = $customer['first_name'] ?? '';
+            $last_name = $customer['last_name'] ?? '';
+            $email = $customer['email'] ?? '';
+            $phone = $customer['phone'] ?? '';
+            $address = $customer['address'] ?? '';
+        } else {
+            $first_name = $customer->first_name ?? '';
+            $last_name = $customer->last_name ?? '';
+            $email = $customer->email ?? '';
+            $phone = $customer->phone ?? '';
+            $address = $customer->address ?? '';
+        }
+        
+        $name = trim($first_name . ' ' . $last_name);
+        
+        return array(
+            'name' => $name,
+            'email' => $email,
+            'phone' => $phone,
+            'address' => $address
+        );
+    }
 }
 
 // Initialize the plugin

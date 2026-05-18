@@ -39,29 +39,55 @@ $filter_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : '';
 $filter_time = isset($_GET['time']) ? sanitize_text_field($_GET['time']) : '';
 $filter_duration = isset($_GET['duration']) ? sanitize_text_field($_GET['duration']) : '';
 
-// Apply filters if provided
-if ($filter_date || $filter_time || $filter_duration) {
-    $rooms = array_filter($rooms, function($room) use ($filter_date, $filter_time, $filter_duration, $room_manager) {
-        // Check date availability
-        if ($filter_date) {
-            // Get booking time range from settings
-            $booking_start_time = get_option('hrb_booking_start_time', '08:00');
-            $booking_end_time = get_option('hrb_booking_end_time', '20:00');
-            
-            // Use filter time as start time, or default to booking start time
-            $start_time = $filter_time ? $filter_time . ':00' : $booking_start_time . ':00';
-            // Calculate end time by adding duration to start time
-            $end_time = date('H:i:s', strtotime($start_time . ' +' . ($filter_duration ?: 2) . ' hours'));
-            
-            $is_available = $room_manager->is_room_available($room->id, $filter_date, $start_time, $end_time);
-            
-            
-            if (!$is_available) {
-                return false;
+// Auto-select today's date if no date is provided
+if (empty($filter_date)) {
+    $filter_date = date('Y-m-d');
+}
+
+// Don't filter rooms - show all rooms but mark availability
+$room_availability = array();
+global $wpdb;
+
+foreach ($rooms as $room) {
+    $is_available = true;
+    
+    // Always check availability when date is set (now always set to today by default)
+    if ($filter_date) {
+        // Check if there are any available time slots for this room on this date
+        // This respects the booking hours configured in settings and checks for master locks
+        $ajax_handler = HRB_Ajax_Handler::getInstance();
+        $check_duration = $filter_duration ?: 2; // Use filter duration or default to 2 hours
+        $all_slots = $ajax_handler->generate_available_time_slots($room->id, $filter_date, $check_duration, 0);
+        
+        // Check if there's at least one available slot
+        $has_available_slot = false;
+        foreach ($all_slots as $slot) {
+            if (!empty($slot['available'])) {
+                $has_available_slot = true;
+                break;
             }
         }
-        return true;
-    });
+        
+        // If no time slots are available (due to master lock or other reasons), mark as unavailable
+        if (!$has_available_slot) {
+            $is_available = false;
+        } else {
+            // If time filters are provided, check specific time slot
+            if ($filter_time || $filter_duration) {
+                // Get booking time range from settings
+                $booking_start_time = get_option('hrb_booking_start_time', '08:00');
+                $booking_end_time = get_option('hrb_booking_end_time', '20:00');
+                
+                // Use filter time as start time, or default to booking start time
+                $start_time = $filter_time ? $filter_time . ':00' : $booking_start_time . ':00';
+                // Calculate end time by adding duration to start time
+                $end_time = date('H:i:s', strtotime($start_time . ' +' . ($filter_duration ?: 2) . ' hours'));
+                
+                $is_available = $room_manager->is_room_available($room->id, $filter_date, $start_time, $end_time);
+            }
+        }
+    }
+    $room_availability[$room->id] = $is_available;
 }
 ?>
 
@@ -332,7 +358,9 @@ if ($filter_date || $filter_time || $filter_duration) {
             <h3 class="hrb-results-title">
                 <?php 
                 if ($filter_date || $filter_time || $filter_duration) {
-                    printf(__('Search Results (%d rooms found)', 'hourly-room-booking'), count($rooms));
+                    $total_rooms = count($rooms);
+                    $available_rooms = !empty($room_availability) ? array_sum($room_availability) : $total_rooms;
+                    printf(__('Available Rooms (%d of %d)', 'hourly-room-booking'), $available_rooms, $total_rooms);
                 } else {
                     printf(__('Available Rooms (%d)', 'hourly-room-booking'), count($rooms));
                 }
@@ -347,17 +375,41 @@ if ($filter_date || $filter_time || $filter_duration) {
         </div>
 
         <div class="hrb-rooms-container" id="hrb-rooms-container">
-            <?php if (empty($rooms)): ?>
+            <?php 
+            // Check if all rooms are unavailable when filters are applied
+            $all_unavailable = false;
+            if (!empty($room_availability) && !empty($rooms)) {
+                $available_count = array_sum($room_availability);
+                $all_unavailable = ($available_count === 0);
+            }
+            
+            if (empty($rooms) || $all_unavailable): ?>
                 <div class="hrb-no-results">
-                    <p><?php _e('No rooms available matching your criteria.', 'hourly-room-booking'); ?></p>
+                    <div class="hrb-no-results-content">
+                        <div class="hrb-no-results-icon">
+                            <i class="hrb-icon-calendar"></i>
+                        </div>
+                        <h3><?php _e('All rooms are currently occupied', 'hourly-room-booking'); ?></h3>
+                        <p><?php _e('All rooms that can be booked online are currently occupied for the selected time period.', 'hourly-room-booking'); ?></p>
+                        <p><?php _e('Please call us at the following number and we will see what we can do for you:', 'hourly-room-booking'); ?></p>
+                        <div class="">
+                            <a href="tel:<?php echo esc_attr(get_option('hrb_company_phone', '')); ?>" class="hrb-phone-link">
+                                <i class="hrb-icon-phone"></i>
+                                <?php echo esc_html(get_option('hrb_company_phone', __('Phone number not configured', 'hourly-room-booking'))); ?>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             <?php else: ?>
                 <div class="hrb-rooms-grid hrb-columns-<?php echo esc_attr($columns); ?>">
                     <?php
                     $displayed_rooms = array_slice($rooms, 0, $rooms_per_page);
+                    $available_count = 0;
                     foreach ($displayed_rooms as $room):
+                        $is_available = isset($room_availability[$room->id]) ? $room_availability[$room->id] : true;
+                        if ($is_available) $available_count++;
                     ?>
-                        <div class="hrb-room-card" data-room-id="<?php echo $room->id; ?>">
+                        <div class="hrb-room-card <?php echo $is_available ? 'hrb-room-available' : 'hrb-room-unavailable'; ?>" data-room-id="<?php echo $room->id; ?>" data-available="<?php echo $is_available ? 'true' : 'false'; ?>">
                             <div class="hrb-room-image">
                                 <?php
                                 $images = $room_manager->get_room_images($room->id);
@@ -419,15 +471,34 @@ if ($filter_date || $filter_time || $filter_duration) {
                                     <?php endif; ?>
                                 </div>
 
+                                <?php if (!$is_available): ?>
+                                    <div class="hrb-room-unavailable-overlay">
+                                        <div class="hrb-unavailable-badge">
+                                            <i class="hrb-icon-calendar"></i>
+                                            <?php _e('Unavailable', 'hourly-room-booking'); ?>
+                                        </div>
+                                        <p class="hrb-unavailable-message">
+                                            <?php _e('This room is not available for the selected time period.', 'hourly-room-booking'); ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
+
                                 <div class="hrb-room-actions">
                                     <?php if ($show_view_button): ?>
                                         <a href="#" class="hrb-btn hrb-btn-primary hrb-view-room" data-room-id="<?php echo $room->id; ?>" data-external-link="<?php echo esc_attr($room->external_link ?? ''); ?>">
                                             <?php _e('View Details', 'hourly-room-booking'); ?>
                                         </a>
                                     <?php endif; ?>
-                                    <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
-                                        <?php _e('Book Now', 'hourly-room-booking'); ?>
-                                    </a>
+                                    <?php if ($is_available): ?>
+                                        <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="<?php echo $room->id; ?>">
+                                            <?php _e('Book Now', 'hourly-room-booking'); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="tel:<?php echo esc_attr(get_option('hrb_company_phone', '')); ?>" class="hrb-btn hrb-btn-outline hrb-call-room" data-room-id="<?php echo $room->id; ?>">
+                                            <i class="hrb-icon-phone"></i>
+                                            <?php _e('Call to Check', 'hourly-room-booking'); ?>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -916,10 +987,138 @@ if ($filter_date || $filter_time || $filter_duration) {
     color: var(--hrb-text-light);
 }
 
+.hrb-no-results-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.hrb-no-results-icon {
+    font-size: 48px;
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.hrb-no-results h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.hrb-no-results p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.hrb-contact-info {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.hrb-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #2c3e50;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 12px 24px;
+    background: #3498db;
+    color: white;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.hrb-phone-link:hover {
+    background: #2980b9;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Unavailable Room Styling */
+.hrb-room-unavailable {
+    opacity: 0.6;
+    position: relative;
+    filter: grayscale(0.3);
+}
+
+.hrb-room-unavailable .hrb-room-image {
+    position: relative;
+}
+
+.hrb-room-unavailable-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    z-index: 10;
+}
+
+.hrb-unavailable-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hrb-unavailable-message {
+    font-size: 14px;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.hrb-btn-outline {
+    background: transparent;
+    border: 2px solid #3498db;
+    color: #3498db;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.hrb-btn-outline:hover {
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.hrb-call-room {
+    width: 100%;
+    justify-content: center;
+}
+
 /* Icons */
 .hrb-icon-room:before { content: "🏢"; }
 .hrb-icon-people:before { content: "👥"; }
 .hrb-icon-amenities:before { content: "⭐"; }
+.hrb-icon-phone:before { content: "📞"; }
+.hrb-icon-calendar:before { content: "📅"; }
 
 @media screen and (max-width: 480px) {
     .hrb-search-row {
@@ -964,7 +1163,10 @@ jQuery(document).ready(function($) {
         bookNow: '<?php _e('Book Now', 'hourly-room-booking'); ?>',
         viewDetails: '<?php _e('View Details', 'hourly-room-booking'); ?>',
         upToPeople: '<?php _e('Up to %d people', 'hourly-room-booking'); ?>',
-        more: '<?php _e('more', 'hourly-room-booking'); ?>'
+        more: '<?php _e('more', 'hourly-room-booking'); ?>',
+        unavailable: '<?php _e('Unavailable', 'hourly-room-booking'); ?>',
+        roomUnavailableMessage: '<?php _e('This room is not available for the selected time period.', 'hourly-room-booking'); ?>',
+        callToCheck: '<?php _e('Call to Check', 'hourly-room-booking'); ?>'
     };
     
     // Overlay Loading Functions
@@ -988,17 +1190,23 @@ jQuery(document).ready(function($) {
         $('.hrb-loading-overlay').remove();
     }
     
-    // Check if URL has filter parameters and trigger search on page load
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasFilters = urlParams.has('date') || urlParams.has('time') || urlParams.has('duration');
-    
-    if (hasFilters) {
-        // Show overlay loading and trigger search on page load if URL has parameters
-        showOverlayLoading();
-        setTimeout(function() {
-            filterRooms();
-        }, 100); // Small delay to ensure DOM is ready
+    // Auto-select today's date if date field is empty
+    const dateInput = $('#hrb-search-date');
+    if (!dateInput.val()) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.val(today);
     }
+    
+    // Check if URL has filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasUrlFilters = urlParams.has('date') || urlParams.has('time') || urlParams.has('duration');
+    
+    // Always trigger filter on page load to show availability for today's date (or URL date)
+    // This ensures validation is applied even on initial page load
+    showOverlayLoading();
+    setTimeout(function() {
+        filterRooms();
+    }, 100); // Small delay to ensure DOM is ready
     // Handle search form submission
     $('#hrb-room-search-form').on('submit', function(e) {
         e.preventDefault();
@@ -1179,17 +1387,67 @@ jQuery(document).ready(function($) {
                     // Generate HTML from room data
                     let roomsHtml = '';
                     if (response.data.length > 0) {
-                        roomsHtml = '<div class="hrb-rooms-grid hrb-columns-<?php echo esc_attr($columns); ?>">';
-                        response.data.forEach(function(room) {
-                            roomsHtml += generateRoomCardHtml(room);
-                        });
-                        roomsHtml += '</div>';
+                        // Check if all rooms are unavailable
+                        const availableCount = response.data.filter(room => room.is_available !== false).length;
+                        const allUnavailable = (availableCount === 0);
+                        
+                        if (allUnavailable) {
+                            // Show enhanced message when all rooms are unavailable
+                            roomsHtml = '<div class="hrb-no-results">' +
+                                '<div class="hrb-no-results-content">' +
+                                    '<div class="hrb-no-results-icon">' +
+                                        '<i class="hrb-icon-calendar"></i>' +
+                                    '</div>' +
+                                    '<h3><?php _e('All rooms are currently occupied', 'hourly-room-booking'); ?></h3>' +
+                                    '<p><?php _e('All rooms that can be booked online are currently occupied for the selected time period.', 'hourly-room-booking'); ?></p>' +
+                                    '<p><?php _e('Please call us at the following number and we will see what we can do for you:', 'hourly-room-booking'); ?></p>' +
+                                    '<div class="">' +
+                                        '<a href="tel:<?php echo esc_attr(get_option('hrb_company_phone', '')); ?>" class="hrb-phone-link">' +
+                                            '<i class="hrb-icon-phone"></i>' +
+                                            '<?php echo esc_js(get_option('hrb_company_phone', __('Phone number not configured', 'hourly-room-booking'))); ?>' +
+                                        '</a>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>';
+                        } else {
+                            // Show rooms with availability indicators
+                            roomsHtml = '<div class="hrb-rooms-grid hrb-columns-<?php echo esc_attr($columns); ?>">';
+                            response.data.forEach(function(room) {
+                                roomsHtml += generateRoomCardHtml(room);
+                            });
+                            roomsHtml += '</div>';
+                        }
                     } else {
-                        roomsHtml = '<div class="hrb-no-rooms"><p><?php _e('No rooms available for the selected criteria.', 'hourly-room-booking'); ?></p></div>';
+                        // No rooms found at all
+                        roomsHtml = '<div class="hrb-no-results">' +
+                            '<div class="hrb-no-results-content">' +
+                                '<div class="hrb-no-results-icon">' +
+                                    '<i class="hrb-icon-calendar"></i>' +
+                                '</div>' +
+                                '<h3><?php _e('All rooms are currently occupied', 'hourly-room-booking'); ?></h3>' +
+                                '<p><?php _e('All rooms that can be booked online are currently occupied for the selected time period.', 'hourly-room-booking'); ?></p>' +
+                                '<p><?php _e('Please call us at the following number and we will see what we can do for you:', 'hourly-room-booking'); ?></p>' +
+                                '<div class="hrb-contact-info">' +
+                                    '<a href="tel:<?php echo esc_attr(get_option('hrb_company_phone', '')); ?>" class="hrb-phone-link">' +
+                                        '<i class="hrb-icon-phone"></i>' +
+                                        '<?php echo esc_js(get_option('hrb_company_phone', __('Phone number not configured', 'hourly-room-booking'))); ?>' +
+                                    '</a>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
                     }
 
                     $('#hrb-rooms-container').html(roomsHtml);
-                    $('.hrb-results-title').text('Available Rooms (' + response.data.length + ')');
+                    if (response.data.length > 0) {
+                        const availableCount = response.data.filter(room => room.is_available !== false).length;
+                        if (availableCount === 0) {
+                            $('.hrb-results-title').text('Available Rooms (0 of ' + response.data.length + ')');
+                        } else {
+                            $('.hrb-results-title').text('Available Rooms (' + availableCount + ' of ' + response.data.length + ')');
+                        }
+                    } else {
+                        $('.hrb-results-title').text('Available Rooms (0)');
+                    }
                     
                     // Update prices based on current duration selection
                     setTimeout(function() {
@@ -1202,7 +1460,7 @@ jQuery(document).ready(function($) {
             },
             error: function() {
                 hideOverlayLoading();
-                console.error('Search request failed');
+                /* removed debug console.error */
                 // Fallback to showing all rooms
                 showAllRooms();
             }
@@ -1278,10 +1536,40 @@ jQuery(document).ready(function($) {
         const description = room.description ? room.description.split(' ').slice(0, 20).join(' ') : '';
         const descriptionHtml = description ? '<p class="hrb-room-description">' + description + '</p>' : '';
 
+        // Check availability
+        const isAvailable = room.is_available !== false;
+        const availabilityClass = isAvailable ? 'hrb-room-available' : 'hrb-room-unavailable';
+        const dataAvailable = isAvailable ? 'true' : 'false';
+        
+        // Generate unavailable overlay if room is not available
+        let unavailableOverlay = '';
+        if (!isAvailable) {
+            unavailableOverlay = `
+                <div class="hrb-room-unavailable-overlay">
+                    <div class="hrb-unavailable-badge">
+                        <i class="hrb-icon-calendar"></i>
+                        ${hrbTranslations.unavailable}
+                    </div>
+                    <p class="hrb-unavailable-message">
+                        ${hrbTranslations.roomUnavailableMessage}
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Generate appropriate action button
+        let actionButton = '';
+        if (isAvailable) {
+            actionButton = `<a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="${room.id}">${hrbTranslations.bookNow}</a>`;
+        } else {
+            actionButton = `<a href="tel:<?php echo esc_attr(get_option('hrb_company_phone', '')); ?>" class="hrb-btn hrb-btn-outline hrb-call-room" data-room-id="${room.id}"><i class="hrb-icon-phone"></i>${hrbTranslations.callToCheck}</a>`;
+        }
+
         return `
-            <div class="hrb-room-card">
+            <div class="hrb-room-card ${availabilityClass}" data-room-id="${room.id}" data-available="${dataAvailable}">
                 <div class="hrb-room-image">
                     ${imageHtml}
+                    ${unavailableOverlay}
                 </div>
                 <div class="hrb-room-content">
                     <h3 class="hrb-room-title">${room.name}</h3>
@@ -1293,9 +1581,7 @@ jQuery(document).ready(function($) {
                     </div>
                     <div class="hrb-room-actions">
                         ${viewButtonHtml}
-                        <a href="#" class="hrb-btn hrb-btn-secondary hrb-book-room" data-room-id="${room.id}">
-                            ${hrbTranslations.bookNow}
-                        </a>
+                        ${actionButton}
                     </div>
                 </div>
             </div>
@@ -1364,7 +1650,7 @@ jQuery(document).ready(function($) {
             container.html('<div class="hrb-rooms-grid">' + rooms.map(function() { return this.outerHTML; }).get().join('') + '</div>');
         }
 
-        console.log('Sorted', rooms.length, 'rooms by:', sortBy);
+        /* removed debug log */
     }
 
     function loadMoreRooms() {
@@ -1424,12 +1710,12 @@ jQuery(document).ready(function($) {
                     }
 
                 } else {
-                    console.error('Failed to load more rooms:', response.data);
+                    /* removed debug console.error */
                     loadMoreBtn.text(originalText).prop('disabled', false);
                 }
             },
             error: function() {
-                console.error('AJAX request failed');
+                /* removed debug console.error */
                 loadMoreBtn.text(originalText).prop('disabled', false);
             }
         });

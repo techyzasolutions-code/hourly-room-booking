@@ -364,6 +364,16 @@ if ($booking_ref) {
         padding: 30px 0;
         border-top: 1px solid var(--hrb-border);
     }
+    
+    /* Print styles */
+    @media print {
+        body * { visibility: hidden !important; }
+        .hrb-booking-success-container, .hrb-booking-success-container * { visibility: visible !important; }
+        .hrb-booking-success-container { position: static; box-shadow: none; margin: 0; max-width: none; }
+        .hrb-actions { display: none !important; }
+        .hrb-success-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .hrb-booking-details, .hrb-next-steps { margin: 20px; box-shadow: none; }
+    }
 
     .hrb-btn {
         display: inline-flex;
@@ -452,12 +462,32 @@ if ($booking_ref) {
         <span class="hrb-success-icon">✓</span>
         <h1 class="hrb-success-title"><?php _e('Booking Confirmed!', 'hourly-room-booking'); ?></h1>
         <p class="hrb-success-subtitle"><?php _e('Your room booking has been successfully created.', 'hourly-room-booking'); ?></p>
+        
+        <?php if ($booking): ?>
+        <div style="margin-top: 30px;">
+            <button type="button" class="hrb-btn hrb-btn-primary" onclick="window.print()" style="background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3); color: white; backdrop-filter: blur(10px);">
+                🖨️ <?php _e('Print Booking Details', 'hourly-room-booking'); ?>
+            </button>
+        </div>
+        <?php endif; ?>
     </div>
 
     <?php if ($booking): ?>
         <div class="hrb-booking-details">
             <h3><?php _e('Booking Details', 'hourly-room-booking'); ?></h3>
-
+            <?php if ($booking && $booking->is_anonymous): ?>
+            <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+            <div style="color: #92400e; font-weight: 500;">
+                    <?php _e('✅ Deine anonyme Buchung war erfolgreich!', 'hourly-room-booking'); ?>
+                </div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #92400e; margin-bottom: 10px;">
+                    <?php _e('Buchungs-ID:', 'hourly-room-booking'); ?> #<?php echo esc_html($booking->booking_reference); ?>
+                </div>
+                <div style="color: #92400e; font-weight: 500;">
+                    <?php _e('Bitte notiere oder speichere diese ID. Sie dient als einziger Nachweis deiner Buchung und wird nicht per E-Mail versendet.', 'hourly-room-booking'); ?>
+                </div>
+            </div>
+        <?php endif; ?>
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Booking Reference', 'hourly-room-booking'); ?>:</span>
                 <span class="hrb-detail-value"><?php echo esc_html($booking->booking_reference); ?></span>
@@ -480,18 +510,20 @@ if ($booking_ref) {
 
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Duration', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours . ' hours'); ?></span>
+                <span class="hrb-detail-value"><?php echo esc_html($booking->total_hours); ?> <?php _e('hours', 'hourly-room-booking'); ?></span>
             </div>
 
-            <div class="hrb-detail-row">
-                <span class="hrb-detail-label"><?php _e('Customer', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html($booking->first_name . ' ' . $booking->last_name); ?></span>
-            </div>
+            <?php if (!$booking->is_anonymous): ?>
+                <div class="hrb-detail-row">
+                    <span class="hrb-detail-label"><?php _e('Customer', 'hourly-room-booking'); ?>:</span>
+                    <span class="hrb-detail-value"><?php echo esc_html($booking->first_name . ' ' . $booking->last_name); ?></span>
+                </div>
 
-            <div class="hrb-detail-row">
-                <span class="hrb-detail-label"><?php _e('Email', 'hourly-room-booking'); ?>:</span>
-                <span class="hrb-detail-value"><?php echo esc_html($booking->email); ?></span>
-            </div>
+                <div class="hrb-detail-row">
+                    <span class="hrb-detail-label"><?php _e('Email', 'hourly-room-booking'); ?>:</span>
+                    <span class="hrb-detail-value"><?php echo esc_html($booking->email); ?></span>
+                </div>
+            <?php endif; ?>
 
             <div class="hrb-detail-row">
                 <span class="hrb-detail-label"><?php _e('Payment Method', 'hourly-room-booking'); ?>:</span>
@@ -531,14 +563,23 @@ if ($booking_ref) {
         <div class="hrb-next-steps">
             <h3><?php _e('What happens next?', 'hourly-room-booking'); ?></h3>
             <ul>
+                <?php if (!$booking->is_anonymous): ?>
                 <li><?php _e('You will receive a confirmation email shortly with all the booking details.', 'hourly-room-booking'); ?></li>
-                <?php if ($booking->payment_method === 'onsite'): ?>
-                    <li><?php _e('Please bring payment (cash or card) when you arrive for your booking.', 'hourly-room-booking'); ?></li>
                 <?php endif; ?>
-                <li><?php _e('Please arrive a few minutes before your booking time.', 'hourly-room-booking'); ?></li>
+                <?php if ($booking->payment_method === 'onsite'): ?>
+                    <li><?php _e('Only cash payments are accepted on site when you arrive for your booking.', 'hourly-room-booking'); ?></li>
+                <?php endif; ?>
+                
+                <?php if (!$booking->is_anonymous): ?>
                 <li><?php _e('If you need to cancel or modify your booking, please contact us as soon as possible.', 'hourly-room-booking'); ?></li>
+                <?php endif; ?>
             </ul>
         </div>
+        <div class="hrb-next-steps">
+            <h3><?php _e('KURZFRISTIGE STORNIERUNGEN', 'hourly-room-booking'); ?></h3>
+            <p>Werden Zimmer (ohne Zusatzleistung - maximal 3 Stunden) innerhalb der letzten 24h vor Buchungsbeginn storniert, so wird eine Stornogebühr von 15 Euro fällig.</p>
+        </div>
+        
     <?php else: ?>
         <div class="hrb-booking-details">
             <h3><?php _e('Booking Information', 'hourly-room-booking'); ?></h3>
@@ -551,6 +592,9 @@ if ($booking_ref) {
             <a href="<?php echo site_url('/booking-details/?ref=' . $booking->booking_reference); ?>" class="hrb-btn hrb-btn-primary">
                 <?php _e('View Full Details', 'hourly-room-booking'); ?>
             </a>
+            <button type="button" class="hrb-btn hrb-btn-secondary" onclick="window.print()">
+            🖨️ <?php _e('Print', 'hourly-room-booking'); ?>
+            </button>
         <?php endif; ?>
         <a href="<?php echo home_url(); ?>" class="hrb-btn hrb-btn-secondary">
             <?php _e('Back to Home', 'hourly-room-booking'); ?>

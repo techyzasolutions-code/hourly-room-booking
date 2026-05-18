@@ -32,6 +32,7 @@ class HRB_Frontend {
         add_rewrite_rule('^booking-success/?(.*)$', 'index.php?hrb_page=booking-success&booking_ref=$matches[1]', 'top');
         add_rewrite_rule('^booking-cancelled/?$', 'index.php?hrb_page=booking-cancelled', 'top');
         add_rewrite_rule('^room-details/([0-9]+)/?$', 'index.php?hrb_page=room-details&room_id=$matches[1]', 'top');
+        add_rewrite_rule('^paypal-payment/?$', 'index.php?hrb_page=paypal-payment', 'top');
 
         // Check if rewrite rules need to be flushed
         if (get_option('hrb_rewrite_rules_flushed') !== HRB_VERSION) {
@@ -44,6 +45,7 @@ class HRB_Frontend {
         $vars[] = 'hrb_page';
         $vars[] = 'booking_ref';
         $vars[] = 'room_id';
+        $vars[] = 'booking_id';
         return $vars;
     }
     
@@ -75,6 +77,8 @@ class HRB_Frontend {
                 $hrb_page = 'booking-details';
             } elseif (strpos($request_uri, '/booking-cancelled') !== false) {
                 $hrb_page = 'booking-cancelled';
+            } elseif (strpos($request_uri, '/paypal-payment') !== false) {
+                $hrb_page = 'paypal-payment';
             }
         }
 
@@ -93,6 +97,10 @@ class HRB_Frontend {
 
             case 'room-details':
                 $this->show_room_details();
+                exit;
+                
+            case 'paypal-payment':
+                $this->show_paypal_payment();
                 exit;
         }
     }
@@ -152,6 +160,31 @@ class HRB_Frontend {
         
         include HRB_PLUGIN_DIR . 'templates/room-details.php';
         exit;
+    }
+    
+    private function show_paypal_payment() {
+        $booking_ref = get_query_var('booking_ref') ?: (isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '');
+        
+        if (empty($booking_ref)) {
+            wp_redirect(home_url());
+            exit;
+        }
+        
+        // Get booking details by reference
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking_by_reference($booking_ref);
+        
+        if (!$booking) {
+            wp_redirect(home_url());
+            exit;
+        }
+        
+        // Set booking data for the template
+        $GLOBALS['hrb_booking'] = $booking;
+        
+        get_header();
+        include HRB_PLUGIN_DIR . 'templates/paypal-payment.php';
+        get_footer();
     }
 }
 

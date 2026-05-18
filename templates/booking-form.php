@@ -673,9 +673,45 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
     display: none;
 }
 
+.hrb-payment-method input[type="radio"]:checked ~ .hrb-payment-method-content,
 .hrb-payment-method input[type="radio"]:checked + .hrb-payment-method-content {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
-    border-left: 4px solid var(--hrb-primary);
+    background: #dc3545 !important;
+    color: white !important;
+    border-left: 4px solid #dc3545 !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) {
+    background: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked):hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) strong {
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) p {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) .hrb-payment-method-content {
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) .hrb-payment-method-content div {
+    color: white !important;
+}
+
+/* Smooth transition for payment method selection */
+.hrb-payment-method .hrb-radio-label {
+    transition: all 0.3s ease;
 }
 
 .hrb-payment-method-content {
@@ -1408,8 +1444,23 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             <div class="hrb-form-step-content" data-step="3">
                 <h3 class="hrb-heading-sm"><?php _e('Your Details', 'hourly-room-booking'); ?></h3>
                 
+                <!-- Anonymous Booking Option (only for bookings < 4 hours) -->
+                <div id="hrb-anonymous-booking-option" class="hrb-anonymous-booking-option" style="display: none;">
+                    <div class="hrb-form-group1">
+                        <label class="hrb-checkbox-label">
+                            <input type="checkbox" id="hrb-anonymous-booking" name="is_anonymous" value="1">
+                            <span class="hrb-checkbox-custom"></span>
+                            <span class="hrb-checkbox-text">
+                                <?php _e('Ich möchte eine 100 % anonyme Buchung vornehmen und bin mir bewusst, dass ich keine Nachrichten zu dieser Buchung erhalten werde.', 'hourly-room-booking'); ?>
+                                <?php _e('Anonyme Buchungen sind nur für Buchungen unter 4 Stunden verfügbar.', 'hourly-room-booking'); ?>
+                                
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
                 <!-- Anonymous Booking Information -->
-                <div class="hrb-static-info" style="margin-bottom: 20px;">
+                <div class="hrb-static-info" style="margin-bottom: 20px; display: none !important;">
                     <h4><?php _e('Note on anonymous booking', 'hourly-room-booking'); ?></h4>
                     <p><?php _e('You can complete this booking anonymously. The "Last Name" field is therefore not a mandatory field – it is sufficient if you enter a synonym or an abbreviation.', 'hourly-room-booking'); ?></p>
                     <p><?php _e('Please note, however: To successfully complete the booking, an email verification is required. We will send a confirmation code to the email address you provided, which you must enter in the next step.', 'hourly-room-booking'); ?></p>
@@ -1425,19 +1476,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 $user_company = '';
 
                 if (is_user_logged_in()) {
-                    // Use booking-specific meta fields for auto-fill
-                    $booking_first_name = get_user_meta($current_user->ID, 'hrb_booking_first_name', true);
-                    $booking_last_name = get_user_meta($current_user->ID, 'hrb_booking_last_name', true);
-                    $booking_email = get_user_meta($current_user->ID, 'hrb_booking_email', true);
-                    $booking_phone = get_user_meta($current_user->ID, 'hrb_booking_phone', true);
-                    $booking_company = get_user_meta($current_user->ID, 'hrb_booking_company', true);
-
-                    // Use booking meta if available, fallback to user data if booking meta is empty
-                    $user_first_name = !empty($booking_first_name) ? $booking_first_name : $current_user->first_name;
-                    $user_last_name = !empty($booking_last_name) ? $booking_last_name : $current_user->last_name;
-                    $user_email = !empty($booking_email) ? $booking_email : $current_user->user_email;
-                    $user_phone = !empty($booking_phone) ? $booking_phone : get_user_meta($current_user->ID, 'phone', true);
-                    $user_company = !empty($booking_company) ? $booking_company : get_user_meta($current_user->ID, 'company', true);
+                    // Use WordPress user data for auto-fill (not booking-specific meta fields)
+                    // This ensures each booking starts fresh with account data, not previous booking data
+                    $user_first_name = $current_user->first_name;
+                    $user_last_name = $current_user->last_name;
+                    $user_email = $current_user->user_email;
+                    $user_phone = get_user_meta($current_user->ID, 'phone', true);
+                    $user_company = get_user_meta($current_user->ID, 'company', true);
 
                     // If still no first/last name, try to extract from display name
                     if (empty($user_first_name) && empty($user_last_name) && !empty($current_user->display_name)) {
@@ -1456,7 +1501,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 <?php endif; ?>
 
                 <div class="hrb-row">
-                    <div class="hrb-col-6">
+                    <div class="hrb-col-6 hrb-name-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label required" for="first-name-<?php echo $room_id; ?>">
                                 <?php _e('First Name', 'hourly-room-booking'); ?>
@@ -1469,7 +1514,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 required>
                         </div>
                     </div>
-                    <div class="hrb-col-6">
+                    <div class="hrb-col-6 hrb-name-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label" for="last-name-<?php echo $room_id; ?>">
                                 <?php _e('Last Name', 'hourly-room-booking'); ?>
@@ -1484,7 +1529,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 </div>
 
                 <div class="hrb-row">
-                    <div class="hrb-col-6">
+                    <div class="hrb-col-6 hrb-email-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label required" for="email-<?php echo $room_id; ?>">
                                 <?php _e('Email Address', 'hourly-room-booking'); ?>
@@ -1497,7 +1542,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 required>
                         </div>
                     </div>
-                    <div class="hrb-col-6">
+                    <div class="hrb-col-6 hrb-phone-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label" for="phone-<?php echo $room_id; ?>">
                                 <?php _e('Phone Number', 'hourly-room-booking'); ?>
@@ -1514,7 +1559,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
 
                 <!-- Contact Verification Section -->
-                <div class="hrb-verification-container">
+                <div class="hrb-verification-container hrb-verification-field">
                     <h4 class="hrb-heading-xs"><?php _e('Contact Verification', 'hourly-room-booking'); ?></h4>
 
                     <?php
@@ -1670,19 +1715,19 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 <img src="<?php echo HRB_PLUGIN_URL; ?>assets/images/payment-methods/cash.png" alt="On-site Payment">
                                 <div>
                                     <strong><?php _e('On-site Payment', 'hourly-room-booking'); ?></strong>
-                                    <p><?php _e('Pay cash or card at the location', 'hourly-room-booking'); ?></p>
+                                    <p><?php _e('Only cash payments are possible on site.', 'hourly-room-booking'); ?></p>
                                 </div>
                             </span>
                         </label>
                     </div>
                 </div>
 
-                <div class="hrb-payment-notice hrb-info-box hrb-alert-info">
+                <div class="hrb-payment-notice hrb-info-box- hrb-alert-info-">
                     <strong><?php _e('Payment Policy:', 'hourly-room-booking'); ?></strong>
                     <ul>
-                        <li><?php _e('Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds', 'hourly-room-booking'); ?></li>
-                        <li><?php _e('Bookings under 4 hours: PayPal or on-site payment available', 'hourly-room-booking'); ?></li>
-                        <li><?php _e('PayPal payments include a 3% processing fee', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('For bookings of 4 hours or more, payment via PayPal in advance is required. Please note that no refunds are possible in this case.', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('For bookings under 4 hours, you can pay either via PayPal or on site.', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('There is a 3% processing fee for PayPal payments.', 'hourly-room-booking'); ?></li>
                     </ul>
                 </div>
 
@@ -1698,7 +1743,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
             <!-- Step 5: Confirmation -->
             <div class="hrb-form-step-content" data-step="5">
-                <h3 class="hrb-heading-sm"><?php _e('Booking Confirmation', 'hourly-room-booking'); ?></h3>
+                <h3 class="hrb-heading-sm"><?php _e('Booking overview', 'hourly-room-booking'); ?></h3>
 
                 <div class="hrb-booking-review">
                     <div class="hrb-row">
@@ -1746,13 +1791,32 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 <div class="hrb-terms-acceptance">
                     <label class="hrb-checkbox-label">
                         <input type="checkbox" name="accept_terms">
-                        <span>
+                        <span class="hrb-checkbox-custom"></span>
+                        <span class="hrb-checkbox-text">
+                            <?php 
+                            // Get Terms & Conditions and Privacy Policy page URLs from settings
+                            $terms_page_id = $settings->get('hrb_terms_page', '');
+                            $privacy_page_id = $settings->get('hrb_privacy_page', '');
+                            
+                            $terms_url = !empty($terms_page_id) ? get_permalink($terms_page_id) : '#';
+                            $privacy_url = !empty($privacy_page_id) ? get_permalink($privacy_page_id) : '#';
+                            ?>
                             <?php _e('I accept the', 'hourly-room-booking'); ?>
-                            <a href="#" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
+                            <a href="<?php echo esc_url($terms_url); ?>" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
                             <?php _e('and', 'hourly-room-booking'); ?>
-                            <a href="#" target="_blank"><?php _e('Privacy Policy', 'hourly-room-booking'); ?></a>
+                            <a href="<?php echo esc_url($privacy_url); ?>" target="_blank"><?php _e('Privacy Policy', 'hourly-room-booking'); ?></a>
                         </span>
                     </label>
+                </div>
+
+                <!-- PayPal Payment Warning -->
+                <div id="hrb-paypal-warning" class="hrb-paypal-warning" style="display: none;">
+                    <div class="hrb-alert hrb-alert-warning">
+                        <strong>⚠️ <?php _e('Important:', 'hourly-room-booking'); ?></strong>
+                        <?php _e('After clicking on', 'hourly-room-booking'); ?>
+                       <strong>„<?php _e('Complete booking', 'hourly-room-booking'); ?>“</strong>
+                       <?php _e('Please make the PayPal payment directly. Otherwise, the transaction may be canceled.', 'hourly-room-booking'); ?>
+                    </div>
                 </div>
 
                 <div class="hrb-alert hrb-alert-success">
@@ -1781,6 +1845,35 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         <!-- PayPal Container -->
         <div id="paypal-button-container" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Anonymous Booking Confirmation Modal (Outside form container) -->
+<div id="hrb-anonymous-modal" class="hrb-modal" style="display: none;">
+    <div class="hrb-modal-overlay"></div>
+    <div class="hrb-modal-content">
+        <div class="hrb-modal-header">
+            <h3><?php _e('Wichtiger Hinweis zur anonymen Buchung', 'hourly-room-booking'); ?></h3>
+            <button type="button" class="hrb-modal-close">&times;</button>
+        </div>
+        <div class="hrb-modal-body">
+            <p><strong><?php _e('Du hast eine 100 % anonyme Buchung gewählt.', 'hourly-room-booking'); ?></strong></p>
+            <p><?php _e('Das bedeutet:', 'hourly-room-booking'); ?></p>
+            <ul>
+                <li><?php _e('Du erhältst keine Buchungsbestätigung, Erinnerungen oder Änderungsmöglichkeiten per E-Mail.', 'hourly-room-booking'); ?></li>
+                <li><?php _e('Du kannst deine Buchung nicht online bearbeiten oder stornieren. Solltest du nach einer Buchung diese wieder stornieren wollen, ist dies nur mit der Buchungs-ID telefonisch oder per E-Mail an: <a href=mailto:info@wi-stundenzimmer.de> info@wi-stundenzimmer.de </a> möglich.', 'hourly-room-booking'); ?></li>
+                <li><?php _e('Die einmalig angezeigte Buchungs-ID dient als einziger Nachweis deiner Buchung.', 'hourly-room-booking'); ?></li>
+            </ul>
+            <p><?php _e('Bitte notiere oder speichere diese ID nach Abschluss deiner Buchung, da sie nicht erneut angezeigt oder per E-Mail gesendet wird.', 'hourly-room-booking'); ?></p>
+        </div>
+        <div class="hrb-modal-footer">
+            <button type="button" class="hrb-btn hrb-btn-secondary" id="hrb-anonymous-cancel">
+                <?php _e('Abbrechen', 'hourly-room-booking'); ?>
+            </button>
+            <button type="button" class="hrb-btn hrb-btn-primary" id="hrb-anonymous-continue">
+                <?php _e('Anonyme Buchung fortsetzen', 'hourly-room-booking'); ?>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -2012,6 +2105,248 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         cursor: not-allowed !important;
         opacity: 1 !important;
     }
+
+    /* Anonymous Booking Styles */
+    .hrb-anonymous-booking-option {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        border-left: 4px solid var(--hrb-primary);
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--hrb-primary-dark);
+        border-color: var(--hrb-primary);
+        opacity: 1 !important;
+    }
+
+    .hrb-checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--hrb-text);
+    }
+
+    .hrb-checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--hrb-border);
+        border-radius: 4px;
+        background: var(--hrb-background);
+        position: relative;
+        flex-shrink: 0;
+        transition: var(--hrb-transition);
+    }
+
+    .hrb-checkbox-label input[type="checkbox"] {
+        display: none;
+    }
+
+    .hrb-checkbox-label input[type="checkbox"]:checked + .hrb-checkbox-custom {
+        background: var(--hrb-primary);
+        border-color: var(--hrb-primary);
+    }
+
+    .hrb-checkbox-label input[type="checkbox"]:checked + .hrb-checkbox-custom::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .hrb-checkbox-text {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    /* Modal Styles - Anonymous Booking Modal Only */
+    #hrb-anonymous-modal.hrb-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    #hrb-anonymous-modal.hrb-modal.show {
+        display: flex;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-content {
+        position: relative;
+        background: var(--hrb-background);
+        border-radius: var(--hrb-radius-xl);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+        margin: auto;
+        transform: translateY(0);
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    #hrb-anonymous-modal .hrb-modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid var(--hrb-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        /* background: linear-gradient(135deg, var(--hrb-primary), var(--hrb-primary-dark)); */
+        color: white;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--hrb-transition);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body {
+        padding: 20px 25px;
+        line-height: 1.6;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body p {
+        margin-bottom: 15px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body li {
+        margin-bottom: 8px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-footer {
+        padding: 20px 25px;
+        border-top: 1px solid var(--hrb-border);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        background: var(--hrb-background-light);
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+
+    /* Email field hiding for anonymous bookings */
+    .hrb-anonymous-booking-active .hrb-email-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-phone-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-verification-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-name-field {
+        display: none !important;
+    }
+
+    /* Responsive adjustments for anonymous modal */
+    @media (max-height: 600px) {
+        #hrb-anonymous-modal .hrb-modal-content {
+            max-height: 95vh;
+            margin: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-body {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer {
+            padding: 15px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        #hrb-anonymous-modal .hrb-modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-header {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-body {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer {
+            padding: 15px 20px;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer button {
+            width: 100%;
+        }
+    }
 </style>
 
 <script>
@@ -2111,7 +2446,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         // Enhanced HRB utils check
         if (!window.HRB || !window.HRB.utils || !window.HRB.utils.showMessage) {
-            console.warn('HRB.utils.showMessage not available, using fallback');
+            /* removed debug warn: HRB.utils.showMessage fallback */
             window.HRB = window.HRB || {};
             window.HRB.utils = window.HRB.utils || {};
             window.HRB.utils.showMessage = window.showMessageFallback;
@@ -2152,26 +2487,42 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     break;
 
                 case 3:
-                    // Validate customer details
-                    const firstName = form.find('input[name="first_name"]').val();
-                    const lastName = form.find('input[name="last_name"]').val();
-                    const email = form.find('input[name="email"]').val();
-                    const phone = form.find('input[name="phone"]').val();
+                    // Check if this is an anonymous booking
+                    const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+                    
+                    if (isAnonymous) {
+                        // For anonymous bookings, validate first_name is required (same as admin)
+                        const firstName = form.find('input[name="first_name"]').val();
+                        
+                        if (!firstName || !firstName.trim()) {
+                            // Ensure name field is visible for validation
+                            form.find('.hrb-name-field').show();
+                            form.find('input[name="first_name"]').focus();
+                            showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                            return false;
+                        }
+                    } else {
+                        // For regular bookings, validate all customer details
+                        const firstName = form.find('input[name="first_name"]').val();
+                        const lastName = form.find('input[name="last_name"]').val();
+                        const email = form.find('input[name="email"]').val();
+                        const phone = form.find('input[name="phone"]').val();
 
-                    if (!firstName.trim()) {
-                        showValidationError('<?php _e('Please enter your first name', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
+                        if (!firstName.trim()) {
+                            showValidationError('<?php _e('Please enter your first name', 'hourly-room-booking'); ?>');
+                            return false;
+                        }
 
-                    if (!email.trim() || !isValidEmail(email)) {
-                        showValidationError('<?php _e('Please enter a valid email address', 'hourly-room-booking'); ?>');
-                        return false;
-                    }
+                        if (!email.trim() || !isValidEmail(email)) {
+                            showValidationError('<?php _e('Please enter a valid email address', 'hourly-room-booking'); ?>');
+                            return false;
+                        }
 
-                    // Validate verification
-                    if (!verificationVerified) {
-                        showValidationError('<?php _e('Please verify your contact information to continue', 'hourly-room-booking'); ?>');
-                        return false;
+                        // Validate verification
+                        if (!verificationVerified) {
+                            showValidationError('<?php _e('Please verify your contact information to continue', 'hourly-room-booking'); ?>');
+                            return false;
+                        }
                     }
 
                     break;
@@ -2293,6 +2644,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         form.find('select[name="duration"]').on('change', function() {
             applyPaymentMethodRestriction();
             updateBookingSummary();
+            checkBookingDuration(); // Check if anonymous booking option should be shown
         });
 
 
@@ -2437,6 +2789,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     duration: duration
                 },
                 success: function(response) {
+                    
                     if (response.success && response.data.slots) {
                         displayAvailableTimeSlots(response.data.slots, roomId);
                     } else {
@@ -2505,6 +2858,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
             loadTimeSlots(roomId, date, duration);
             updateBookingSummary();
+            checkBookingDuration(); // Check if anonymous booking option should be shown
         });
 
         function generateTimeSlots(duration) {
@@ -2530,27 +2884,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 const endHourSlot = Math.floor(endTimeMinutesSlot / 60);
                 const endMinuteSlot = endTimeMinutesSlot % 60;
                 
-                // Check if the slot exceeds the end time (handle day overflow)
-                let endHourDisplay = endHourSlot;
-                let slotExceedsEndTime = false;
-                
-                if (endHourSlot >= 24) {
-                    // Slot crosses midnight - check if it's within the same day
-                    endHourDisplay = endHourSlot - 24;
-                    // If the slot ends after midnight, it exceeds the end time
-                    slotExceedsEndTime = true;
-                } else {
-                    // Check if slot ends after the configured end time
-                    slotExceedsEndTime = endTimeMinutesSlot > endTimeMinutes;
-                }
-                
                 // Skip this slot if it exceeds the end time
-                if (slotExceedsEndTime) {
+                if (endTimeMinutesSlot > endTimeMinutes) {
                     continue;
                 }
                 
                 const startTime = String(startHourSlot).padStart(2, '0') + ':' + String(startMinuteSlot).padStart(2, '0');
-                const endTime = String(endHourDisplay).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
+                const endTime = (endHourSlot === 24 && endMinuteSlot === 0)
+                    ? '24:00'
+                    : String(endHourSlot).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
                 const display = startTime + ' - ' + endTime;
 
                 // Calculate price based on duration
@@ -2626,12 +2968,28 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handlePayPalPayment() {
+            // Validate anonymous booking name before payment
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return;
+                }
+            }
 
             // Get form data
             const formData = getFormData();
 
             // Validate required fields before creating PayPal order
-            if (!formData.first_name || !formData.email) {
+            if (!formData.first_name || (!isAnonymous && !formData.email)) {
                 showValidationError('Please fill in all required customer details before proceeding with payment.');
                 return;
             }
@@ -2669,6 +3027,23 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handleOnsitePayment() {
+            // Validate anonymous booking name before payment
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return;
+                }
+            }
+            
             // Show loading state
             showPaymentLoading();
             submitBooking();
@@ -2688,6 +3063,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 last_name: form.find('input[name="last_name"]').val(),
                 email: form.find('input[name="email"]').val(),
                 phone: form.find('input[name="phone"]').val(),
+                is_anonymous: form.find('input[name="is_anonymous"]:checked').val() || '0',
             };
 
             // Get selected extras
@@ -2749,6 +3125,30 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function submitBooking() {
+            // Validate anonymous booking name before submission
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    // Remove required attribute temporarily to prevent browser validation error
+                    form.find('input[name="first_name"]').prop('required', false);
+                    // Scroll to name field
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    // Re-add required attribute
+                    form.find('input[name="first_name"]').prop('required', true);
+                    
+                    hidePaymentLoading();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return false;
+                }
+            }
+            
             HRB.app.submitBooking(form).then(response => {
                 // Redirect to success page
                 window.location.href = '<?php echo site_url('/booking-success/'); ?>?ref=' + response.booking_reference;
@@ -3025,13 +3425,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 </div>
             `;
 
-            // Add VAT line
-            summaryHtml += `
-                <div class="hrb-summary-item hrb-summary-vat">
-                    <span>zzgl. ${taxRate}% MwSt.</span>
-                    <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
-                </div>
-            `;
+            // Add VAT line only if tax rate is greater than 0
+            if (taxRate > 0) {
+                summaryHtml += `
+                    <div class="hrb-summary-item hrb-summary-vat">
+                        <span>zzgl. ${taxRate}% MwSt.</span>
+                        <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
+                    </div>
+                `;
+            }
 
             if (paypalFee > 0 && paymentMethod === 'paypal') {
                 summaryHtml += `
@@ -3047,8 +3449,18 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <span><strong><?php _e('Total', 'hourly-room-booking'); ?></strong></span>
                     <span><strong>${window.HRB.utils.formatPrice(total)}</strong></span>
                 </div>
-            </div>
-        `;
+            `;
+            
+            // Add VAT message if tax rate is 0 or blank
+            if (taxRate === 0) {
+                summaryHtml += `
+                    <div class="hrb-vat-message">
+                        <small><?php _e('Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer.', 'hourly-room-booking'); ?></small>
+                    </div>
+                `;
+            }
+            
+            summaryHtml += `</div>`;
 
             $('#booking-summary-<?php echo $room_id; ?>').html(summaryHtml);
         }
@@ -3162,6 +3574,18 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function checkVerificationStatus(email) {
+            // Check if this is an anonymous booking
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            
+            if (isAnonymous) {
+                // For anonymous bookings, skip verification entirely
+                verificationCompleted = true;
+                verificationVerified = true;
+                $('#details-and-verification-next').prop('disabled', false);
+                $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+                return;
+            }
+            
             // Clear previous status messages
             $('.hrb-verification-success, .hrb-verification-error').remove();
 
@@ -3402,5 +3826,180 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 }
             }, 1000);
         }
+
+        // Anonymous Booking Logic
+        function checkBookingDuration() {
+            const duration = parseInt(form.find('select[name="duration"]').val());
+            const anonymousOption = $('#hrb-anonymous-booking-option');
+            
+            if (duration && duration < 4) {
+                anonymousOption.show();
+            } else {
+                anonymousOption.hide();
+                // Uncheck anonymous booking if duration is 4+ hours
+                $('#hrb-anonymous-booking').prop('checked', false);
+                handleAnonymousBookingChange();
+            }
+        }
+
+        function setAnonymousFieldRequirements(isAnonymous) {
+            // For anonymous bookings: keep name fields visible and make first_name required
+            // Hide email, phone, and verification fields
+            const emailPhoneVerificationInputs = form.find('.hrb-email-field input, .hrb-phone-field input, .hrb-verification-field input');
+            const nameInputs = form.find('.hrb-name-field input');
+            
+            if (isAnonymous) {
+                // Disable email, phone, and verification fields
+                emailPhoneVerificationInputs.each(function() {
+                    const $input = $(this);
+                    if ($input.prop('required')) {
+                        $input.data('hrb-required-was', true);
+                    }
+                    $input.prop('required', false).attr('aria-required', 'false').prop('disabled', true);
+                });
+                
+                // Keep name fields enabled and make first_name required (same as admin)
+                nameInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    // Make first_name required for anonymous bookings
+                    if ($input.attr('name') === 'first_name') {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+            } else {
+                // Re-enable all fields for regular bookings
+                emailPhoneVerificationInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    if ($input.data('hrb-required-was')) {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+                
+                nameInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    if ($input.data('hrb-required-was')) {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+            }
+        }
+
+        function handleAnonymousBookingChange() {
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            const formContainer = form.closest('.hrb-booking-form-container');
+            
+            if (isAnonymous) {
+                // Show modal
+                $('#hrb-anonymous-modal').show().addClass('show');
+            } else {
+                // Show all fields for regular bookings
+                formContainer.removeClass('hrb-anonymous-booking-active');
+                form.find('.hrb-email-field, .hrb-phone-field, .hrb-verification-field, .hrb-name-field').show();
+                setAnonymousFieldRequirements(false);
+                applyAnonymousPaymentVisibility(false);
+            }
+        }
+
+        // Check duration on page load and when duration changes
+        checkBookingDuration();
+        
+        // Listen for duration changes (using select, not input)
+        form.find('select[name="duration"]').on('change', function() {
+            checkBookingDuration();
+        });
+
+        // Handle anonymous booking checkbox change
+        $(document).on('change', '#hrb-anonymous-booking', function() {
+            if ($(this).is(':checked')) {
+                handleAnonymousBookingChange();
+                // Enable the button immediately for anonymous bookings
+                verificationCompleted = true;
+                verificationVerified = true;
+                $('#details-and-verification-next').prop('disabled', false);
+                $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+            } else {
+                handleAnonymousBookingChange();
+                // Reset verification state for regular bookings
+                resetVerificationState();
+            }
+        });
+
+        // Handle modal buttons
+        $(document).on('click', '#hrb-anonymous-continue', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+            const formContainer = form.closest('.hrb-booking-form-container');
+            formContainer.addClass('hrb-anonymous-booking-active');
+            
+            // Hide email, phone, and verification fields, but keep name fields visible
+            form.find('.hrb-email-field, .hrb-phone-field, .hrb-verification-field').hide();
+            form.find('.hrb-name-field').show(); // Keep name fields visible
+            
+            setAnonymousFieldRequirements(true);
+            applyAnonymousPaymentVisibility(true);
+            
+            // Enable the button for anonymous bookings
+            verificationCompleted = true;
+            verificationVerified = true;
+            $('#details-and-verification-next').prop('disabled', false);
+            $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+        });
+
+        $(document).on('click', '#hrb-anonymous-cancel', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+            $('#hrb-anonymous-booking').prop('checked', false);
+            handleAnonymousBookingChange();
+            // Reset verification state when canceling anonymous booking
+            resetVerificationState();
+        });
+
+        // Handle modal close
+        $(document).on('click', '.hrb-modal-close, .hrb-modal-overlay', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+        });
+
+        // Prevent native validation errors on hidden inputs across steps
+        form.on('submit', function() {
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            form.find(':input[required]').each(function() {
+                const $input = $(this);
+                // For anonymous bookings, keep first_name required even if hidden temporarily
+                // We'll validate it manually and show it if needed
+                if (!$input.is(':visible')) {
+                    // Don't remove required from first_name for anonymous bookings
+                    if (isAnonymous && $input.attr('name') === 'first_name') {
+                        // Keep it required, we'll handle validation manually
+                        return;
+                    }
+                    $input.data('hrb-required-was', true).prop('required', false).prop('disabled', true);
+                }
+            });
+        });
+
+        // Hide/show PayPal option depending on anonymous booking
+        function applyAnonymousPaymentVisibility(isAnonymous) {
+            const paypalOption = form.find('input[name="payment_method"][value="paypal"]').closest('.hrb-payment-method');
+            const onsiteOption = form.find('#onsite-payment-option');
+            if (isAnonymous) {
+                paypalOption.hide();
+                onsiteOption.show();
+                form.find('input[name="payment_method"][value="onsite"]').prop('checked', true).trigger('change');
+                updateBookingSummary();
+            } else {
+                paypalOption.show();
+                // Re-apply standard duration-based restriction
+                const duration = parseInt(form.find('select[name="duration"]').val());
+                if (duration >= 4) {
+                    onsiteOption.hide();
+                    form.find('input[name="payment_method"][value="paypal"]').prop('checked', true).trigger('change');
+                } else {
+                    onsiteOption.show();
+                }
+                updateBookingSummary();
+            }
+        }
+
     });
 </script>

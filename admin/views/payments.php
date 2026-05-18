@@ -175,10 +175,7 @@ $currency_symbol = hrb_get_currency_symbol();
                                 </div>
                             </td>
                             <td class="column-customer">
-                                <strong><?php echo esc_html($payment->customer_name ?? 'N/A'); ?></strong>
-                                <?php if ($payment->customer_email): ?>
-                                    <br><small><?php echo esc_html($payment->customer_email); ?></small>
-                                <?php endif; ?>
+                                <?php echo hrb_display_customer_info($payment, 'name_email'); ?>
                             </td>
                             <td class="column-amount">
                                 <strong><?php echo $currency_symbol . number_format($payment->amount, 2); ?></strong>
@@ -1037,7 +1034,7 @@ $currency_symbol = hrb_get_currency_symbol();
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', status, error);
+                /* removed debug console.error for AJAX Error */
                 alert('Failed to load refund information. Please try again.');
             }
         });
@@ -1049,45 +1046,69 @@ $currency_symbol = hrb_get_currency_symbol();
     }
 
     function markPaymentCompleted(paymentId) {
-        if (confirm('<?php _e('Mark this payment as completed? This should only be done after receiving the cash payment.', 'hourly-room-booking'); ?>')) {
-            jQuery.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'hrb_mark_payment_completed',
-                    payment_id: paymentId,
-                    nonce: '<?php echo wp_create_nonce('hrb_admin_nonce'); ?>'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.data.message || '<?php _e('Failed to mark payment as completed', 'hourly-room-booking'); ?>');
+        // Use custom alert dialog with warning type
+        window.hrbShowAlertDialog(
+            <?php echo json_encode(__('Mark this payment as completed? This should only be done after receiving the cash payment.', 'hourly-room-booking')); ?>,
+            {
+                warningMessage: <?php echo json_encode(__('This action should only be done after receiving the actual cash payment.', 'hourly-room-booking')); ?>,
+                title: <?php echo json_encode(__('Mark Payment as Completed', 'hourly-room-booking')); ?>,
+                confirmText: <?php echo json_encode(__('Mark Completed', 'hourly-room-booking')); ?>,
+                cancelText: <?php echo json_encode(__('Cancel', 'hourly-room-booking')); ?>,
+                type: 'warning'
+            },
+            function() {
+                // User confirmed - proceed with marking as completed
+                jQuery.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'hrb_mark_payment_completed',
+                        payment_id: paymentId,
+                        nonce: '<?php echo wp_create_nonce('hrb_admin_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.data.message || '<?php _e('Failed to mark payment as completed', 'hourly-room-booking'); ?>');
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        );
     }
 
     function cancelPayment(paymentId) {
-        if (confirm('<?php _e('Are you sure you want to cancel this payment?', 'hourly-room-booking'); ?>')) {
-            jQuery.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'hrb_cancel_payment',
-                    payment_id: paymentId,
-                    nonce: '<?php echo wp_create_nonce('hrb_admin_nonce'); ?>'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.data.message || '<?php _e('Failed to cancel payment', 'hourly-room-booking'); ?>');
+        // Use custom alert dialog with danger type
+        window.hrbShowAlertDialog(
+            <?php echo json_encode(__('Are you sure you want to cancel this payment?', 'hourly-room-booking')); ?>,
+            {
+                warningMessage: <?php echo json_encode(__('This action cannot be undone.', 'hourly-room-booking')); ?>,
+                title: <?php echo json_encode(__('Cancel Payment', 'hourly-room-booking')); ?>,
+                confirmText: <?php echo json_encode(__('Cancel Payment', 'hourly-room-booking')); ?>,
+                cancelText: <?php echo json_encode(__('Keep Payment', 'hourly-room-booking')); ?>,
+                type: 'danger'
+            },
+            function() {
+                // User confirmed - proceed with cancellation
+                jQuery.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'hrb_cancel_payment',
+                        payment_id: paymentId,
+                        nonce: '<?php echo wp_create_nonce('hrb_admin_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.data.message || '<?php _e('Failed to cancel payment', 'hourly-room-booking'); ?>');
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        );
     }
 
     function exportPayments() {
@@ -1118,7 +1139,7 @@ $currency_symbol = hrb_get_currency_symbol();
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Refund AJAX Error:', status, error, xhr.responseText);
+                /* removed debug console.error for Refund AJAX Error */
                 alert('<?php _e('Failed to process refund. Please try again.', 'hourly-room-booking'); ?>');
             }
         });

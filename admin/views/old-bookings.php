@@ -20,13 +20,17 @@ $room_manager = HRB_Room_Manager::getInstance();
 $customer_manager = HRB_Customer_Manager::getInstance();
 $admin = HRB_Admin::getInstance();
 
-// Handle view and edit actions early
-if (in_array($action, ['view', 'edit']) && $booking_id) {
+// Handle view action early (edit is not allowed for old bookings)
+if ($action === 'view' && $booking_id) {
     $booking = $booking_manager->get_booking($booking_id);
     if (!$booking) {
         echo '<div class="notice notice-error"><p>' . __('Booking not found.', 'hourly-room-booking') . '</p></div>';
         $action = 'list';
     }
+} elseif ($action === 'edit') {
+    // Redirect to view if someone tries to edit an old booking
+    wp_redirect(admin_url('admin.php?page=hrb-old-bookings&action=view&id=' . $booking_id));
+    exit;
 }
 
 // Handle form submissions
@@ -58,78 +62,18 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
             }
             break;
 
-        case 'update_booking':
-            if ($post_booking_id) {
-                // Process extras
-                $extras = [];
-                if (isset($_POST['extras']) && is_array($_POST['extras'])) {
-                    foreach ($_POST['extras'] as $extra_id) {
-                        $extras[] = intval($extra_id);
-                    }
-                }
-                
-                $update_data = [
-                    'status' => sanitize_text_field($_POST['booking_status'] ?? ''),
-                    'booking_date' => sanitize_text_field($_POST['booking_date'] ?? ''),
-                    'start_time' => sanitize_text_field($_POST['start_time'] ?? ''),
-                    'end_time' => sanitize_text_field($_POST['end_time'] ?? ''),
-                    'extra_people' => intval($_POST['extra_people'] ?? 0),
-                    'extras' => $extras,
-                    'payment_method' => sanitize_text_field($_POST['payment_method'] ?? ''),
-                    'special_requests' => sanitize_textarea_field($_POST['special_requests'] ?? ''),
-                ];
-
-                $customer_data = [
-                    'first_name' => sanitize_text_field($_POST['first_name'] ?? ''),
-                    'last_name' => sanitize_text_field($_POST['last_name'] ?? ''),
-                    'email' => sanitize_email($_POST['email'] ?? ''),
-                    'phone' => sanitize_text_field($_POST['phone'] ?? ''),
-                    'company' => sanitize_text_field($_POST['company'] ?? ''),
-                ];
-
-                // Remove extras from update_data since it's handled separately
-                $extras_data = $update_data['extras'];
-                unset($update_data['extras']);
-                
-                $result = $booking_manager->update_booking($post_booking_id, $update_data);
-                
-                // Update extras if any are selected
-                if (!empty($extras_data)) {
-                    $extras_result = $booking_manager->save_booking_extras(
-                        $post_booking_id,
-                        $extras_data,
-                        $update_data['booking_date'],
-                        $update_data['start_time'],
-                        $update_data['end_time']
-                    );
-                    
-                    if (is_wp_error($extras_result)) {
-                        echo '<div class="notice notice-error"><p>' . $extras_result->get_error_message() . '</p></div>';
-                        break;
-                    }
+        case 'delete_booking':
+            if ($post_booking_id && current_user_can('hrb_manage_bookings')) {
+                $result = $booking_manager->delete_booking($post_booking_id);
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Booking deleted successfully.', 'hourly-room-booking') . '</p></div>';
                 } else {
-                    // Only remove extras if we're sure none should be selected
-                    // For now, let's not automatically remove extras to prevent data loss
-                    // $booking_manager->remove_booking_extras($post_booking_id);
-                }
-
-                // Update customer data using customer manager
-                $customer_result = $customer_manager->update_customer($booking->customer_id, $customer_data);
-
-                if ($result && $customer_result) {
-                    // Redirect to view page with success message
-                    //wp_redirect(admin_url('admin.php?page=hrb-old-bookings&action=view&id=' . $post_booking_id . '&updated=1'));
-                    ?>
-                    <script>
-                        window.location.href = '<?php echo admin_url('admin.php?page=hrb-old-bookings&action=view&id=' . $post_booking_id . '&updated=1'); ?>';
-                    </script>
-                    <?php
-                    //exit;
-                } else {
-                    echo '<div class="notice notice-error"><p>' . __('Failed to update booking.', 'hourly-room-booking') . '</p></div>';
+                    echo '<div class="notice notice-error"><p>' . __('Failed to delete booking.', 'hourly-room-booking') . '</p></div>';
                 }
             }
             break;
+
+        // update_booking action removed - old bookings cannot be edited
     }
 
     // Reset action to 'list' after processing
@@ -387,11 +331,6 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
             </div>
 
             <div class="hrb-booking-actions">
-                <?php if (current_user_can('hrb_manage_bookings')): ?>
-                <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=edit&id=' . $booking->id); ?>" class="button button-primary">
-                    <?php _e('Edit Booking', 'hourly-room-booking'); ?>
-                </a>
-                <?php endif; ?>
                 <?php if ($booking->status === 'pending' && current_user_can('hrb_manage_bookings')): ?>
                     <form method="POST" style="display: inline;">
                         <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
@@ -400,106 +339,21 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                         <button type="submit" class="button button-secondary"><?php _e('Confirm Booking', 'hourly-room-booking'); ?></button>
                     </form>
                 <?php endif; ?>
+                <?php if (current_user_can('hrb_manage_bookings')): ?>
+                    <form method="POST" style="display: inline;" id="delete-booking-form-<?php echo $booking->id; ?>">
+                        <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
+                        <input type="hidden" name="action" value="delete_booking">
+                        <input type="hidden" name="id" value="<?php echo esc_attr($booking->id); ?>">
+                        <button type="button" class="button button-small hrb-delete-btn" title="<?php _e('Delete', 'hourly-room-booking'); ?>" 
+                                data-booking-id="<?php echo esc_attr($booking->id); ?>" 
+                                data-booking-reference="<?php echo esc_attr($booking->booking_reference); ?>"
+                                onclick="confirmDeleteBooking(this)">
+                            <span class="dashicons dashicons-trash"></span> <?php _e('Delete', 'hourly-room-booking'); ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-    </div>
-
-<?php elseif ($action === 'edit' && isset($booking)): ?>
-    <!-- EDIT BOOKING -->
-    <div class="wrap hrb-admin-booking-edit">
-        <div class="hrb-page-header">
-            <h1 class="wp-heading-inline">
-            <?php printf(__('Edit Booking - #%s', 'hourly-room-booking'), esc_html($booking->booking_reference)); ?>
-        </h1>
-        <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=view&id=' . $booking->id); ?>" class="page-title-action">
-            <?php _e('View Details', 'hourly-room-booking'); ?>
-        </a>
-
-        </div>
-        
-        <hr class="wp-header-end">
-
-        <form method="POST" class="hrb-edit-booking-form">
-            <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
-            <input type="hidden" name="action" value="update_booking">
-            <input type="hidden" name="id" value="<?php echo $booking->id; ?>">
-
-            <div class="hrb-edit-grid">
-                <div class="hrb-edit-section">
-                    <h3><?php _e('Booking Details', 'hourly-room-booking'); ?></h3>
-
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="booking_status"><?php _e('Status', 'hourly-room-booking'); ?></label></th>
-                            <td>
-                                <select name="booking_status" id="booking_status">
-                                    <option value="pending" <?php selected($booking->status, 'pending'); ?>><?php _e('Pending', 'hourly-room-booking'); ?></option>
-                                    <option value="confirmed" <?php selected($booking->status, 'confirmed'); ?>><?php _e('Confirmed', 'hourly-room-booking'); ?></option>
-                                    <option value="completed" <?php selected($booking->status, 'completed'); ?>><?php _e('Completed', 'hourly-room-booking'); ?></option>
-                                    <option value="cancelled" <?php selected($booking->status, 'cancelled'); ?>><?php _e('Cancelled', 'hourly-room-booking'); ?></option>
-                                    <option value="no_show" <?php selected($booking->status, 'no_show'); ?>><?php _e('No Show', 'hourly-room-booking'); ?></option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="booking_date"><?php _e('Date', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="date" name="booking_date" id="booking_date" value="<?php echo esc_attr($booking->booking_date); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="start_time"><?php _e('Start Time', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="time" name="start_time" id="start_time" value="<?php echo esc_attr(date('H:i', strtotime($booking->start_time))); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="end_time"><?php _e('End Time', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="time" name="end_time" id="end_time" value="<?php echo esc_attr(date('H:i', strtotime($booking->end_time))); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="extra_people"><?php _e('Extra People', 'hourly-room-booking'); ?></label></th>
-                            <td>
-                                <input type="number" name="extra_people" id="extra_people" value="<?php echo esc_attr($booking->extra_people ?? 0); ?>" min="0" max="10" class="small-text">
-                                <p class="description"><?php printf(__('Number of additional people beyond the base (%s per extra person, max 10)', 'hourly-room-booking'), hrb_format_amount(15)); ?></p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="special_requests"><?php _e('Special Requests', 'hourly-room-booking'); ?></label></th>
-                            <td><textarea name="special_requests" id="special_requests" rows="4" class="large-text"><?php echo esc_textarea($booking->special_requests); ?></textarea></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="hrb-edit-section">
-                    <h3><?php _e('Customer Information', 'hourly-room-booking'); ?></h3>
-
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="first_name"><?php _e('First Name', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="text" name="first_name" id="first_name" value="<?php echo esc_attr($booking->first_name); ?>" class="regular-text" required></td>
-                        </tr>
-                        <tr>
-                            <th><label for="last_name"><?php _e('Last Name', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="text" name="last_name" id="last_name" value="<?php echo esc_attr($booking->last_name); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="email"><?php _e('Email', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="email" name="email" id="email" value="<?php echo esc_attr($booking->email); ?>" class="regular-text" required></td>
-                        </tr>
-                        <tr>
-                            <th><label for="phone"><?php _e('Phone', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="tel" name="phone" id="phone" value="<?php echo esc_attr($booking->phone); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="company"><?php _e('Company', 'hourly-room-booking'); ?></label></th>
-                            <td><input type="text" name="company" id="company" value="<?php echo esc_attr($booking->company); ?>" class="regular-text"></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="hrb-booking-actions">
-            <input type="submit" name="submit" class="button button-primary" value="<?php _e('Update Booking', 'hourly-room-booking'); ?>">
-            <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=view&id=' . $booking->id); ?>" class="button button-secondary"><?php _e('Cancel', 'hourly-room-booking'); ?></a>
-            </div>
-           
-        </form>
     </div>
 
 <?php else: ?>
@@ -514,7 +368,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
     </h1>
     
             <div class="hrb-page-actions">
-                <!-- <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=add'); ?>" class="page-title-action">
+                <!-- <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=add'); ?>" class="page-title-action">
                     <?php _e('Add New Booking', 'hourly-room-booking'); ?>
                 </a> -->
             </div>
@@ -710,10 +564,17 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                                         <?php // Cancel booking button removed - cancellations should only be handled via phone or email ?>
 
                                         <?php if (current_user_can('hrb_manage_bookings')): ?>
-                                        <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=edit&id=' . $booking['id']); ?>"
-                                            class="button button-secondary button-small" title="<?php _e('Edit', 'hourly-room-booking'); ?>">
-                                            <span class="dashicons dashicons-edit"></span>
-                                        </a>
+                                        <form method="POST" style="display: inline;" id="delete-booking-form-<?php echo $booking['id']; ?>">
+                                            <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
+                                            <input type="hidden" name="action" value="delete_booking">
+                                            <input type="hidden" name="id" value="<?php echo esc_attr($booking['id']); ?>">
+                                            <button type="button" class="button button-small hrb-delete-btn" title="<?php _e('Delete', 'hourly-room-booking'); ?>" 
+                                                    data-booking-id="<?php echo esc_attr($booking['id']); ?>" 
+                                                    data-booking-reference="<?php echo esc_attr($booking['booking_reference']); ?>"
+                                                    onclick="confirmDeleteBooking(this)">
+                                                <span class="dashicons dashicons-trash"></span>
+                                            </button>
+                                        </form>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -755,7 +616,7 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
                     </div>
                     <h3><?php _e('No bookings found', 'hourly-room-booking'); ?></h3>
                     <p><?php _e('No bookings match your current filters. Try adjusting your search criteria.', 'hourly-room-booking'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=hrb-old-bookings&action=add'); ?>" class="button button-primary">
+                    <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=add'); ?>" class="button button-primary">
                         <?php _e('Add New Booking', 'hourly-room-booking'); ?>
                     </a>
                 </div>
@@ -1989,4 +1850,40 @@ function hrb_get_sortable_header($label, $orderby, $current_orderby, $current_or
             }
         });
     });
+
+    // Delete booking confirmation function
+    window.confirmDeleteBooking = function(buttonElement) {
+        var bookingId = buttonElement.getAttribute('data-booking-id');
+        var bookingReference = buttonElement.getAttribute('data-booking-reference');
+
+        // Use custom alert dialog with danger type if available
+        if (typeof window.hrbShowAlertDialog === 'function') {
+            window.hrbShowAlertDialog(
+                <?php echo json_encode(__('Are you sure you want to delete this booking?', 'hourly-room-booking')); ?>,
+                {
+                    warningMessage: <?php echo json_encode(__('This action cannot be undone.', 'hourly-room-booking')); ?>,
+                    title: <?php echo json_encode(__('Delete Booking', 'hourly-room-booking')); ?>,
+                    details: [
+                        {
+                            label: <?php echo json_encode(__('Booking Reference:', 'hourly-room-booking')); ?>,
+                            value: bookingReference,
+                            class: 'original'
+                        }
+                    ],
+                    confirmText: <?php echo json_encode(__('Delete', 'hourly-room-booking')); ?>,
+                    cancelText: <?php echo json_encode(__('Cancel', 'hourly-room-booking')); ?>,
+                    type: 'danger'
+                },
+                function() {
+                    // User confirmed - submit the form
+                    document.getElementById('delete-booking-form-' + bookingId).submit();
+                }
+            );
+        } else {
+            // Fallback to standard confirm if custom dialog is not available
+            if (confirm(<?php echo json_encode(__('Are you sure you want to delete this booking? This action cannot be undone.', 'hourly-room-booking')); ?>)) {
+                document.getElementById('delete-booking-form-' + bookingId).submit();
+            }
+        }
+    };
 </script>

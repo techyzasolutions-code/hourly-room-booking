@@ -95,6 +95,7 @@ if ($filter_status !== 'all') {
                     <th scope="col" class="column-capacity"><?php _e('Capacity', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-price"><?php _e('Hourly Price', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-amenities"><?php _e('Amenities', 'hourly-room-booking'); ?></th>
+                    <th scope="col" class="column-color"><?php _e('Color', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-status"><?php _e('Status', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-actions"><?php _e('Actions', 'hourly-room-booking'); ?></th>
                 </tr>
@@ -102,7 +103,7 @@ if ($filter_status !== 'all') {
             <tbody id="sortable-rooms">
                 <?php if (empty($rooms)): ?>
                     <tr>
-                        <td colspan="8" class="hrb-no-data">
+                        <td colspan="9" class="hrb-no-data">
                             <div class="hrb-empty-state">
                                 <span class="dashicons dashicons-admin-multisite"></span>
                                 <h3><?php _e('No rooms found', 'hourly-room-booking'); ?></h3>
@@ -177,6 +178,12 @@ if ($filter_status !== 'all') {
                                     echo '<span class="no-amenities">' . __('No amenities', 'hourly-room-booking') . '</span>';
                                 }
                                 ?>
+                            </td>
+                            <td class="column-color">
+                                <div class="room-color-display">
+                                    <span class="color-preview" style="background-color: <?php echo esc_attr($room->color ?? '#3498db'); ?>; width: 20px; height: 20px; border-radius: 50%; display: inline-block; border: 2px solid #ddd;"></span>
+                                    <span class="color-code"><?php echo esc_html($room->color ?? '#3498db'); ?></span>
+                                </div>
                             </td>
                             <td class="column-status">
                                 <span class="hrb-status hrb-status-<?php echo $room->is_active ? 'active' : 'inactive'; ?>">
@@ -302,6 +309,19 @@ if ($filter_status !== 'all') {
                         <td>
                             <input type="text" name="room_amenities" id="room_amenities" class="regular-text">
                             <p class="description"><?php _e('Comma-separated list of amenities (e.g., WiFi, Projector, Whiteboard).', 'hourly-room-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="room_color"><?php _e('Room Color', 'hourly-room-booking'); ?></label>
+                        </th>
+                        <td>
+                            <div class="color-picker-container">
+                                <input type="color" name="room_color" id="room_color" value="#3498db" class="color-picker">
+                                <input type="text" name="room_color_text" id="room_color_text" value="#3498db" class="color-text-input" placeholder="#3498db">
+                                <div class="color-preview" id="color-preview" style="width: 30px; height: 30px; border-radius: 4px; display: inline-block; border: 2px solid #ddd; background-color: #3498db;"></div>
+                            </div>
+                            <p class="description"><?php _e('Choose a color for this room to help identify it in the calendar and booking views.', 'hourly-room-booking'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -588,7 +608,50 @@ if ($filter_status !== 'all') {
 }
 
 .column-amenities {
-    width: 25%;
+    width: 20%;
+}
+
+.column-color {
+    width: 15%;
+    text-align: center;
+}
+
+.room-color-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-text-input {
+    width: 100px;
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.color-preview {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.color-preview:hover {
+    transform: scale(1.1);
 }
 
 .column-status {
@@ -1062,26 +1125,51 @@ if ($filter_status !== 'all') {
 
 <script>
 function showAddRoomModal() {
-    document.getElementById('modal-title').textContent = '<?php _e('Add New Room', 'hourly-room-booking'); ?>';
-    document.getElementById('form-action').value = 'create_room';
-    document.getElementById('form-room-id').value = '';
-    document.getElementById('submit-button').textContent = '<?php _e('Add Room', 'hourly-room-booking'); ?>';
+    // Ensure modal elements exist before trying to access them
+    const modalTitle = document.getElementById('modal-title');
+    const formAction = document.getElementById('form-action');
+    const formRoomId = document.getElementById('form-room-id');
+    const submitButton = document.getElementById('submit-button');
+    const roomForm = document.getElementById('room-form');
+    const roomIsActive = document.getElementById('room_is_active');
+    const roomModal = document.getElementById('room-modal');
+    
+    if (!modalTitle || !formAction || !formRoomId || !submitButton || !roomForm || !roomIsActive || !roomModal) {
+        console.error('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    modalTitle.textContent = '<?php _e('Add New Room', 'hourly-room-booking'); ?>';
+    formAction.value = 'create_room';
+    formRoomId.value = '';
+    submitButton.textContent = '<?php _e('Add Room', 'hourly-room-booking'); ?>';
 
     // Reset form
-    document.getElementById('room-form').reset();
-    document.getElementById('room_is_active').checked = true;
+    roomForm.reset();
+    roomIsActive.checked = true;
     
     // Clear images for new room
     clearRoomImages();
 
-    document.getElementById('room-modal').style.display = 'flex';
+    roomModal.style.display = 'flex';
 }
 
 function editRoom(roomId) {
-    document.getElementById('modal-title').textContent = '<?php _e('Edit Room', 'hourly-room-booking'); ?>';
-    document.getElementById('form-action').value = 'update_room';
-    document.getElementById('form-room-id').value = roomId;
-    document.getElementById('submit-button').textContent = '<?php _e('Update Room', 'hourly-room-booking'); ?>';
+    // Ensure modal elements exist before trying to access them
+    const modalTitle = document.getElementById('modal-title');
+    const formAction = document.getElementById('form-action');
+    const formRoomId = document.getElementById('form-room-id');
+    const submitButton = document.getElementById('submit-button');
+    
+    if (!modalTitle || !formAction || !formRoomId || !submitButton) {
+        console.error('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    modalTitle.textContent = '<?php _e('Edit Room', 'hourly-room-booking'); ?>';
+    formAction.value = 'update_room';
+    formRoomId.value = roomId;
+    submitButton.textContent = '<?php _e('Update Room', 'hourly-room-booking'); ?>';
 
     // Fetch room data via AJAX
     jQuery.ajax({
@@ -1095,25 +1183,43 @@ function editRoom(roomId) {
         success: function(response) {
             if (response.success) {
                 const room = response.data;
-                console.log('Room data received:', room);
+                /* removed debug log */
 
-                // Populate all form fields
-                document.getElementById('room_name').value = room.name || '';
-                document.getElementById('room_description').value = room.description || '';
-                document.getElementById('room_capacity').value = room.capacity || '';
-                document.getElementById('room_price_2_hours').value = room.price_2_hours || '';
-                document.getElementById('room_price_3_hours').value = room.price_3_hours || '';
-                document.getElementById('room_price_4_hours').value = room.price_4_hours || '';
-                document.getElementById('room_price_extra_hour').value = room.price_extra_hour || '';
-                document.getElementById('room_amenities').value = room.amenities || '';
-                document.getElementById('room_external_link').value = room.external_link || '';
-                document.getElementById('room_is_active').checked = parseInt(room.is_active) === 1;
+                // Populate all form fields with safety checks
+                const roomName = document.getElementById('room_name');
+                const roomDescription = document.getElementById('room_description');
+                const roomCapacity = document.getElementById('room_capacity');
+                const roomPrice2Hours = document.getElementById('room_price_2_hours');
+                const roomPrice3Hours = document.getElementById('room_price_3_hours');
+                const roomPrice4Hours = document.getElementById('room_price_4_hours');
+                const roomPriceExtraHour = document.getElementById('room_price_extra_hour');
+                const roomAmenities = document.getElementById('room_amenities');
+                const roomColor = document.getElementById('room_color');
+                const roomColorText = document.getElementById('room_color_text');
+                const colorPreview = document.getElementById('color-preview');
+                const roomExternalLink = document.getElementById('room_external_link');
+                const roomIsActive = document.getElementById('room_is_active');
+                const roomModal = document.getElementById('room-modal');
+
+                if (roomName) roomName.value = room.name || '';
+                if (roomDescription) roomDescription.value = room.description || '';
+                if (roomCapacity) roomCapacity.value = room.capacity || '';
+                if (roomPrice2Hours) roomPrice2Hours.value = room.price_2_hours || '';
+                if (roomPrice3Hours) roomPrice3Hours.value = room.price_3_hours || '';
+                if (roomPrice4Hours) roomPrice4Hours.value = room.price_4_hours || '';
+                if (roomPriceExtraHour) roomPriceExtraHour.value = room.price_extra_hour || '';
+                if (roomAmenities) roomAmenities.value = room.amenities || '';
+                if (roomColor) roomColor.value = room.color || '#3498db';
+                if (roomColorText) roomColorText.value = room.color || '#3498db';
+                if (colorPreview) colorPreview.style.backgroundColor = room.color || '#3498db';
+                if (roomExternalLink) roomExternalLink.value = room.external_link || '';
+                if (roomIsActive) roomIsActive.checked = parseInt(room.is_active) === 1;
                 
                 // Load existing images
                 loadRoomImages(room.images);
 
                 // Show the modal
-                document.getElementById('room-modal').style.display = 'flex';
+                if (roomModal) roomModal.style.display = 'flex';
             } else {
                 alert('Failed to load room data');
             }
@@ -1125,25 +1231,56 @@ function editRoom(roomId) {
 }
 
 function closeRoomModal() {
+    // Hide the modal
     document.getElementById('room-modal').style.display = 'none';
+    
+    // Reset the form to clear any data
+    document.getElementById('room-form').reset();
+    
+    // Clear any room images
+    clearRoomImages();
+    
+    // Reset form action and room ID
+    document.getElementById('form-action').value = 'create_room';
+    document.getElementById('form-room-id').value = '';
+    
+    // Reset modal title and button text
+    document.getElementById('modal-title').textContent = '<?php _e('Add New Room', 'hourly-room-booking'); ?>';
+    document.getElementById('submit-button').textContent = '<?php _e('Add Room', 'hourly-room-booking'); ?>';
+    
+    // Reset room active checkbox
+    document.getElementById('room_is_active').checked = true;
 }
 
 function deleteRoom(roomId, roomName) {
-    const message = '<?php _e('Are you sure you want to permanently delete this room?', 'hourly-room-booking'); ?>\n\n' +
-                   '<?php _e('Room:', 'hourly-room-booking'); ?> ' + roomName + '\n\n' +
-                   '<?php _e('This action cannot be undone!', 'hourly-room-booking'); ?>';
-
-    if (confirm(message)) {
-        const roomIdField = document.getElementById('delete-room-id');
-        const form = document.getElementById('delete-room-form');
-        
-        if (roomIdField && form) {
-            roomIdField.value = roomId;
-            form.submit();
-        } else {
-            console.error('Form elements not found');
+    // Use custom alert dialog with danger type
+    window.hrbShowAlertDialog(
+        <?php echo json_encode(__('Are you sure you want to permanently delete this room?', 'hourly-room-booking')); ?>,
+        {
+            warningMessage: <?php echo json_encode(__('This action cannot be undone!', 'hourly-room-booking')); ?>,
+            title: <?php echo json_encode(__('Delete Room', 'hourly-room-booking')); ?>,
+            details: [
+                {
+                    label: <?php echo json_encode(__('Room:', 'hourly-room-booking')); ?>,
+                    value: roomName,
+                    class: 'original'
+                }
+            ],
+            confirmText: <?php echo json_encode(__('Delete', 'hourly-room-booking')); ?>,
+            cancelText: <?php echo json_encode(__('Cancel', 'hourly-room-booking')); ?>,
+            type: 'danger'
+        },
+        function() {
+            // User confirmed - submit the form
+            const roomIdField = document.getElementById('delete-room-id');
+            const form = document.getElementById('delete-room-form');
+            
+            if (roomIdField && form) {
+                roomIdField.value = roomId;
+                form.submit();
+            }
         }
-    }
+    );
 }
 
 // Room image upload functions
@@ -1342,4 +1479,39 @@ function showCopyError() {
         }, 300);
     }, 4000);
 }
+
+// Color picker functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const colorPicker = document.getElementById('room_color');
+    const colorText = document.getElementById('room_color_text');
+    const colorPreview = document.getElementById('color-preview');
+    
+    if (colorPicker && colorText && colorPreview) {
+        // Update text input when color picker changes
+        colorPicker.addEventListener('input', function() {
+            colorText.value = this.value;
+            colorPreview.style.backgroundColor = this.value;
+        });
+        
+        // Update color picker when text input changes
+        colorText.addEventListener('input', function() {
+            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                colorPicker.value = this.value;
+                colorPreview.style.backgroundColor = this.value;
+            }
+        });
+        
+        // Update preview when text input loses focus
+        colorText.addEventListener('blur', function() {
+            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                colorPicker.value = this.value;
+                colorPreview.style.backgroundColor = this.value;
+            } else {
+                // Reset to color picker value if invalid
+                this.value = colorPicker.value;
+                colorPreview.style.backgroundColor = colorPicker.value;
+            }
+        });
+    }
+});
 </script>

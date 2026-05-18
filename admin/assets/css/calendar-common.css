@@ -1,0 +1,340 @@
+/* Common Calendar Styling for All Pages */
+
+/* Admin Page Styling */
+
+.hrb-modal-footer .button {
+    margin-left: 12px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+.hrb-admin-page {
+    background: #f1f1f1;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.hrb-page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.hrb-page-title h1 {
+    color: white;
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.hrb-page-title .description {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-size: 16px;
+}
+
+.hrb-page-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.hrb-page-actions .page-title-action {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.hrb-page-actions .page-title-action:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+}
+
+/* Calendar Controls */
+.hrb-calendar-controls {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hrb-room-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hrb-room-filter label {
+    font-weight: 600;
+    color: #1d2327;
+    margin: 0;
+}
+
+.hrb-room-filter select {
+    padding: 10px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    min-width: 200px;
+    transition: border-color 0.3s ease;
+}
+
+.hrb-room-filter select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Calendar Styling */
+.hrb-calendar-container {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    min-height: 600px;
+}
+
+#lock-calendar,
+#extras-lock-calendar {
+    margin-top: 20px;
+}
+
+/* Lock event styling */
+/* Lock event styling - default for dedicated lock calendars */
+.fc .fc-bg-event {
+    
+    opacity: 1;
+}
+.fc-event[data-type="master_lock"]{
+    color: #fff;
+}
+
+.fc-event[data-type="room_lock"],
+.fc-event[data-type="extra_lock"] {
+    opacity:1;
+    font-style: italic;
+    cursor: pointer;
+}
+
+/* Override for main calendar - room locks should look like booking events */
+#hrb-calendar .fc-event[data-type="room_lock"] {
+    opacity: 1 !important;
+    font-style: normal !important;
+}
+
+.fc-event[data-type="master_lock"],
+.fc-event[data-type="master_extra_lock"] {
+    
+    cursor: pointer;
+}
+
+/* Modal Styling */
+.hrb-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hrb-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.hrb-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    animation: modalIn 0.3s ease forwards;
+    display: flex;
+    flex-direction: column;
+}
+
+.hrb-modal-content form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+@keyframes modalIn {
+    to {
+        transform: scale(1);
+    }
+}
+
+.hrb-modal-header {
+    padding: 5px 30px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.hrb-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.hrb-modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b7280;
+    background: white;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.hrb-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.hrb-modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.hrb-modal-footer {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.hrb-form-group {
+    margin-bottom: 20px;
+}
+
+.hrb-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.hrb-form-group input,
+.hrb-form-group select,
+.hrb-form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.hrb-form-group input:focus,
+.hrb-form-group select:focus,
+.hrb-form-group textarea:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.hrb-warning-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.hrb-warning-notice p {
+    margin: 0;
+    color: #856404;
+}
+
+/* Field validation styling */
+.hrb-field-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.hrb-form-group input.error,
+.hrb-form-group select.error,
+.hrb-form-group textarea.error {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hrb-page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .hrb-page-actions {
+        justify-content: center;
+    }
+    
+    .hrb-modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
+
+.fc-event-title {
+    font-weight: 700;
+   
+}
+.fc-event-time {
+    font-weight: 700;
+   
+}
+
+.fc-event {
+    padding: 5px;
+}

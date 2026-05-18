@@ -1171,7 +1171,7 @@ class HRB_Settings {
     public function ajax_save_settings(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_settings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1213,7 +1213,8 @@ class HRB_Settings {
             ]);
         } else {
             wp_send_json_success([
-                'message' => sprintf(__('%d settings saved successfully', 'hourly-room-booking'), $saved_count)
+                // 'message' => sprintf(__('%d Settings saved successfully.', 'hourly-room-booking'), $saved_count)
+                'message' => __('Settings saved successfully.', 'hourly-room-booking')
             ]);
         }
     }
@@ -1226,7 +1227,7 @@ class HRB_Settings {
     public function ajax_reset_settings(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_settings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }

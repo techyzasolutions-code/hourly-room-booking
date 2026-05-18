@@ -63,20 +63,20 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
         <div class="hrb-calendar-legend">
             <div class="legend-item">
-                <span class="legend-color confirmed"></span>
+                <span class="legend-color" style="background: linear-gradient(135deg, #10b981, #059669);"></span>
                 <?php _e('Confirmed', 'hourly-room-booking'); ?>
             </div>
             <div class="legend-item">
-                <span class="legend-color pending"></span>
+                <span class="legend-color" style="background: linear-gradient(135deg, #f59e0b, #d97706);"></span>
                 <?php _e('Pending', 'hourly-room-booking'); ?>
             </div>
             <div class="legend-item">
-                <span class="legend-color cancelled"></span>
-                <?php _e('Cancelled', 'hourly-room-booking'); ?>
+                <span class="legend-color" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"></span>
+                <?php _e('Completed', 'hourly-room-booking'); ?>
             </div>
             <div class="legend-item">
-                <span class="legend-color completed"></span>
-                <?php _e('Completed', 'hourly-room-booking'); ?>
+                <span class="legend-color" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></span>
+                <?php _e('Cancelled', 'hourly-room-booking'); ?>
             </div>
         </div>
     </div>
@@ -494,6 +494,155 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+/* ===== Booking details modal v2 ===== */
+.hrb-bd {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.hrb-bd-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 18px;
+}
+
+.hrb-bd-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #eef0f3;
+    min-width: 0;
+}
+
+.hrb-bd-item-total {
+    background: linear-gradient(135deg, #eef2ff, #ede9fe);
+    border-color: #ddd6fe;
+}
+
+.hrb-bd-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.hrb-bd-label .bi {
+    color: #6366f1;
+    font-size: 13px;
+}
+
+.hrb-bd-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word;
+}
+
+.hrb-bd-value small {
+    display: block;
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.hrb-bd-amount {
+    font-size: 18px;
+    color: #4f46e5;
+}
+
+/* Notes blocks */
+.hrb-bd-note {
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid;
+}
+
+.hrb-bd-note-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.hrb-bd-note-header .bi {
+    font-size: 15px;
+}
+
+.hrb-bd-note-body {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #374151;
+    white-space: pre-wrap;
+}
+
+.hrb-bd-note-customer {
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+.hrb-bd-note-customer .hrb-bd-note-header { color: #92400e; }
+
+.hrb-bd-note-admin {
+    background: #ede9fe;
+    border-color: #ddd6fe;
+}
+.hrb-bd-note-admin .hrb-bd-note-header { color: #5b21b6; }
+
+/* Loading state */
+.hrb-bd-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #6b7280;
+}
+
+.hrb-bd-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: hrb-bd-spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes hrb-bd-spin {
+    to { transform: rotate(360deg); }
+}
+
+.hrb-bd-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* Stack to one column on smaller modals */
+@media (max-width: 560px) {
+    .hrb-bd-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Enhanced FullCalendar Styling */
 .fc-event {
     cursor: pointer;
@@ -547,11 +696,155 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .fc-event-time {
     font-size: 11px;
-    opacity: 0.9;
+    opacity: 1;
     line-height: 1.2;
     overflow: visible;
     white-space: normal;
     word-wrap: break-word;
+    color: white !important;
+}
+
+/* ===== Calendar event card layout ===== */
+.fc-event-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 2px;
+    width: 100%;
+}
+
+.fc-event-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.25;
+    color: #fff !important;
+    overflow: hidden;
+}
+
+.fc-event-row span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.fc-event-customer {
+    font-weight: 700;
+    font-size: 12px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.fc-event-room {
+    font-weight: 500;
+    font-size: 11px;
+    opacity: 0.92;
+}
+
+.fc-event-row.fc-event-time {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+/* Override base FullCalendar title/time word-wrap rules for the new layout */
+.fc-event .fc-event-title,
+.fc-event .fc-event-time {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Icons inline with text */
+.fc-event-icon {
+    font-size: 12px;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.95;
+}
+
+/* ===== Badges row (anonymous + status side by side) ===== */
+.fc-event-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+/* Anonymous booking badge */
+.fc-event-anon-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.28);
+    color: white !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    line-height: 1.3;
+}
+
+.fc-event-anon-badge .bi {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Icon inside status badge */
+.fc-event-detail {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px !important;
+    line-height: 1.3 !important;
+}
+
+.fc-event-detail .bi {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Status badge styling */
+.fc-event-detail {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 2px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    max-width: fit-content;
+}
+
+/* Status badge colors */
+.fc-event-status-confirmed {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+}
+
+.fc-event-status-pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+}
+
+.fc-event-status-cancelled {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+}
+
+.fc-event-status-completed {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: white !important;
+}
+
+.fc-event-status-no_show {
+    background: linear-gradient(135deg, #8a8c8f, #6b7280) !important;
     color: white !important;
 }
 
@@ -576,10 +869,17 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .fc-daygrid-event .fc-event-time {
     font-size: 10px;
     line-height: 1.1;
-    opacity: 0.8;
+    opacity: 1;
     white-space: normal;
     word-wrap: break-word;
     color: white !important;
+    font-weight: bold;
+}
+
+.fc-daygrid-event .fc-event-detail {
+    font-size: 8px;
+    padding: 1px 4px;
+    margin-top: 1px;
 }
 
 /* Week and Day view styling */
@@ -604,6 +904,12 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     white-space: normal;
     word-wrap: break-word;
     color: white !important;
+}
+
+.fc-timegrid-event .fc-event-detail {
+    font-size: 9px;
+    padding: 2px 5px;
+    margin-top: 2px;
 }
 
 /* Calendar grid improvements */
@@ -646,6 +952,51 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     }
 }
 
+/* Room color-based events - colors are set dynamically via backgroundColor */
+.fc-event-room-color {
+    /* Base styling for room color events */
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Force room colors to override any other styles */
+.fc-event-room-color,
+.fc-event-room-color:hover,
+.fc-event-room-color.fc-event-mirror,
+.fc-daygrid-event.fc-event-room-color,
+.fc-daygrid-event.fc-event-room-color:hover,
+.fc-daygrid-dot-event.fc-event-room-color,
+.fc-daygrid-dot-event.fc-event-room-color:hover {
+    /* Force room colors to take precedence over any other CSS */
+    background: var(--room-color, #3498db) !important;
+    background-color: var(--room-color, #3498db) !important;
+    border-color: var(--room-color, #3498db) !important;
+}
+
+/* Override any FullCalendar default styles */
+.fc-event.fc-event-room-color,
+.fc-event.fc-event-room-color:hover,
+.fc-event.fc-event-room-color:focus,
+.fc-event.fc-event-room-color:active,
+.fc-event.fc-event-room-color.fc-event-mirror,
+.fc-daygrid-event.fc-event-room-color,
+.fc-daygrid-event.fc-event-room-color:hover,
+.fc-timegrid-event.fc-event-room-color,
+.fc-timegrid-event.fc-event-room-color:hover {
+    background: var(--room-color, #3498db) !important;
+    background-color: var(--room-color, #3498db) !important;
+    border-color: var(--room-color, #3498db) !important;
+}
+
+/* Nuclear option - override everything */
+[class*="fc-event"][class*="room-color"] {
+    background: var(--room-color, #3498db) !important;
+    background-color: var(--room-color, #3498db) !important;
+    border-color: var(--room-color, #3498db) !important;
+}
+
+/* Status-based styling for reference (kept for legend) */
 .fc-event-no_show {
     background: #8a8c8f;
     color: #383d41;
@@ -653,7 +1004,6 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .fc-event-confirmed {
     background: linear-gradient(135deg, #10b981, #059669);
 }
-
 
 .fc-event-pending {
     background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -718,15 +1068,28 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
         font-size: 1.8em;
     }
 }
-.fc-daygrid-dot-event.fc-event-mirror, .fc-daygrid-dot-event:hover {
-    background: #000 !important;
+
+/* Lock event styling */
+.fc-event[data-type="room_lock"] {
+    display: none;
+    font-style: italic;
 }
+
+.fc-event[data-type="master_lock"] {
+   
+}
+
+/* Removed black background override to allow room colors to show */
 </style>
+
+<!-- Bootstrap Icons (local) -->
+<link href="<?php echo HRB_ASSETS_URL . 'vendor/bootstrap-icons/bootstrap-icons.min.css?ver=1.11.3'; ?>" rel="stylesheet">
 
 <!-- FullCalendar CSS & JS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/de.global.min.js"></script>
+<script src="<?php echo plugin_dir_url(__FILE__) . '../assets/js/calendar-common.js'; ?>"></script>
 
 <script>
 let calendar;
@@ -756,30 +1119,125 @@ function initializeCalendar() {
         events: function(info, successCallback, failureCallback) {
             fetchCalendarEvents(info.start, info.end, successCallback, failureCallback);
         },
+        eventDidMount: function(info) {
+            // Set data-type attribute for events
+            setEventDataType(info);
+            
+            // Apply room colors to booking events
+            applyBookingColors(info);
+            
+            // Apply room colors to room lock events
+            applyRoomColors(info, ['room_lock']);
+        },
         eventClick: function(info) {
+            // Don't show booking details for lock events
+            if (info.event.extendedProps && info.event.extendedProps.type) {
+                return;
+            }
             showBookingDetails(info.event.id);
         },
         eventClassNames: function(arg) {
-            return ['fc-event-' + arg.event.extendedProps.status];
+            return ['fc-event-room-color'];
         },
         eventContent: function(arg) {
-            // Show full text without truncation
-            let title = arg.event.title;
+            // Handle room lock events separately
+            if (arg.event.extendedProps && arg.event.extendedProps.type === 'room_lock') {
+                const title = arg.event.title;
+                const startTime = arg.event.extendedProps.start_time;
+                const endTime = arg.event.extendedProps.end_time;
+                
+                let timeText = '';
+                if (startTime && endTime) {
+                    // Format time range: "10:00 - 12:00"
+                    timeText = startTime.substring(0, 5) + ' - ' + endTime.substring(0, 5);
+                }
+                
+                return {
+                    html: '<div class="fc-event-content">' +
+                          '<div class="fc-event-title">' + title + '</div>' +
+                          '<div class="fc-event-time">' + timeText + '</div>' +
+                          '</div>'
+                };
+            }
             
+            // Handle booking events
+            // Extract status from title (format: "Customer - Room (Status)")
+            let title = arg.event.title;
+            let status = arg.event.extendedProps.status || '';
+
+            // Fallback: parse from title if extendedProp missing
+            if (!status) {
+                const statusMatch = title.match(/\(([^)]+)\)$/);
+                if (statusMatch) { status = statusMatch[1]; }
+            }
+
+            // Use clean fields from extendedProps when available
+            const customerName = arg.event.extendedProps.customer_name || title.replace(/\s*\([^)]+\)$/, '');
+            const roomName = arg.event.extendedProps.room_name || '';
+
             // Format time text to show proper AM/PM format
             let timeText = arg.timeText;
             if (timeText.includes(' - ')) {
                 timeText = timeText.replace(' - ', '-');
             }
-            
             // Convert time format from "8a" to "8 AM"
             timeText = timeText.replace(/(\d+)a/g, '$1 AM');
             timeText = timeText.replace(/(\d+)p/g, '$1 PM');
             
+            // Create status badge with appropriate color class
+            let statusBadge = '';
+            let statusIcon = 'bi-tag-fill';
+            if (status) {
+                const statusClass = 'fc-event-status-' + status.toLowerCase();
+
+                // Translate status to German and pick icon
+                let translatedStatus = status;
+                switch(status.toLowerCase()) {
+                    case 'confirmed':
+                        translatedStatus = '<?php _e('Confirmed', 'hourly-room-booking'); ?>';
+                        statusIcon = 'bi-check-circle-fill';
+                        break;
+                    case 'pending':
+                        translatedStatus = '<?php _e('Pending', 'hourly-room-booking'); ?>';
+                        statusIcon = 'bi-hourglass-split';
+                        break;
+                    case 'cancelled':
+                        translatedStatus = '<?php _e('Cancelled', 'hourly-room-booking'); ?>';
+                        statusIcon = 'bi-x-circle-fill';
+                        break;
+                    case 'completed':
+                        translatedStatus = '<?php _e('Completed', 'hourly-room-booking'); ?>';
+                        statusIcon = 'bi-check2-all';
+                        break;
+                    case 'no_show':
+                        translatedStatus = '<?php _e('No Show', 'hourly-room-booking'); ?>';
+                        statusIcon = 'bi-person-x-fill';
+                        break;
+                }
+
+                statusBadge = '<div class="fc-event-detail ' + statusClass + '"><i class="bi ' + statusIcon + '"></i><span>' + translatedStatus + '</span></div>';
+            }
+
+            let anonymousBadge = '';
+            if (arg.event.extendedProps.is_anonymous) {
+                anonymousBadge = '<div class="fc-event-anon-badge"><i class="bi bi-incognito"></i><span><?php _e('Anonymous', 'hourly-room-booking'); ?></span></div>';
+            }
+
+            // Build customer + room rows (room only shown if present)
+            let customerRow = '<div class="fc-event-row fc-event-customer"><i class="bi bi-person-fill fc-event-icon"></i><span>' + customerName + '</span></div>';
+            let roomRow = roomName
+                ? '<div class="fc-event-row fc-event-room"><i class="bi bi-door-closed-fill fc-event-icon"></i><span>' + roomName + '</span></div>'
+                : '';
+
             return {
                 html: '<div class="fc-event-content">' +
-                      '<div class="fc-event-title">' + title + '</div>' +
-                      '<div class="fc-event-time">' + timeText + '</div>' +
+                      customerRow +
+                      roomRow +
+                      '<div class="fc-event-row fc-event-time"><i class="bi bi-clock-fill fc-event-icon"></i><span>' + timeText + '</span></div>' +
+                      '<div class="fc-event-badges">' +
+                          anonymousBadge +
+                          statusBadge +
+                      '</div>' +
                       '</div>'
             };
         }
@@ -839,6 +1297,20 @@ document.querySelectorAll('.calendar-view-btn').forEach(btn => {
 });
 
 function showBookingDetails(bookingId) {
+    const modalBody = document.getElementById('booking-modal-body');
+    const modal = document.getElementById('booking-modal');
+
+    // Open immediately with a loading skeleton — no wait on AJAX
+    modalBody.innerHTML = '<div class="hrb-bd-loading">' +
+        '<div class="hrb-bd-spinner"></div>' +
+        '<p><?php echo esc_js(__('Loading booking details…', 'hourly-room-booking')); ?></p>' +
+        '</div>';
+    modal.style.display = 'flex';
+
+    document.getElementById('edit-booking-btn').onclick = function() {
+        editBooking(bookingId);
+    };
+
     jQuery.ajax({
         url: ajaxurl,
         type: 'POST',
@@ -849,18 +1321,36 @@ function showBookingDetails(bookingId) {
         },
         success: function(response) {
             if (response.success) {
-                document.getElementById('booking-modal-body').innerHTML = response.data.html;
-                document.getElementById('edit-booking-btn').onclick = function() {
-                    editBooking(bookingId);
-                };
-                document.getElementById('booking-modal').style.display = 'flex';
+                modalBody.innerHTML = response.data.html;
+            } else {
+                modalBody.innerHTML = '<div class="hrb-bd-error"><i class="bi bi-exclamation-triangle-fill"></i> ' +
+                    '<?php echo esc_js(__('Could not load booking details.', 'hourly-room-booking')); ?>' +
+                    '</div>';
             }
+        },
+        error: function() {
+            modalBody.innerHTML = '<div class="hrb-bd-error"><i class="bi bi-exclamation-triangle-fill"></i> ' +
+                '<?php echo esc_js(__('Network error. Please try again.', 'hourly-room-booking')); ?>' +
+                '</div>';
         }
     });
 }
 
 function closeBookingModal() {
+    // Hide the modal
     document.getElementById('booking-modal').style.display = 'none';
+    
+    // Clear the modal body content
+    document.getElementById('booking-modal-body').innerHTML = '';
+    
+    // Reset modal title
+    document.getElementById('booking-modal-title').textContent = '<?php _e('Booking Details', 'hourly-room-booking'); ?>';
+    
+    // Remove any event handlers from the edit button
+    const editBtn = document.getElementById('edit-booking-btn');
+    if (editBtn) {
+        editBtn.onclick = null;
+    }
 }
 
 function editBooking(bookingId) {
@@ -884,12 +1374,12 @@ function loadCalendarStats() {
                 document.getElementById('stats-month').textContent = stats.month || 0;
                 document.getElementById('stats-revenue').textContent = '<?php echo hrb_get_currency_symbol(); ?>' + (stats.revenue || 0).toFixed(2);
             } else {
-                console.error('Calendar stats error:', response.data);
+                /* removed debug console.error */
             }
         },
         error: function(xhr, status, error) {
-            console.error('AJAX error:', error);
-            console.error('Response:', xhr.responseText);
+            /* removed debug console.error */
+            /* removed debug console.error */
         }
     });
 }

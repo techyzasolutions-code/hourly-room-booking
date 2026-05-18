@@ -70,6 +70,7 @@ class HRB_Room_Manager {
             'price_extra_hour' => 0.00,
             'images' => '',
             'amenities' => '',
+            'color' => '#3498db',
             'is_active' => 1,
             'sort_order' => 0
         );
@@ -104,7 +105,7 @@ class HRB_Room_Manager {
         $result = $wpdb->insert(
             $wpdb->prefix . 'hrb_rooms',
             $room_data,
-            array('%s', '%s', '%d', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%d', '%d')
+            array('%s', '%s', '%d', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%d', '%d')
         );
         
         if ($result === false) {
@@ -209,7 +210,7 @@ class HRB_Room_Manager {
     public function toggle_room_status($room_id) {
         global $wpdb;
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_rooms')) {
             return new WP_Error('permission_denied', __('Permission denied', 'hourly-room-booking'));
         }
 

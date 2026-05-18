@@ -30,7 +30,7 @@
 
             // Global AJAX error handler
             $(document).ajaxError((event, jqXHR, ajaxSettings, thrownError) => {
-                console.error('HRB AJAX Error:', thrownError);
+                /* removed debug console.error */
                 const ajaxObj = window.hrbAjax || window.hrb_ajax || {};
                 const strings = ajaxObj.strings || {};
                 const errorMessage = (strings && strings.booking_error) || 'An error occurred. Please try again.';
@@ -176,6 +176,7 @@
             this.initTimeSlotPickers();
             this.initPriceCalculator();
             this.initMultiStepForms();
+            this.initPayPalWarning();
         }
 
         initSearchForms() {
@@ -225,12 +226,12 @@
                 const form = $(this).closest('.hrb-booking-form');
                 // Skip AJAX pricing if form has local pricing enabled
                 const localPricing = form.data('local-pricing');
-                console.log('Form change detected, local-pricing:', localPricing, typeof localPricing);
+                /* removed debug log */
                 if (localPricing === true || localPricing === 'true') {
-                    console.log('Skipping AJAX pricing - using local pricing');
+                    /* removed debug log */
                     return; // Let the local function handle it
                 }
-                console.log('Using AJAX pricing');
+                /* removed debug log */
                 HRB.app.calculatePrice(form);
             });
 
@@ -256,7 +257,7 @@
         initMultiStepForms() {
             // Multi-step form navigation is handled by individual booking form templates
             // This method is kept for compatibility but doesn't interfere with custom form logic
-            console.log('Multi-step forms initialized (handled by templates)');
+            /* removed debug log */
         }
 
         showStep(step) {
@@ -552,8 +553,8 @@
                 <span class="hrb-summary-value"><strong>${this.formatPrice(pricing.subtotal)}</strong></span>
             </div>`;
 
-            // Add VAT line
-            if (pricing.tax_amount > 0) {
+            // Add VAT line only if tax rate is greater than 0
+            if (pricing.tax_rate > 0 && pricing.tax_amount > 0) {
                 html += `<div class="hrb-summary-item hrb-summary-vat">
                     <span class="hrb-summary-label">zzgl. ${pricing.tax_rate}% MwSt.</span>
                     <span class="hrb-summary-value">${this.formatPrice(pricing.tax_amount)}</span>
@@ -573,6 +574,13 @@
                 <span class="hrb-summary-label"><strong>${this.strings.total || 'Total'}</strong></span>
                 <span class="hrb-summary-value"><strong>${this.formatPrice(pricing.total_amount)}</strong></span>
             </div>`;
+
+            // Add VAT message if tax rate is 0 or blank
+            if (pricing.tax_rate === 0 && pricing.tax_amount === 0) {
+                html += `<div class="hrb-vat-message">
+                    <small>Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer.</small>
+                </div>`;
+            }
 
             summary.html(html);
         }
@@ -609,7 +617,7 @@
 
         renderCalendar(container, events) {
             // Basic calendar rendering - you can integrate with FullCalendar here
-            console.log('Calendar events:', events);
+            /* removed debug log */
         }
 
         showLoading(element) {
@@ -635,7 +643,7 @@
         showMessage(type, message) {
             // Don't show undefined, null, or empty messages
             if (!message || message === 'undefined' || message === undefined || message.toString().trim() === '') {
-                console.warn('HRB: Attempted to show undefined/empty message:', message);
+                /* removed debug warn */
                 return;
             }
 
@@ -677,6 +685,20 @@
 
         formatTime(time) {
             return time.substring(0, 5); // HH:MM format
+        }
+
+        initPayPalWarning() {
+            // Show/hide PayPal warning based on payment method selection
+            $(document).on('change', 'input[name="payment_method"]', function() {
+                const selectedMethod = $(this).val();
+                const warning = $('#hrb-paypal-warning');
+                
+                if (selectedMethod === 'paypal') {
+                    warning.slideDown(300);
+                } else {
+                    warning.slideUp(300);
+                }
+            });
         }
     }
 

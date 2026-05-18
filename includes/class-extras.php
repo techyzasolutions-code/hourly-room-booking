@@ -224,9 +224,11 @@ class HRB_Extras {
 
         return $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT e.*, be.quantity, be.unit_price, be.total_price
+                "SELECT e.*, be.quantity, be.unit_price, be.total_price, COALESCE(be.added_by_admin, 0) as added_by_admin, be.added_by_user_id,
+                 u.user_login as added_by_username, u.display_name as added_by_display_name
                  FROM {$extras_table} e
                  INNER JOIN {$booking_extras_table} be ON e.id = be.extra_id
+                 LEFT JOIN {$wpdb->users} u ON be.added_by_user_id = u.ID
                  WHERE be.booking_id = %d
                  ORDER BY e.name ASC",
                 $booking_id

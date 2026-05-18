@@ -58,18 +58,18 @@ class DeclarationBlock extends RuleSet
         $oResult = new DeclarationBlock($oParserState->currentLine());
         try {
             $aSelectorParts = [];
-            $sStringWrapperChar = false;
+            $sStringwrapperChar = false;
             do {
                 $aSelectorParts[] = $oParserState->consume(1)
                     . $oParserState->consumeUntil(['{', '}', '\'', '"'], false, false, $aComments);
                 if (in_array($oParserState->peek(), ['\'', '"']) && substr(end($aSelectorParts), -1) != "\\") {
-                    if ($sStringWrapperChar === false) {
-                        $sStringWrapperChar = $oParserState->peek();
-                    } elseif ($sStringWrapperChar == $oParserState->peek()) {
-                        $sStringWrapperChar = false;
+                    if ($sStringwrapperChar === false) {
+                        $sStringwrapperChar = $oParserState->peek();
+                    } elseif ($sStringwrapperChar == $oParserState->peek()) {
+                        $sStringwrapperChar = false;
                     }
                 }
-            } while (!in_array($oParserState->peek(), ['{', '}']) || $sStringWrapperChar !== false);
+            } while (!in_array($oParserState->peek(), ['{', '}']) || $sStringwrapperChar !== false);
             $oResult->setSelectors(implode('', $aSelectorParts), $oList);
             if ($oParserState->comes('{')) {
                 $oParserState->consume(1);

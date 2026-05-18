@@ -165,7 +165,7 @@ class HRB_Calendar {
         wp_localize_script('hrb-admin-calendar', 'hrbAdminCalendar', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('hrb_admin_calendar_nonce'),
-            'canEdit' => current_user_can('manage_options'),
+            'canEdit' => current_user_can('hrb_manage_bookings'),
             'strings' => [
                 'editBooking' => __('Edit Booking', 'hourly-room-booking'),
                 'deleteBooking' => __('Delete Booking', 'hourly-room-booking'),
@@ -207,6 +207,8 @@ class HRB_Calendar {
                 b.status,
                 b.total_amount,
                 b.extra_people,
+                b.is_anonymous,
+                b.booking_reference,
                 r.name as room_name,
                 CONCAT(c.first_name, ' ', c.last_name) as customer_name,
                 c.email as customer_email,
@@ -237,7 +239,9 @@ class HRB_Calendar {
                 'title' => sprintf(
                     '%s - %s',
                     $booking['room_name'],
-                    $booking['customer_name']
+                    $booking['is_anonymous'] ? 
+                        sprintf(__('Anonymous (%s)', 'hourly-room-booking'), $booking['booking_reference']) : 
+                        $booking['customer_name']
                 ),
                 'start' => $start_datetime,
                 'end' => $end_datetime,
@@ -248,9 +252,11 @@ class HRB_Calendar {
                     'bookingId' => $booking['id'],
                     'roomId' => $booking['room_id'],
                     'roomName' => $booking['room_name'],
-                    'customerName' => $booking['customer_name'],
-                    'customerEmail' => $booking['customer_email'],
-                    'customerPhone' => $booking['customer_phone'],
+                    'isAnonymous' => $booking['is_anonymous'],
+                    'bookingReference' => $booking['booking_reference'],
+                    'customerName' => $booking['is_anonymous'] ? __('Anonymous', 'hourly-room-booking') : $booking['customer_name'],
+                    'customerEmail' => $booking['is_anonymous'] ? __('No contact information available', 'hourly-room-booking') : $booking['customer_email'],
+                    'customerPhone' => $booking['is_anonymous'] ? __('No contact information available', 'hourly-room-booking') : $booking['customer_phone'],
                     'status' => $booking['status'],
                     'totalAmount' => $booking['total_amount'],
                     'extraPeople' => $booking['extra_people'],

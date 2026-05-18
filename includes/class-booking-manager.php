@@ -24,6 +24,7 @@ class HRB_Booking_Manager {
         add_action('wp_loaded', array($this, 'schedule_events'));
         add_action('hrb_cleanup_expired_bookings', array($this, 'cleanup_expired_bookings'));
         add_action('hrb_send_booking_reminders', array($this, 'send_booking_reminders'));
+        add_action('hrb_cleanup_incomplete_payments', array($this, 'cleanup_incomplete_payments'));
     }
     
     /**
@@ -36,6 +37,11 @@ class HRB_Booking_Manager {
         
         if (!wp_next_scheduled('hrb_send_booking_reminders')) {
             wp_schedule_event(time(), 'hourly', 'hrb_send_booking_reminders');
+        }
+        
+        // Schedule cleanup of incomplete PayPal payments every 5 minutes
+        if (!wp_next_scheduled('hrb_cleanup_incomplete_payments')) {
+            wp_schedule_event(time(), 'hrb_five_minutes', 'hrb_cleanup_incomplete_payments');
         }
     }
     
@@ -53,7 +59,16 @@ class HRB_Booking_Manager {
         }
         
         // Validate booking rules
-        $validation = $this->validate_booking_data($data);
+        // Allow inactive rooms ONLY if booking is created by admin AND user is actually an admin
+        // This prevents frontend manipulation by checking user capabilities
+        $allow_inactive_rooms = false;
+        if (isset($data['created_by_admin']) && ($data['created_by_admin'] == 1 || $data['created_by_admin'] === '1')) {
+            // Double-check: verify user is actually an admin (prevents frontend manipulation)
+            if (current_user_can('manage_options') || current_user_can('hrb_manage_bookings')) {
+                $allow_inactive_rooms = true;
+            }
+        }
+        $validation = $this->validate_booking_data($data, false, $allow_inactive_rooms);
         if (is_wp_error($validation)) {
             return $validation;
         }
@@ -82,14 +97,18 @@ class HRB_Booking_Manager {
             'tax_amount' => $pricing['tax_amount'],
             'paypal_fee' => $pricing['paypal_fee'],
             'total_amount' => $pricing['total_amount'],
-            'status' => isset($data['status']) ? $data['status'] : 'pending',
+            'status' => isset($data['status']) ? sanitize_text_field($data['status']) : (isset($data['payment_method']) && in_array($data['payment_method'], ['onsite', 'cash']) ? 'confirmed' : 'pending'),
             'payment_status' => isset($data['payment_status']) ? $data['payment_status'] : 'pending',
             'payment_method' => isset($data['payment_method']) ? sanitize_text_field($data['payment_method']) : null,
             'special_requests' => isset($data['special_requests']) ? sanitize_textarea_field($data['special_requests']) : null,
             'admin_notes' => isset($data['admin_notes']) ? sanitize_textarea_field($data['admin_notes']) : null,
             'created_by_admin' => isset($data['created_by_admin']) ? intval($data['created_by_admin']) : 0,
-            'cooldown_override' => isset($data['cooldown_override']) ? intval($data['cooldown_override']) : 0
+            'cooldown_override' => isset($data['cooldown_override']) ? intval($data['cooldown_override']) : 0,
+            'is_anonymous' => isset($data['is_anonymous']) ? intval($data['is_anonymous']) : 0,
+            'first_name' => isset($data['first_name']) ? sanitize_text_field($data['first_name']) : null,
+            'last_name' => isset($data['last_name']) ? sanitize_text_field($data['last_name']) : null
         );
+        
         
         // Start transaction
         $wpdb->query('START TRANSACTION');
@@ -99,9 +118,8 @@ class HRB_Booking_Manager {
             $result = $wpdb->insert(
                 $wpdb->prefix . 'hrb_bookings',
                 $booking_data,
-                array('%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d')
+                array('%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s')
             );
-           
             if ($result === false) {
                 $wpdb_error = $wpdb->last_error;
                 throw new Exception(__('Failed to create booking', 'hourly-room-booking') . ': ' . $wpdb_error);
@@ -109,17 +127,39 @@ class HRB_Booking_Manager {
             
             $booking_id = $wpdb->insert_id;
 
-            // Create payment record (except for PayPal which handles its own payment records)
+            // Create payment record
             $payment_method = $booking_data['payment_method'] ?: 'onsite';
-            if ($payment_method !== 'paypal') {
-                $payment_manager = HRB_Payment_Manager::getInstance();
-                $currency = HRB_Currency_Manager::getInstance()->get_currency_code();
-
+            $payment_manager = HRB_Payment_Manager::getInstance();
+            $currency = HRB_Currency_Manager::getInstance()->get_currency_code();
+            
+            if ($payment_method === 'paypal') {
+                // For PayPal, create payment record with token to prevent multiple payments
+                // Generate unique payment token for security
+                $payment_token = wp_generate_password(32, false);
+                
                 $payment_id = $payment_manager->create_payment(
                     $booking_id,
                     $booking_data['total_amount'],
                     $payment_method,
-                    $currency
+                    $currency,
+                    array(
+                        'status' => 'pending',
+                        'payment_token' => $payment_token,
+                        'fees' => $booking_data['paypal_fee'] ?? 0
+                    )
+                );
+
+                if (is_wp_error($payment_id)) {
+                    throw new Exception($payment_id->get_error_message());
+                }
+            } else {
+                // For other payment methods, create payment record normally
+                $payment_id = $payment_manager->create_payment(
+                    $booking_id,
+                    $booking_data['total_amount'],
+                    $payment_method,
+                    $currency,
+                    array('status' => $booking_data['payment_status'])
                 );
 
                 if (is_wp_error($payment_id)) {
@@ -127,8 +167,25 @@ class HRB_Booking_Manager {
                 }
             }
 
-            // Create invoice if booking is confirmed
+            // Create invoice based on payment method and status
+            $should_create_invoice = false;
+            
             if ($booking_data['status'] === 'confirmed') {
+                // For PayPal payments, create invoice immediately
+                if ($payment_method === 'paypal') {
+                    $should_create_invoice = true;
+                }
+                // For cash/onsite payments, only create invoice when status is 'paid'
+                elseif (in_array($payment_method, ['onsite', 'cash']) && $booking_data['payment_status'] === 'paid') {
+                    $should_create_invoice = true;
+                }
+                // For other payment methods, create invoice immediately
+                elseif (!in_array($payment_method, ['onsite', 'cash', 'paypal'])) {
+                    $should_create_invoice = true;
+                }
+            }
+            
+            if ($should_create_invoice) {
                 $invoice_id = $this->create_invoice($booking_id);
                 if (is_wp_error($invoice_id)) {
                     throw new Exception($invoice_id->get_error_message());
@@ -136,6 +193,42 @@ class HRB_Booking_Manager {
             }
 
             $wpdb->query('COMMIT');
+            
+            // Send appropriate notification based on payment method
+            if ($payment_method === 'paypal') {
+                // Generate payment link with token for admin-created bookings
+                $payment_link = home_url('/paypal-payment/?ref=' . urlencode($booking_data['booking_reference']));
+                
+                // If booking was created by admin, include payment token in link
+                if (!empty($booking_data['created_by_admin'])) {
+                    global $wpdb;
+                    // Get the payment token we just created
+                    $payment_record = $wpdb->get_row($wpdb->prepare(
+                        "SELECT payment_token FROM {$wpdb->prefix}hrb_payments 
+                        WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'pending'
+                        ORDER BY id DESC LIMIT 1",
+                        $booking_id
+                    ));
+                    
+                    if ($payment_record && !empty($payment_record->payment_token)) {
+                        $payment_link .= '&token=' . urlencode($payment_record->payment_token);
+                    }
+                }
+                
+                $custom_data = array(
+                    // Only include the payment link when booking was created by an admin
+                    'payment_link' => !empty($booking_data['created_by_admin']) ? $payment_link : ''
+                );
+
+                $this->send_booking_notification(
+                    $booking_id,
+                    'online_payment_pending',
+                    $custom_data
+                );
+            } else {
+                // For other payment methods, send booking confirmation
+                $this->send_booking_notification($booking_id, 'booking_confirmation');
+            }
             
             return $booking_id;
             
@@ -148,10 +241,14 @@ class HRB_Booking_Manager {
     /**
      * Validate booking data
      */
-    public function validate_booking_data($data, $allow_past_dates = false) {
-        // Validate room exists and is active
+    public function validate_booking_data($data, $allow_past_dates = false, $allow_inactive_rooms = false) {
+        // Validate room exists and is active (unless admin allows inactive rooms)
         $room = HRB_Room_Manager::getInstance()->get_room($data['room_id']);
-        if (!$room || !$room->is_active) {
+        if (!$room) {
+            return new WP_Error('invalid_room', __('Selected room is not available', 'hourly-room-booking'));
+        }
+        // Only check is_active if not allowing inactive rooms
+        if (!$allow_inactive_rooms && !$room->is_active) {
             return new WP_Error('invalid_room', __('Selected room is not available', 'hourly-room-booking'));
         }
         
@@ -195,11 +292,37 @@ class HRB_Booking_Manager {
             return new WP_Error('max_duration', __('Maximum booking duration is 12 hours', 'hourly-room-booking'));
         }
         
-        // Validate business hours
+        // Validate business hours (allow cross-midnight when end time < start time and end limit is 24:00)
         $business_start = get_option('hrb_booking_start_time', '08:00');
         $business_end = get_option('hrb_booking_end_time', '20:00');
-        
-        if ($data['start_time'] < $business_start || $data['end_time'] > $business_end) {
+        $allow_cross_midnight = ($business_end === '24:00' || $business_end === '24:00:00');
+
+        $start_minutes = $this->time_to_minutes($data['start_time']);
+        $end_minutes   = $this->time_to_minutes($data['end_time']);
+        $business_start_minutes = $this->time_to_minutes($business_start);
+        $business_end_minutes   = $this->time_to_minutes($business_end);
+
+        // Start must be within window
+        if ($start_minutes < $business_start_minutes) {
+            return new WP_Error('outside_business_hours', 
+                sprintf(__('Bookings must be between %s and %s', 'hourly-room-booking'), $business_start, $business_end));
+        }
+
+        // Compute slot end minutes relative to start (handle cross-midnight)
+        $slot_end_minutes = $end_minutes;
+        if ($end_minutes <= $start_minutes) {
+            $slot_end_minutes += 24 * 60; // next day
+        }
+
+        // Business end boundary
+        // If end is 24:00 and slot crosses midnight, allow up to next-day 24:00 (i.e., +24h window)
+        $max_end_minutes = $allow_cross_midnight ? ($business_end_minutes + 24 * 60) : $business_end_minutes;
+
+        if (!$allow_cross_midnight && $slot_end_minutes > $business_end_minutes) {
+            return new WP_Error('outside_business_hours', 
+                sprintf(__('Bookings must be between %s and %s', 'hourly-room-booking'), $business_start, $business_end));
+        }
+        if ($allow_cross_midnight && $slot_end_minutes > $max_end_minutes) {
             return new WP_Error('outside_business_hours', 
                 sprintf(__('Bookings must be between %s and %s', 'hourly-room-booking'), $business_start, $business_end));
         }
@@ -211,16 +334,41 @@ class HRB_Booking_Manager {
      * Calculate booking duration in hours
      */
     private function calculate_duration($start_time, $end_time) {
-        $start = strtotime($start_time);
-        $end = strtotime($end_time);
-        return ($end - $start) / 3600;
+        $start_minutes = $this->time_to_minutes($start_time);
+        $end_minutes   = $this->time_to_minutes($end_time);
+        if ($end_minutes <= $start_minutes) {
+            $end_minutes += 24 * 60; // cross-midnight
+        }
+        return ($end_minutes - $start_minutes) / 60;
+    }
+
+    private function time_to_minutes($time) {
+        $parts = explode(':', $time);
+        $h = intval($parts[0]);
+        $m = isset($parts[1]) ? intval($parts[1]) : 0;
+        return $h * 60 + $m;
     }
     
     /**
      * Save extras for a booking
      */
-    public function save_booking_extras($booking_id, $extras_data, $booking_date, $start_time, $end_time) {
+    public function save_booking_extras($booking_id, $extras_data, $booking_date, $start_time, $end_time, $is_admin_edit = false) {
         global $wpdb;
+        
+        // Get original extras with their added_by_admin flags and user IDs before deletion (to preserve admin-added status)
+        $original_extras_map = [];
+        if ($is_admin_edit) {
+            $original_extras_rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT extra_id, added_by_admin, added_by_user_id FROM {$wpdb->prefix}hrb_booking_extras WHERE booking_id = %d",
+                $booking_id
+            ));
+            foreach ($original_extras_rows as $row) {
+                $original_extras_map[$row->extra_id] = [
+                    'added_by_admin' => intval($row->added_by_admin),
+                    'added_by_user_id' => intval($row->added_by_user_id ?? 0)
+                ];
+            }
+        }
         
         // First, remove all existing extras for this booking
         $wpdb->delete(
@@ -236,22 +384,57 @@ class HRB_Booking_Manager {
         $stock_manager = HRB_Extra_Stock_Manager::getInstance();
         $extras_manager = HRB_Extras::getInstance();
         
+        // Check if this is an admin booking (allow inactive extras)
+        $is_admin_booking = current_user_can('manage_options') || current_user_can('hrb_manage_bookings');
+        
         foreach ($extras_data as $index => $extra) {
             // Handle both formats: direct ID or array with ID
             $extra_id = is_array($extra) ? intval($extra['id']) : intval($extra);
             
             if ($extra_id > 0) {
-                // Check availability first
-                $availability = $stock_manager->check_availability(
-                    $extra_id,
-                    $booking_date,
-                    $start_time,
-                    $end_time,
-                    1
-                );
+                // Get extra to check if it's active
+                $extra_obj = $extras_manager->get_extra($extra_id);
+                if (!$extra_obj) {
+                    return new WP_Error('extra_not_found', sprintf(__('Extra not found: ID %d', 'hourly-room-booking'), $extra_id));
+                }
                 
-                if (!$availability['available']) {
-                    return new WP_Error('extra_unavailable', sprintf(__('Sorry, extra item is no longer available: %s', 'hourly-room-booking'), $availability['reason']));
+                // For admin bookings, skip active check but still validate stock/availability
+                // For frontend bookings, check availability (includes active status)
+                if ($is_admin_booking && !$extra_obj->is_active) {
+                    // Admin can book inactive extras - skip availability check but still validate locks
+                    // Just verify the extra exists and we can proceed
+                    $availability = ['available' => true, 'available_quantity' => 999];
+                } else {
+                    // Check availability first (includes active check for frontend)
+                    $availability = $stock_manager->check_availability(
+                        $extra_id,
+                        $booking_date,
+                        $start_time,
+                        $end_time,
+                        1,
+                        $booking_id  // Exclude current booking from availability check
+                    );
+                    
+                    if (!$availability['available']) {
+                        return new WP_Error('extra_unavailable', sprintf(__('Sorry, extra item is no longer available: %s', 'hourly-room-booking'), $availability['reason']));
+                    }
+                }
+                
+                // Preserve added_by_admin flag and user ID if it was already set, otherwise check if it's new
+                $added_by_admin = 0;
+                $added_by_user_id = null;
+                
+                if (isset($original_extras_map[$extra_id])) {
+                    // Preserve the existing flag and user ID (was already admin-added)
+                    $added_by_admin = $original_extras_map[$extra_id]['added_by_admin'];
+                    $added_by_user_id = $original_extras_map[$extra_id]['added_by_user_id'] > 0 ? $original_extras_map[$extra_id]['added_by_user_id'] : null;
+                } else {
+                    // New extra - mark as admin-added if this is an admin edit
+                    if ($is_admin_edit) {
+                        $added_by_admin = 1;
+                        // Store the current user ID (admin or staff)
+                        $added_by_user_id = get_current_user_id();
+                    }
                 }
                 
                 // Save to booking_extras table for pricing and stock management
@@ -268,9 +451,11 @@ class HRB_Booking_Manager {
                             'total_price' => $extra->price,
                             'booking_date' => $booking_date,
                             'start_time' => $start_time,
-                            'end_time' => $end_time
+                            'end_time' => $end_time,
+                            'added_by_admin' => $added_by_admin,
+                            'added_by_user_id' => $added_by_user_id
                         ],
-                        ['%d', '%d', '%d', '%f', '%f', '%s', '%s', '%s']
+                        ['%d', '%d', '%d', '%f', '%f', '%s', '%s', '%s', '%d', '%d']
                     );
                     
                     if ($result === false) {
@@ -281,6 +466,113 @@ class HRB_Booking_Manager {
         }
         
         return true;
+    }
+
+    /**
+     * Track booking modifications (hours or extra people increases)
+     */
+    public function track_booking_modification($booking_id, $modification_type, $original_value, $new_value, $additional_amount, $added_by_user_id = null) {
+        global $wpdb;
+        
+        // Only track if there's an increase
+        if ($new_value <= $original_value) {
+            return false;
+        }
+        
+        // Don't track if additional amount is negative
+        if ($additional_amount < 0) {
+            return false;
+        }
+        
+        // Get current user if not provided and we're in admin context
+        if ($added_by_user_id === null || $added_by_user_id == 0) {
+            if (is_admin() && (current_user_can('manage_options') || current_user_can('hrb_manage_bookings'))) {
+                $added_by_user_id = get_current_user_id();
+            } else {
+                // Not in admin context or user doesn't have capabilities
+                return false;
+            }
+        }
+        
+        // Verify user has admin capabilities
+        if ($added_by_user_id > 0) {
+            $user = get_userdata($added_by_user_id);
+            if (!$user || (!user_can($added_by_user_id, 'manage_options') && !user_can($added_by_user_id, 'hrb_manage_bookings'))) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        
+        $modifications_table = $wpdb->prefix . 'hrb_booking_modifications';
+        
+        // Check if modification already exists for this booking and type
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$modifications_table} 
+             WHERE booking_id = %d AND modification_type = %s 
+             ORDER BY id DESC LIMIT 1",
+            $booking_id,
+            $modification_type
+        ));
+        
+        if ($existing) {
+            // Update existing modification
+            $update_result = $wpdb->update(
+                $modifications_table,
+                [
+                    'original_value' => $original_value,
+                    'new_value' => $new_value,
+                    'additional_amount' => $additional_amount,
+                    'added_by_user_id' => $added_by_user_id
+                ],
+                ['id' => $existing->id],
+                ['%f', '%f', '%f', '%d'],
+                ['%d']
+            );
+            
+            if ($update_result === false) {
+                return false;
+            }
+        } else {
+            // Insert new modification
+            $insert_result = $wpdb->insert(
+                $modifications_table,
+                [
+                    'booking_id' => $booking_id,
+                    'modification_type' => $modification_type,
+                    'original_value' => $original_value,
+                    'new_value' => $new_value,
+                    'additional_amount' => $additional_amount,
+                    'added_by_user_id' => $added_by_user_id
+                ],
+                ['%d', '%s', '%f', '%f', '%f', '%d']
+            );
+            
+            if ($insert_result === false) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get booking modifications
+     */
+    public function get_booking_modifications($booking_id) {
+        global $wpdb;
+        
+        $modifications_table = $wpdb->prefix . 'hrb_booking_modifications';
+        $users_table = $wpdb->users;
+        
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT bm.*, u.user_login as added_by_username, u.display_name as added_by_display_name
+             FROM {$modifications_table} bm
+             LEFT JOIN {$users_table} u ON bm.added_by_user_id = u.ID
+             WHERE bm.booking_id = %d
+             ORDER BY bm.created_at DESC",
+            $booking_id
+        ));
     }
 
     /**
@@ -320,9 +612,9 @@ class HRB_Booking_Manager {
         // Calculate subtotal before fees
         $subtotal = $base_price + $extra_people_cost + $extras_cost;
 
-        // Calculate VAT (19% in Germany)
+        // Calculate VAT (based on admin setting)
         $tax_rate = floatval(get_option('hrb_tax_rate', 19)) / 100; // Convert percentage to decimal
-        $tax_amount = $subtotal * $tax_rate;
+        $tax_amount = $tax_rate > 0 ? $subtotal * $tax_rate : 0; // Only calculate tax if rate > 0
 
         // Calculate PayPal fee (3% on subtotal) - only if PayPal is selected
         $paypal_fee = 0;
@@ -418,7 +710,16 @@ class HRB_Booking_Manager {
         global $wpdb;
 
         return $wpdb->get_row($wpdb->prepare(
-            "SELECT b.*, r.name as room_name, c.first_name, c.last_name, c.email, c.phone, c.company,
+            "SELECT b.*, r.name as room_name, 
+                    CASE 
+                        WHEN b.is_anonymous = 1 THEN CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE '' END
+                        ELSE CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE c.first_name END
+                    END as first_name,
+                    CASE 
+                        WHEN b.is_anonymous = 1 THEN CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE '' END
+                        ELSE CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE c.last_name END
+                    END as last_name,
+                    c.email, c.phone, c.company,
                     p.status as actual_payment_status, p.transaction_id, p.processed_at
              FROM {$wpdb->prefix}hrb_bookings b
              JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
@@ -436,7 +737,16 @@ class HRB_Booking_Manager {
         global $wpdb;
         
         return $wpdb->get_row($wpdb->prepare(
-            "SELECT b.*, r.name as room_name, c.first_name, c.last_name, c.email, c.phone, c.company
+            "SELECT b.*, r.name as room_name, 
+                    CASE 
+                        WHEN b.is_anonymous = 1 THEN CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE '' END
+                        ELSE CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE c.first_name END
+                    END as first_name,
+                    CASE 
+                        WHEN b.is_anonymous = 1 THEN CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE '' END
+                        ELSE CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN b.last_name ELSE c.last_name END
+                    END as last_name,
+                    c.email, c.phone, c.company
              FROM {$wpdb->prefix}hrb_bookings b
              JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
              JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
@@ -448,7 +758,7 @@ class HRB_Booking_Manager {
     /**
      * Update booking
      */
-    public function update_booking($booking_id, $data, $send_notification = true) {
+    public function update_booking($booking_id, $data, $send_notification = true, $is_new_booking = false) {
         global $wpdb;
         
         $booking = $this->get_booking($booking_id);
@@ -553,9 +863,52 @@ class HRB_Booking_Manager {
             );
         }
         
-        // Send notification if status changed and notifications are enabled
-        if ($send_notification && isset($data['status']) && $data['status'] !== $booking->status) {
-            $this->send_booking_notification($booking_id, 'booking_modified');
+        // Send notification if booking was modified and notifications are enabled (but not for new bookings)
+        if ($send_notification && !$is_new_booking) {
+            // Check if any significant booking data changed (not just status)
+            $significant_fields = ['status', 'booking_date', 'start_time', 'end_time', 'room_id', 
+                                   'base_price', 'extra_people_price', 'extras_price', 'total_amount',
+                                   'extra_people', 'payment_method'];
+            $has_changes = false;
+            
+            // Check if status changed
+            if (isset($data['status']) && $data['status'] !== $booking->status) {
+                $has_changes = true;
+            }
+            
+            // Check if any other significant field changed
+            if (!$has_changes) {
+                foreach ($significant_fields as $field) {
+                    if (isset($data[$field])) {
+                        $old_value = isset($booking->$field) ? $booking->$field : null;
+                        $new_value = $data[$field];
+                        
+                        // Compare values (handle numeric comparisons)
+                        if (is_numeric($old_value) && is_numeric($new_value)) {
+                            if (floatval($old_value) != floatval($new_value)) {
+                                $has_changes = true;
+                                break;
+                            }
+                        } elseif ($old_value != $new_value) {
+                            $has_changes = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Also check if extras were added/removed (by comparing extras_price)
+            if (!$has_changes && isset($data['extras_price'])) {
+                $old_extras_price = isset($booking->extras_price) ? floatval($booking->extras_price) : 0;
+                $new_extras_price = floatval($data['extras_price']);
+                if ($old_extras_price != $new_extras_price) {
+                    $has_changes = true;
+                }
+            }
+            
+            if ($has_changes) {
+                $this->send_booking_notification($booking_id, 'booking_modified');
+            }
         }
         
         return true;
@@ -581,7 +934,7 @@ class HRB_Booking_Manager {
         $booking_datetime = strtotime($booking->booking_date . ' ' . $booking->start_time);
         $min_cancellation_time = $booking_datetime - ($cancellation_hours * 3600);
         
-        if (time() > $min_cancellation_time && !current_user_can('manage_options')) {
+        if (time() > $min_cancellation_time && !current_user_can('hrb_manage_bookings')) {
             return new WP_Error('cancellation_too_late', 
                 sprintf(__('Bookings can only be cancelled %d hours in advance', 'hourly-room-booking'), $cancellation_hours));
         }
@@ -655,9 +1008,23 @@ class HRB_Booking_Manager {
                 ['%d']
             );
             
+            // Delete booking modifications
+            $wpdb->delete(
+                $wpdb->prefix . 'hrb_booking_modifications',
+                ['booking_id' => $booking_id],
+                ['%d']
+            );
+            
             // Delete payments
             $wpdb->delete(
                 $wpdb->prefix . 'hrb_payments',
+                ['booking_id' => $booking_id],
+                ['%d']
+            );
+            
+            // Delete invoices
+            $wpdb->delete(
+                $wpdb->prefix . 'hrb_invoices',
                 ['booking_id' => $booking_id],
                 ['%d']
             );
@@ -726,7 +1093,9 @@ class HRB_Booking_Manager {
         // Customer search
         if (!empty($filters['customer_search'])) {
             $search = '%' . $wpdb->esc_like($filters['customer_search']) . '%';
-            $where_conditions[] = '(c.first_name LIKE %s OR c.last_name LIKE %s OR c.email LIKE %s OR c.phone LIKE %s)';
+            $where_conditions[] = '(c.first_name LIKE %s OR c.last_name LIKE %s OR c.email LIKE %s OR c.phone LIKE %s OR b.first_name LIKE %s OR b.last_name LIKE %s)';
+            $params[] = $search;
+            $params[] = $search;
             $params[] = $search;
             $params[] = $search;
             $params[] = $search;
@@ -768,6 +1137,8 @@ class HRB_Booking_Manager {
         $invoice_counter = get_option('hrb_invoice_counter', 1);
         $invoice_number = date('Y') . '-' . str_pad($invoice_counter, 6, '0', STR_PAD_LEFT);
         
+        $tax_rate = floatval(get_option('hrb_tax_rate', 19));
+        
         $invoice_data = array(
             'invoice_number' => $invoice_number,
             'booking_id' => $booking_id,
@@ -775,7 +1146,7 @@ class HRB_Booking_Manager {
             'issue_date' => current_time('Y-m-d'),
             'due_date' => date('Y-m-d', strtotime('+14 days')),
             'subtotal' => $booking->base_price,
-            'tax_rate' => floatval(get_option('hrb_tax_rate', 19)),
+            'tax_rate' => $tax_rate,
             'tax_amount' => $booking->tax_amount,
             'total_amount' => $booking->total_amount,
             'status' => 'sent'
@@ -788,21 +1159,23 @@ class HRB_Booking_Manager {
         );
         
         if ($result === false) {
-            return new WP_Error('invoice_creation_failed', __('Failed to create invoice', 'hourly-room-booking'));
+            return new WP_Error('invoice_creation_failed', __('Failed to create invoice', 'hourly-room-booking') . ': ' . $wpdb->last_error);
         }
+        
+        $invoice_id = $wpdb->insert_id;
         
         // Update invoice counter
         update_option('hrb_invoice_counter', $invoice_counter + 1);
         
-        return $wpdb->insert_id;
+        return $invoice_id;
     }
     
     /**
      * Send booking notification
      */
-    public function send_booking_notification($booking_id, $event) {
+    public function send_booking_notification($booking_id, $event, $custom_data = array()) {
         $notification_manager = HRB_Notification_Manager::getInstance();
-        return $notification_manager->send_notification($booking_id, $event);
+        return $notification_manager->send_notification($booking_id, $event, $custom_data);
     }
     
     /**
@@ -872,21 +1245,30 @@ class HRB_Booking_Manager {
     public function send_booking_reminders() {
         global $wpdb;
         
-        
         // Get bookings starting in 1 hour (expanded window: 45-75 minutes)
+        // Filter out anonymous bookings and bookings without email
         $upcoming_bookings = $wpdb->get_results(
-            "SELECT b.*, c.email, c.phone 
+            "SELECT b.*, c.email, c.phone, c.first_name, c.last_name
              FROM {$wpdb->prefix}hrb_bookings b
-             JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
+             LEFT JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
              WHERE b.status = 'confirmed'
+             AND b.is_anonymous = 0
+             AND c.email IS NOT NULL
+             AND c.email != ''
              AND CONCAT(b.booking_date, ' ', b.start_time) BETWEEN NOW() + INTERVAL 45 MINUTE AND NOW() + INTERVAL 75 MINUTE"
         );
         
-        
         $reminders_sent = 0;
         $reminders_skipped = 0;
+        $reminders_failed = 0;
         
         foreach ($upcoming_bookings as $booking) {
+            // Validate email before proceeding
+            if (empty($booking->email) || !is_email($booking->email)) {
+                $reminders_skipped++;
+                continue;
+            }
+            
             // Check if reminder already sent
             $reminder_sent = $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_notification_logs 
@@ -896,17 +1278,22 @@ class HRB_Booking_Manager {
             
             if ($reminder_sent == 0) {
                 $result = $this->send_booking_notification($booking->id, 'booking_reminder');
-                $reminders_sent++;
+                
+                if (is_wp_error($result)) {
+                    $reminders_failed++;
+                } else {
+                    $reminders_sent++;
+                }
             } else {
                 $reminders_skipped++;
             }
         }
         
-        
         return array(
             'total_found' => count($upcoming_bookings),
             'reminders_sent' => $reminders_sent,
-            'reminders_skipped' => $reminders_skipped
+            'reminders_skipped' => $reminders_skipped,
+            'reminders_failed' => $reminders_failed
         );
     }
     
@@ -1136,6 +1523,7 @@ class HRB_Booking_Manager {
                 b.start_time,
                 b.end_time,
                 b.status,
+                b.is_anonymous,
                 b.payment_method,
                 COALESCE(p.status, b.payment_status) as payment_status,
                 p.status as actual_payment_status,
@@ -1144,15 +1532,30 @@ class HRB_Booking_Manager {
                 b.total_amount,
                 b.extra_people,
                 b.created_at,
-                CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+                CASE 
+                    WHEN b.is_anonymous = 1 THEN CONCAT(
+                        CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE '' END, 
+                        CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN CONCAT(' ', b.last_name) ELSE '' END
+                    )
+                    ELSE CONCAT(c.first_name, ' ', c.last_name)
+                END as customer_name,
                 c.email as customer_email,
                 c.phone as customer_phone,
                 r.name as room_name
             FROM {$wpdb->prefix}hrb_bookings b
             LEFT JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
             LEFT JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
-            LEFT JOIN {$wpdb->prefix}hrb_payments p ON b.id = p.booking_id
+            LEFT JOIN (
+                SELECT booking_id, status, transaction_id, processed_at
+                FROM {$wpdb->prefix}hrb_payments
+                WHERE id IN (
+                    SELECT MAX(id) 
+                    FROM {$wpdb->prefix}hrb_payments 
+                    GROUP BY booking_id
+                )
+            ) p ON b.id = p.booking_id
             {$where_clause}
+            GROUP BY b.id
             ORDER BY {$order_by}
             LIMIT %d OFFSET %d
         ";
@@ -1354,6 +1757,52 @@ class HRB_Booking_Manager {
         );
         
         return $result;
+    }
+    
+    /**
+     * Cleanup incomplete PayPal payments after 15 minutes
+     * This prevents time slots from being blocked by abandoned payment processes
+     */
+    public function cleanup_incomplete_payments() {
+        global $wpdb;
+        
+        // Find bookings with PayPal payment method that are still pending after 15 minutes
+        $incomplete_bookings = $wpdb->get_results($wpdb->prepare("
+            SELECT b.id, b.booking_reference, b.customer_id, b.room_id, b.booking_date, b.start_time, b.end_time
+            FROM {$wpdb->prefix}hrb_bookings b
+            LEFT JOIN {$wpdb->prefix}hrb_payments p ON b.id = p.booking_id
+            WHERE b.payment_method = 'paypal' 
+            AND b.status = 'pending' 
+            AND b.payment_status = 'pending'
+            AND b.created_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+            AND (p.id IS NULL OR p.status = 'pending')
+        "));
+        
+        $cancelled_count = 0;
+        
+        foreach ($incomplete_bookings as $booking) {
+            // Cancel the booking
+            $result = $wpdb->update(
+                $wpdb->prefix . 'hrb_bookings',
+                array(
+                    'status' => 'cancelled',
+                    'payment_status' => 'cancelled'
+                ),
+                array('id' => $booking->id),
+                array('%s', '%s'),
+                array('%d')
+            );
+            
+            if ($result !== false) {
+                $cancelled_count++;
+                
+                // Send payment timeout cancellation email
+                $this->send_booking_notification($booking->id, 'payment_timeout_cancellation');
+                
+            }
+        }
+        
+        return $cancelled_count;
     }
 }
 ?>

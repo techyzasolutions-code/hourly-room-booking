@@ -128,8 +128,7 @@ $month_end = date('Y-m-t');
                                         </td>
                                         <td>
                                             <div class="hrb-customer-info">
-                                                <strong><?php echo esc_html($booking['customer_name']); ?></strong><br>
-                                                <small><?php echo esc_html($booking['customer_email']); ?></small>
+                                                <?php echo hrb_display_customer_info($booking, 'name_email'); ?>
                                             </div>
                                         </td>
                                         <td>
@@ -370,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .hrb-admin-dashboard {
     background: #f8f9fa;
     min-height: calc(100vh - 32px);
-    margin: 20px -20px -20px -2px;
+    /* margin: 20px -20px -20px -2px; */
     padding: 20px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }

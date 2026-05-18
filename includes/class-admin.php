@@ -27,15 +27,25 @@ class HRB_Admin {
         add_action('wp_ajax_hrb_get_room_details', array($this, 'ajax_get_room_details'));
         add_action('wp_ajax_hrb_get_calendar_events', array($this, 'ajax_get_calendar_events'));
         add_action('wp_ajax_hrb_get_calendar_stats', array($this, 'ajax_get_calendar_stats'));
+        add_action('wp_ajax_hrb_get_lock_events', array($this, 'ajax_get_lock_events'));
+        add_action('wp_ajax_hrb_get_extras_lock_events', array($this, 'ajax_get_extras_lock_events'));
         add_action('wp_ajax_hrb_get_booking_details', array($this, 'ajax_get_booking_details_modal'));
         add_action('wp_ajax_hrb_get_customer_details', array($this, 'ajax_get_customer_details'));
         add_action('wp_ajax_hrb_save_customer', array($this, 'ajax_save_customer'));
         add_action('wp_ajax_hrb_export_customer_data', array($this, 'ajax_export_customer_data'));
+        add_action('wp_ajax_hrb_check_customer_bookings', array($this, 'ajax_check_customer_bookings'));
         add_action('wp_ajax_hrb_get_extra_details', array($this, 'ajax_get_extra_details'));
         add_action('wp_ajax_hrb_get_template', array($this, 'ajax_get_template'));
+        add_action('wp_ajax_hrb_test_reminders', array($this, 'ajax_test_reminders'));
+        add_action('wp_ajax_hrb_delete_notification_log', array($this, 'ajax_delete_notification_log'));
+        add_action('wp_ajax_hrb_resend_notification', array($this, 'ajax_resend_notification'));
+        add_action('wp_ajax_hrb_send_additional_payment_link', array($this, 'ajax_send_additional_payment_link'));
+        add_action('wp_ajax_hrb_mark_additional_payment_complete', array($this, 'ajax_mark_additional_payment_complete'));
+        add_action('wp_ajax_hrb_regenerate_invoice', array($this, 'ajax_regenerate_invoice'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('admin_notices', array($this, 'add_admin_notices'));
         add_action('wp_dashboard_setup', array($this, 'add_dashboard_widgets'));
+        add_action('admin_footer', array($this, 'render_confirmation_modal'));
     }
     
     /**
@@ -83,6 +93,16 @@ class HRB_Admin {
             array($this, 'rooms_page')
         );
         
+        // Room Availability submenu
+        add_submenu_page(
+            'hrb-dashboard',
+            __('Room Availability', 'hourly-room-booking'),
+            __('Room Availability', 'hourly-room-booking'),
+            'hrb_manage_rooms',
+            'hrb-room-availability',
+            array($this, 'room_availability_page')
+        );
+        
         // Calendar submenu
         add_submenu_page(
             'hrb-dashboard',
@@ -103,6 +123,16 @@ class HRB_Admin {
             array($this, 'customers_page')
         );
 
+        // Extras Availability submenu
+        add_submenu_page(
+            'hrb-dashboard',
+            __('Extras Availability', 'hourly-room-booking'),
+            __('Extras Availability', 'hourly-room-booking'),
+            'hrb_manage_extras',
+            'hrb-extras-availability',
+            array($this, 'extras_availability_page')
+        );
+        
         // Extras submenu
         add_submenu_page(
             'hrb-dashboard',
@@ -161,6 +191,16 @@ class HRB_Admin {
             'hrb_view_bookings',
             'hrb-guide',
             array($this, 'guide_page')
+        );
+        
+        // Email Logs submenu (formerly Reminder Logs)
+        add_submenu_page(
+            'hrb-dashboard',
+            __('Email Logs', 'hourly-room-booking'),
+            __('Email Logs', 'hourly-room-booking'),
+            'hrb_view_bookings',
+            'hrb-reminder-logs',
+            array($this, 'reminder_logs_page')
         );
     }
     
@@ -227,9 +267,18 @@ class HRB_Admin {
         wp_enqueue_script('hrb-admin', HRB_PLUGIN_URL . 'admin/assets/js/admin.js', array('jquery', 'chart-js'), HRB_VERSION, true);
         wp_enqueue_style('hrb-admin', HRB_PLUGIN_URL . 'admin/assets/css/admin.css', array(), HRB_VERSION);
         
-        wp_localize_script('hrb-admin', 'hrb_admin_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
+        wp_localize_script('hrb-admin', 'hrbAdmin', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('hrb_admin_nonce'),
+            'i18n' => array(
+                'confirmAction' => __('Confirm Action', 'hourly-room-booking'),
+                'confirmTimeSlotChange' => __('Confirm Time Slot Change', 'hourly-room-booking'),
+                'originalTime' => __('Original time:', 'hourly-room-booking'),
+                'newTime' => __('New time:', 'hourly-room-booking'),
+                'confirm' => __('Confirm', 'hourly-room-booking'),
+                'cancel' => __('Cancel', 'hourly-room-booking'),
+                'sureChangeTimeSlot' => __('Are you sure you want to change the time slot?', 'hourly-room-booking'),
+            ),
             'strings' => array(
                 'confirm_delete' => __('Are you sure you want to delete this item?', 'hourly-room-booking'),
                 'confirm_cancel' => __('Are you sure you want to cancel this booking?', 'hourly-room-booking'),
@@ -326,6 +375,40 @@ class HRB_Admin {
         //$this->render_admin_header(__('Rooms Management', 'hourly-room-booking'));
         include HRB_PLUGIN_DIR . 'admin/views/rooms.php';
         //$this->render_admin_footer();
+    }
+    
+    /**
+     * Room Availability page
+     */
+    public function room_availability_page() {
+        $this->check_permissions('hrb_manage_rooms');
+        $room_manager = HRB_Room_Manager::getInstance();
+        
+        // Handle AJAX actions
+        if (isset($_POST['action']) && isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_admin_action')) {
+            $this->handle_room_availability_actions();
+        }
+        
+        $rooms = $room_manager->get_all_rooms(false); // Include inactive rooms
+        
+        include HRB_PLUGIN_DIR . 'admin/views/room-availability.php';
+    }
+    
+    /**
+     * Extras Availability page
+     */
+    public function extras_availability_page() {
+        $this->check_permissions('hrb_manage_extras');
+        $extras_manager = HRB_Extras::getInstance();
+        
+        // Handle AJAX actions
+        if (isset($_POST['action']) && isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_admin_action')) {
+            $this->handle_extras_availability_actions();
+        }
+        
+        $extras = $extras_manager->get_extras('all');
+        
+        include HRB_PLUGIN_DIR . 'admin/views/extras-availability.php';
     }
     
     /**
@@ -612,6 +695,7 @@ class HRB_Admin {
                         array_filter(array_map('trim', explode(',', $_POST['room_amenities']))) : [],
                     'images' => isset($_POST['room_images']) ? 
                         array_filter(array_map('trim', explode(',', $_POST['room_images']))) : [],
+                    'color' => sanitize_hex_color($_POST['room_color'] ?? '#3498db'),
                     'external_link' => $_POST['room_external_link'] ?? ''
                 );
                 
@@ -659,6 +743,7 @@ class HRB_Admin {
                     'price_extra_hour' => floatval($_POST['room_price_extra_hour'] ?? 0),
                     'amenities' => $amenities_json,
                     'images' => $images_json,
+                    'color' => sanitize_hex_color($_POST['room_color'] ?? '#3498db'),
                     'external_link' => sanitize_url($_POST['room_external_link'] ?? ''),
                     'is_active' => isset($_POST['room_is_active']) ? 1 : 0
                 );
@@ -692,6 +777,326 @@ class HRB_Admin {
                     echo '<div class="notice notice-error"><p>' . $result->get_error_message() . '</p></div>';
                 } else {
                     echo '<div class="notice notice-success"><p>' . __('Room status updated successfully!', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Handle room availability actions
+     */
+    private function handle_room_availability_actions() {
+        // Check if user can manage rooms
+        if (!current_user_can('hrb_manage_rooms')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage room availability.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
+        $action = sanitize_text_field($_POST['action']);
+        $sub_action = sanitize_text_field($_POST['sub_action'] ?? '');
+        global $wpdb;
+        
+        switch ($sub_action) {
+            case 'lock_room':
+                $room_id = intval($_POST['room_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->insert(
+                    $wpdb->prefix . 'hrb_room_locks',
+                    array(
+                        'room_id' => $room_id,
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason,
+                        'created_by' => get_current_user_id(),
+                        'created_at' => current_time('mysql')
+                    ),
+                    array('%d', '%s', '%s', '%s', '%d', '%s')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Room locked successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to lock room.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'unlock_room':
+                $lock_id = intval($_POST['lock_id']);
+                
+                $result = $wpdb->delete(
+                    $wpdb->prefix . 'hrb_room_locks',
+                    array('id' => $lock_id),
+                    array('%d')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Room unlocked successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to unlock room.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'master_lock':
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->insert(
+                    $wpdb->prefix . 'hrb_master_locks',
+                    array(
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason,
+                        'created_by' => get_current_user_id(),
+                        'created_at' => current_time('mysql')
+                    ),
+                    array('%s', '%s', '%s', '%d', '%s')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Master lock applied successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to apply master lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'edit_room_lock':
+                $lock_id = intval($_POST['lock_id']);
+                $room_id = intval($_POST['room_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->update(
+                    $wpdb->prefix . 'hrb_room_locks',
+                    array(
+                        'room_id' => $room_id,
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason
+                    ),
+                    array('id' => $lock_id),
+                    array('%d', '%s', '%s', '%s'),
+                    array('%d')
+                );
+                
+                if ($result !== false) {
+                    echo '<div class="notice notice-success"><p>' . __('Room lock updated successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to update room lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'edit_master_lock':
+                $lock_id = intval($_POST['lock_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->update(
+                    $wpdb->prefix . 'hrb_master_locks',
+                    array(
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason
+                    ),
+                    array('id' => $lock_id),
+                    array('%s', '%s', '%s'),
+                    array('%d')
+                );
+                
+                if ($result !== false) {
+                    echo '<div class="notice notice-success"><p>' . __('Master lock updated successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to update master lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'master_unlock':
+                $lock_id = intval($_POST['lock_id']);
+                
+                $result = $wpdb->delete(
+                    $wpdb->prefix . 'hrb_master_locks',
+                    array('id' => $lock_id),
+                    array('%d')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Master lock removed successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to remove master lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Create missing extra locks tables if they don't exist
+     */
+    public function ensure_extra_locks_tables() {
+        global $wpdb;
+        
+        $extra_locks_table = $wpdb->prefix . 'hrb_extra_locks';
+        $master_extra_locks_table = $wpdb->prefix . 'hrb_master_extra_locks';
+        
+        // Check if tables exist
+        $extra_locks_exists = $wpdb->get_var("SHOW TABLES LIKE '$extra_locks_table'") == $extra_locks_table;
+        $master_extra_locks_exists = $wpdb->get_var("SHOW TABLES LIKE '$master_extra_locks_table'") == $master_extra_locks_table;
+        
+        if (!$extra_locks_exists || !$master_extra_locks_exists) {
+            // Create the missing tables
+            HRB_Database::create_tables();
+        }
+    }
+    
+    /**
+     * Handle extras availability actions
+     */
+    private function handle_extras_availability_actions() {
+        // Check if user can manage extras
+        if (!current_user_can('hrb_manage_extras')) {
+            echo '<div class="notice notice-error"><p>' . __('You do not have permission to manage extras availability.', 'hourly-room-booking') . '</p></div>';
+            return;
+        }
+        
+        $sub_action = sanitize_text_field($_POST['sub_action']);
+        global $wpdb;
+        
+        switch ($sub_action) {
+            case 'lock_extra':
+                $extra_id = intval($_POST['extra_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->insert(
+                    $wpdb->prefix . 'hrb_extra_locks',
+                    array(
+                        'extra_id' => $extra_id,
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason,
+                        'created_by' => get_current_user_id(),
+                        'created_at' => current_time('mysql')
+                    ),
+                    array('%d', '%s', '%s', '%s', '%d', '%s')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Extra locked successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to lock extra.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'unlock_extra':
+                $lock_id = intval($_POST['lock_id']);
+                
+                $result = $wpdb->delete(
+                    $wpdb->prefix . 'hrb_extra_locks',
+                    array('id' => $lock_id),
+                    array('%d')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Extra unlocked successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to unlock extra.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'master_lock_extras':
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->insert(
+                    $wpdb->prefix . 'hrb_master_extra_locks',
+                    array(
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason,
+                        'created_by' => get_current_user_id(),
+                        'created_at' => current_time('mysql')
+                    ),
+                    array('%s', '%s', '%s', '%d', '%s')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Master lock applied successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to apply master lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'master_unlock_extras':
+                $lock_id = intval($_POST['lock_id']);
+                
+                $result = $wpdb->delete(
+                    $wpdb->prefix . 'hrb_master_extra_locks',
+                    array('id' => $lock_id),
+                    array('%d')
+                );
+                
+                if ($result) {
+                    echo '<div class="notice notice-success"><p>' . __('Master lock removed successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to remove master lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'edit_extra_lock':
+                $lock_id = intval($_POST['lock_id']);
+                $extra_id = intval($_POST['extra_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->update(
+                    $wpdb->prefix . 'hrb_extra_locks',
+                    array(
+                        'extra_id' => $extra_id,
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason
+                    ),
+                    array('id' => $lock_id),
+                    array('%d', '%s', '%s', '%s'),
+                    array('%d')
+                );
+                
+                if ($result !== false) {
+                    echo '<div class="notice notice-success"><p>' . __('Extra lock updated successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to update extra lock.', 'hourly-room-booking') . '</p></div>';
+                }
+                break;
+                
+            case 'edit_master_extra_lock':
+                $lock_id = intval($_POST['lock_id']);
+                $start_datetime = sanitize_text_field($_POST['start_datetime']);
+                $end_datetime = sanitize_text_field($_POST['end_datetime']);
+                $reason = sanitize_textarea_field($_POST['reason']);
+                
+                $result = $wpdb->update(
+                    $wpdb->prefix . 'hrb_master_extra_locks',
+                    array(
+                        'start_datetime' => $start_datetime,
+                        'end_datetime' => $end_datetime,
+                        'reason' => $reason
+                    ),
+                    array('id' => $lock_id),
+                    array('%s', '%s', '%s'),
+                    array('%d')
+                );
+                
+                if ($result !== false) {
+                    echo '<div class="notice notice-success"><p>' . __('Master extra lock updated successfully!', 'hourly-room-booking') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . __('Failed to update master extra lock.', 'hourly-room-booking') . '</p></div>';
                 }
                 break;
         }
@@ -934,7 +1339,7 @@ class HRB_Admin {
      * Handle admin AJAX requests
      */
     public function handle_admin_ajax() {
-        if (!wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
             wp_die(__('Security check failed', 'hourly-room-booking'));
         }
         
@@ -1063,23 +1468,29 @@ class HRB_Admin {
         // Remove existing role first to ensure clean update
         remove_role('hrb_staff');
         
-        // Add room booking staff role (VIEW-ONLY)
+        // Add room booking staff role (FULL ACCESS)
         add_role('hrb_staff', __('Room Booking Staff', 'hourly-room-booking'), array(
             'read' => true,
             'hrb_view_bookings' => true,
-            'hrb_manage_bookings' => false,  // Staff cannot manage bookings
+            'hrb_manage_bookings' => true,   // Staff can manage bookings
             'hrb_view_calendar' => true,
             'hrb_view_customers' => true,
+            'hrb_manage_customers' => true,  // Staff can manage customers
             'hrb_view_payments' => true,
+            'hrb_manage_payments' => true,   // Staff can manage payments
             'hrb_view_reports' => true,
-            'hrb_manage_settings' => false,  // Staff cannot access settings
-            'hrb_manage_rooms' => false,    // Staff cannot manage rooms
-            'hrb_manage_customers' => false, // Staff cannot manage customers
-            'hrb_manage_payments' => false   // Staff cannot manage payments
+            'hrb_manage_settings' => true,   // Staff can access settings
+            'hrb_manage_rooms' => true,      // Staff can manage rooms
+            'hrb_manage_extras' => true,     // Staff can manage extras
+            'hrb_view_extras' => true,       // Staff can view extras
+            'hrb_export_data' => true        // Staff can export data
         ));
         
         // Force update existing users with hrb_staff role
         self::update_existing_staff_capabilities();
+        
+        // Force update existing administrator users
+        self::update_existing_admin_capabilities();
         
         // Add capabilities to administrator
         $admin_role = get_role('administrator');
@@ -1087,6 +1498,8 @@ class HRB_Admin {
             $admin_role->add_cap('hrb_view_bookings');
             $admin_role->add_cap('hrb_manage_bookings');
             $admin_role->add_cap('hrb_manage_rooms');
+            $admin_role->add_cap('hrb_manage_extras');
+            $admin_role->add_cap('hrb_view_extras');
             $admin_role->add_cap('hrb_view_calendar');
             $admin_role->add_cap('hrb_view_customers');
             $admin_role->add_cap('hrb_manage_customers');
@@ -1094,6 +1507,7 @@ class HRB_Admin {
             $admin_role->add_cap('hrb_manage_payments');
             $admin_role->add_cap('hrb_view_reports');
             $admin_role->add_cap('hrb_manage_settings');
+            $admin_role->add_cap('hrb_export_data');  // Add export capability
         }
     }
     
@@ -1105,19 +1519,45 @@ class HRB_Admin {
         $staff_users = get_users(array('role' => 'hrb_staff'));
         
         foreach ($staff_users as $user) {
-            // Remove old capabilities that might exist
-            $user->remove_cap('hrb_manage_bookings');
-            $user->remove_cap('hrb_manage_rooms');
-            $user->remove_cap('hrb_manage_customers');
-            $user->remove_cap('hrb_manage_payments');
-            $user->remove_cap('hrb_manage_settings');
-            
-            // Ensure they have the correct view-only capabilities
+            // Give staff full access to all plugin capabilities
             $user->add_cap('hrb_view_bookings');
+            $user->add_cap('hrb_manage_bookings');
             $user->add_cap('hrb_view_calendar');
             $user->add_cap('hrb_view_customers');
+            $user->add_cap('hrb_manage_customers');
             $user->add_cap('hrb_view_payments');
+            $user->add_cap('hrb_manage_payments');
             $user->add_cap('hrb_view_reports');
+            $user->add_cap('hrb_manage_settings');
+            $user->add_cap('hrb_manage_rooms');
+            $user->add_cap('hrb_manage_extras');
+            $user->add_cap('hrb_view_extras');
+            $user->add_cap('hrb_export_data');
+        }
+    }
+    
+    /**
+     * Update existing administrator users with correct capabilities
+     */
+    public static function update_existing_admin_capabilities() {
+        // Get all users with administrator role
+        $admin_users = get_users(array('role' => 'administrator'));
+        
+        foreach ($admin_users as $user) {
+            // Give administrators all plugin capabilities
+            $user->add_cap('hrb_view_bookings');
+            $user->add_cap('hrb_manage_bookings');
+            $user->add_cap('hrb_manage_rooms');
+            $user->add_cap('hrb_manage_extras');
+            $user->add_cap('hrb_view_extras');
+            $user->add_cap('hrb_view_calendar');
+            $user->add_cap('hrb_view_customers');
+            $user->add_cap('hrb_manage_customers');
+            $user->add_cap('hrb_view_payments');
+            $user->add_cap('hrb_manage_payments');
+            $user->add_cap('hrb_view_reports');
+            $user->add_cap('hrb_manage_settings');
+            $user->add_cap('hrb_export_data');
         }
     }
     
@@ -1132,6 +1572,8 @@ class HRB_Admin {
             $admin_role->remove_cap('hrb_view_bookings');
             $admin_role->remove_cap('hrb_manage_bookings');
             $admin_role->remove_cap('hrb_manage_rooms');
+            $admin_role->remove_cap('hrb_manage_extras');
+            $admin_role->remove_cap('hrb_view_extras');
             $admin_role->remove_cap('hrb_view_calendar');
             $admin_role->remove_cap('hrb_view_customers');
             $admin_role->remove_cap('hrb_manage_customers');
@@ -1139,6 +1581,7 @@ class HRB_Admin {
             $admin_role->remove_cap('hrb_manage_payments');
             $admin_role->remove_cap('hrb_view_reports');
             $admin_role->remove_cap('hrb_manage_settings');
+            $admin_role->remove_cap('hrb_export_data');  // Remove export capability
         }
     }
     
@@ -1486,6 +1929,7 @@ class HRB_Admin {
                 b.total_amount,
                 b.payment_status,
                 b.created_at,
+                b.is_anonymous,
                 CONCAT(c.first_name, ' ', c.last_name) as customer_name,
                 c.email as customer_email,
                 c.phone as customer_phone,
@@ -1558,7 +2002,7 @@ class HRB_Admin {
     public function ajax_get_booking_chart_data(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1609,7 +2053,7 @@ class HRB_Admin {
     public function ajax_get_room_details() {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1653,6 +2097,7 @@ class HRB_Admin {
             'price_extra_hour' => $room->price_extra_hour ?? 0,
             'amenities' => $amenities_display,
             'images' => $room->images, // Add images field
+            'color' => $room->color ?? '#3498db', // Add color field
             'external_link' => $room->external_link ?? '',
             'is_active' => $room->is_active,
             'created_at' => $room->created_at,
@@ -1685,9 +2130,9 @@ class HRB_Admin {
             }
 
             $events = $wpdb->get_results($wpdb->prepare(
-                "SELECT b.*, c.first_name, c.last_name, r.name as room_name
+                "SELECT b.*, b.first_name as booking_first_name, b.last_name as booking_last_name, c.first_name, c.last_name, r.name as room_name, r.color as room_color
                  FROM {$wpdb->prefix}hrb_bookings b
-                 JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
+                 LEFT JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
                  JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
                  WHERE b.booking_date BETWEEN %s AND %s
                  {$where_room}
@@ -1699,21 +2144,131 @@ class HRB_Admin {
             $calendar_events = array();
 
             foreach ($events as $event) {
+                // Handle anonymous bookings
+                if ($event->is_anonymous) {
+                    $anon_name = trim(($event->booking_first_name ?? '') . ' ' . ($event->booking_last_name ?? ''));
+                    $customer_display = !empty($anon_name) ? $anon_name : sprintf(__('Anonymous (%s)', 'hourly-room-booking'), $event->booking_reference);
+                    $customer_name = !empty($anon_name) ? $anon_name : __('Anonymous', 'hourly-room-booking');
+                } else {
+                    $customer_display = $event->first_name . ' ' . $event->last_name;
+                    $customer_name = $event->first_name . ' ' . $event->last_name;
+                }
+                
+                // Get room color or default to blue
+                $room_color = !empty($event->room_color) ? $event->room_color : '#3498db';
+                
+                // Create title with customer name, room name, and status
+                $status_text = ucfirst($event->status);
+                $title = $customer_display . ' - ' . $event->room_name . ' (' . $status_text . ')';
+                
                 $calendar_events[] = array(
                     'id' => $event->id,
-                    'title' => $event->first_name . ' ' . $event->last_name . ' - ' . $event->room_name,
+                    'title' => $title,
                     'start' => $event->booking_date . 'T' . $event->start_time,
                     'end' => $event->booking_date . 'T' . $event->end_time,
-                    'backgroundColor' => $this->get_status_color($event->status),
-                    'borderColor' => $this->get_status_color($event->status),
+                    'backgroundColor' => $room_color,
+                    'borderColor' => $room_color,
                     'textColor' => '#fff',
                     'extendedProps' => array(
                         'booking_reference' => $event->booking_reference,
-                        'customer_name' => $event->first_name . ' ' . $event->last_name,
+                        'is_anonymous' => $event->is_anonymous,
+                        'customer_name' => $customer_name,
                         'room_name' => $event->room_name,
+                        'room_color' => $room_color,
                         'status' => $event->status,
                         'payment_status' => $event->payment_status,
                         'total_amount' => number_format($event->total_amount, 2)
+                    )
+                );
+            }
+
+            // Add room locks to calendar
+            $room_locks_query = '';
+            $lock_params = [$start_date, $end_date];
+            
+            if ($room_id > 0) {
+                $room_locks_query = 'AND rl.room_id = %d';
+                $lock_params[] = $room_id;
+            }
+
+            $room_locks = $wpdb->get_results($wpdb->prepare(
+                "SELECT rl.*, r.name as room_name, r.color as room_color
+                 FROM {$wpdb->prefix}hrb_room_locks rl
+                 LEFT JOIN {$wpdb->prefix}hrb_rooms r ON rl.room_id = r.id
+                 WHERE DATE(rl.start_datetime) >= %s AND DATE(rl.end_datetime) <= %s
+                 {$room_locks_query}
+                 ORDER BY rl.start_datetime",
+                $lock_params
+            ));
+
+            foreach ($room_locks as $lock) {
+                $event_start = date('Y-m-d', strtotime($lock->start_datetime));
+                $event_end = date('Y-m-d', strtotime($lock->end_datetime . ' +1 day'));
+                
+                // Extract time components for display
+                $start_time = date('H:i:s', strtotime($lock->start_datetime));
+                $end_time = date('H:i:s', strtotime($lock->end_datetime));
+                
+                if ($start_time !== '00:00:00' || $end_time !== '23:59:59') {
+                    // Time-specific lock
+                    $event_start .= 'T' . substr($start_time, 0, 5);
+                    $event_end = date('Y-m-d', strtotime($lock->end_datetime)) . 'T' . substr($end_time, 0, 5);
+                }
+                
+                // Use room color for lock events
+                $room_color = !empty($lock->room_color) ? $lock->room_color : '#95a5a6';
+                
+                // Format title without time information
+                $title = '🔒 ' . $lock->room_name;
+                if ($lock->reason) {
+                    $title .= ' - ' . $lock->reason;
+                }
+                
+                $calendar_events[] = array(
+                    'id' => 'lock_' . $lock->id,
+                    'title' => $title,
+                    'start' => $event_start,
+                    'end' => $event_end,
+                    'backgroundColor' => $room_color,
+                    'borderColor' => $room_color,
+                    'textColor' => '#fff',
+                    'extendedProps' => array(
+                        'type' => 'room_lock',
+                        'lock_id' => $lock->id,
+                        'room_id' => $lock->room_id,
+                        'room_name' => $lock->room_name,
+                        'room_color' => $room_color,
+                        'reason' => $lock->reason,
+                        'start_datetime' => $lock->start_datetime,
+                        'end_datetime' => $lock->end_datetime
+                    )
+                );
+            }
+
+            // Add master locks to calendar
+            $master_locks = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_master_locks
+                 WHERE DATE(start_datetime) >= %s AND DATE(end_datetime) <= %s
+                 ORDER BY start_datetime",
+                [$start_date, $end_date]
+            ));
+
+            foreach ($master_locks as $lock) {
+                $calendar_events[] = array(
+                    'id' => 'master_lock_' . $lock->id,
+                    'title' => '🔒🔒 MASTER LOCK - ' . ($lock->reason ?: 'All rooms locked'),
+                    'start' => date('Y-m-d', strtotime($lock->start_datetime)),
+                    'end' => date('Y-m-d', strtotime($lock->end_datetime . ' +1 day')),
+                    'backgroundColor' => '#e74c3c',
+                    'borderColor' => '#c0392b',
+                    'textColor' => '#fff',
+                    'display' => 'background',
+                    'extendedProps' => array(
+                        'type' => 'master_lock',
+                        'lock_id' => $lock->id,
+                        'reason' => $lock->reason,
+                        'start_datetime' => $lock->start_datetime,
+                        'end_datetime' => $lock->end_datetime
                     )
                 );
             }
@@ -1812,6 +2367,237 @@ class HRB_Admin {
     }
 
     /**
+     * AJAX handler for getting extra lock events for calendar
+     */
+    public function ajax_get_extras_lock_events() {
+        try {
+            check_ajax_referer('hrb_admin_nonce', 'nonce');
+            
+            if (!current_user_can('hrb_manage_extras')) {
+                wp_send_json_error('Insufficient permissions');
+            }
+
+            // Ensure tables exist
+            $this->ensure_extra_locks_tables();
+
+            $start_date = sanitize_text_field($_POST['start'] ?? '');
+            $end_date = sanitize_text_field($_POST['end'] ?? '');
+            $extra_id = intval($_POST['extra_id'] ?? 0);
+
+            global $wpdb;
+            $lock_events = array();
+
+            // Get extra locks
+            $extra_locks_query = "SELECT el.*, e.name as extra_name
+                                 FROM {$wpdb->prefix}hrb_extra_locks el
+                                 LEFT JOIN {$wpdb->prefix}hrb_extras e ON el.extra_id = e.id
+                                 WHERE (DATE(el.start_datetime) <= %s AND DATE(el.end_datetime) >= %s)";
+            
+            $extra_locks_params = array($end_date, $start_date);
+            
+            if ($extra_id > 0) {
+                $extra_locks_query .= " AND el.extra_id = %d";
+                $extra_locks_params[] = $extra_id;
+            }
+            
+            $extra_locks_query .= " ORDER BY el.start_datetime";
+            
+            $extra_locks = $wpdb->get_results($wpdb->prepare($extra_locks_query, $extra_locks_params));
+
+            foreach ($extra_locks as $lock) {
+                $event_start = date('Y-m-d', strtotime($lock->start_datetime));
+                $event_end = date('Y-m-d', strtotime($lock->end_datetime . ' +1 day'));
+                
+                // Extract time components for display
+                $start_time = date('H:i:s', strtotime($lock->start_datetime));
+                $end_time = date('H:i:s', strtotime($lock->end_datetime));
+                
+                if ($start_time !== '00:00:00' || $end_time !== '23:59:59') {
+                    // Time-specific lock
+                    $event_start .= 'T' . substr($start_time, 0, 5);
+                    $event_end = date('Y-m-d', strtotime($lock->end_datetime)) . 'T' . substr($end_time, 0, 5);
+                }
+                
+                $lock_events[] = array(
+                    'id' => 'extra_lock_' . $lock->id,
+                    'title' => '🔒 ' . $lock->extra_name . ($lock->reason ? ' - ' . $lock->reason : ''),
+                    'start' => $event_start,
+                    'end' => $event_end,
+                    'backgroundColor' => '#95a5a6',
+                    'borderColor' => '#7f8c8d',
+                    'textColor' => '#fff',
+                    'extendedProps' => array(
+                        'type' => 'extra_lock',
+                        'lock_id' => $lock->id,
+                        'extra_id' => $lock->extra_id,
+                        'extra_name' => $lock->extra_name,
+                        'reason' => $lock->reason,
+                        'start_datetime' => $lock->start_datetime,
+                        'end_datetime' => $lock->end_datetime
+                    )
+                );
+            }
+
+            // Get master extra locks
+            $master_extra_locks = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_master_extra_locks
+                 WHERE DATE(start_datetime) <= %s AND DATE(end_datetime) >= %s
+                 ORDER BY start_datetime",
+                $end_date, $start_date
+            ));
+
+            foreach ($master_extra_locks as $lock) {
+                $lock_events[] = array(
+                    'id' => 'master_extra_lock_' . $lock->id,
+                    'title' => '🔒🔒 MASTER LOCK' . ($lock->reason ? ' - ' . $lock->reason : ''),
+                    'start' => date('Y-m-d', strtotime($lock->start_datetime)),
+                    'end' => date('Y-m-d', strtotime($lock->end_datetime . ' +1 day')),
+                    'backgroundColor' => '#e74c3c',
+                    'borderColor' => '#c0392b',
+                    'textColor' => '#fff',
+                    'extendedProps' => array(
+                        'type' => 'master_extra_lock',
+                        'lock_id' => $lock->id,
+                        'reason' => $lock->reason,
+                        'start_datetime' => $lock->start_datetime,
+                        'end_datetime' => $lock->end_datetime
+                    )
+                );
+            }
+
+            wp_send_json_success($lock_events);
+
+        } catch (Exception $e) {
+            wp_send_json_error('Extra lock calendar error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * AJAX handler for lock events (dedicated lock calendar)
+     *
+     * @since 1.0.0
+     */
+    public function ajax_get_lock_events() {
+        try {
+            check_ajax_referer('hrb_admin_nonce', 'nonce');
+            
+            if (!current_user_can('hrb_manage_rooms')) {
+                wp_send_json_error('Insufficient permissions');
+            }
+
+            $start_date = sanitize_text_field($_POST['start'] ?? '');
+            $end_date = sanitize_text_field($_POST['end'] ?? '');
+            $room_id = intval($_POST['room_id'] ?? 0);
+
+            global $wpdb;
+            $lock_events = array();
+
+            // Get room locks
+            $room_locks_query = "SELECT rl.*, r.name as room_name, r.color as room_color
+                                FROM {$wpdb->prefix}hrb_room_locks rl
+                                LEFT JOIN {$wpdb->prefix}hrb_rooms r ON rl.room_id = r.id
+                                WHERE DATE(rl.start_datetime) <= %s AND DATE(rl.end_datetime) >= %s";
+            
+            $room_locks_params = array($end_date, $start_date);
+            
+            if ($room_id > 0) {
+                $room_locks_query .= " AND rl.room_id = %d";
+                $room_locks_params[] = $room_id;
+            }
+            
+            $room_locks_query .= " ORDER BY rl.start_datetime";
+            
+            $room_locks = $wpdb->get_results($wpdb->prepare($room_locks_query, $room_locks_params));
+
+            foreach ($room_locks as $lock) {
+                $event_start = date('Y-m-d', strtotime($lock->start_datetime));
+                $event_end = date('Y-m-d', strtotime($lock->end_datetime . ' +1 day'));
+                
+                // Extract time components for display
+                $start_time = date('H:i:s', strtotime($lock->start_datetime));
+                $end_time = date('H:i:s', strtotime($lock->end_datetime));
+                
+                if ($start_time !== '00:00:00' || $end_time !== '23:59:59') {
+                    // Time-specific lock
+                    $event_start .= 'T' . substr($start_time, 0, 5);
+                    $event_end = date('Y-m-d', strtotime($lock->end_datetime)) . 'T' . substr($end_time, 0, 5);
+                }
+                
+                // Use room color for lock events
+                $room_color = !empty($lock->room_color) ? $lock->room_color : '#95a5a6';
+                
+                // Format title without time information (time will be shown separately)
+                $title = '🔒 ' . $lock->room_name;
+                if ($lock->reason) {
+                    $title .= ' - ' . $lock->reason;
+                }
+                
+                // Format time range for display
+                $time_range = '';
+                if ($start_time !== '00:00:00' || $end_time !== '23:59:59') {
+                    $start_time_formatted = substr($start_time, 0, 5);
+                    $end_time_formatted = substr($end_time, 0, 5);
+                    $time_range = $start_time_formatted . ' - ' . $end_time_formatted;
+                }
+                
+                $lock_events[] = array(
+                    'id' => 'lock_' . $lock->id,
+                    'title' => $title,
+                    'start' => $event_start,
+                    'end' => $event_end,
+                    'backgroundColor' => $room_color,
+                    'borderColor' => $room_color,
+                    'textColor' => '#fff',
+                    'extendedProps' => array(
+                        'type' => 'room_lock',
+                        'lock_id' => $lock->id,
+                        'room_id' => $lock->room_id,
+                        'room_name' => $lock->room_name,
+                        'room_color' => $room_color,
+                        'reason' => $lock->reason,
+                        'start_datetime' => $lock->start_datetime,
+                        'end_datetime' => $lock->end_datetime,
+                        'time_range' => $time_range
+                    )
+                );
+            }
+
+            // Get master locks
+            $master_locks = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}hrb_master_locks
+                 WHERE DATE(start_datetime) <= %s AND DATE(end_datetime) >= %s
+                 ORDER BY start_datetime",
+                $end_date, $start_date
+            ));
+
+            foreach ($master_locks as $lock) {
+            $lock_events[] = array(
+                'id' => 'master_lock_' . $lock->id,
+                'title' => '🔒🔒 MASTER LOCK' . ($lock->reason ? ' - ' . $lock->reason : ''),
+                'start' => date('Y-m-d', strtotime($lock->start_datetime)),
+                'end' => date('Y-m-d', strtotime($lock->end_datetime . ' +1 day')),
+                'backgroundColor' => '#e74c3c',
+                'borderColor' => '#c0392b',
+                'textColor' => '#fff',
+                'display' => 'background',
+                'extendedProps' => array(
+                    'type' => 'master_lock',
+                    'lock_id' => $lock->id,
+                    'reason' => $lock->reason,
+                    'start_datetime' => $lock->start_datetime,
+                    'end_datetime' => $lock->end_datetime
+                )
+            );
+            }
+
+            wp_send_json_success($lock_events);
+
+        } catch (Exception $e) {
+            wp_send_json_error('Lock calendar error: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * AJAX handler for booking details modal
      *
      * @since 1.0.0
@@ -1819,7 +2605,7 @@ class HRB_Admin {
     public function ajax_get_booking_details_modal(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1835,7 +2621,13 @@ class HRB_Admin {
 
         $booking = $wpdb->get_row($wpdb->prepare("
             SELECT b.*,
-                   CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+                   CASE 
+                       WHEN b.is_anonymous = 1 THEN CONCAT(
+                           CASE WHEN b.first_name IS NOT NULL AND b.first_name != '' AND b.first_name != '0' THEN b.first_name ELSE '' END, 
+                           CASE WHEN b.last_name IS NOT NULL AND b.last_name != '' AND b.last_name != '0' THEN CONCAT(' ', b.last_name) ELSE '' END
+                       )
+                       ELSE CONCAT(c.first_name, ' ', c.last_name)
+                   END as customer_name,
                    c.email as customer_email,
                    c.phone as customer_phone,
                    r.name as room_name
@@ -1850,57 +2642,73 @@ class HRB_Admin {
             return;
         }
 
-        // Generate HTML for modal
-        $html = '<div class="hrb-booking-details">';
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Booking Reference:', 'hourly-room-booking') . '</strong> ' . esc_html($booking->booking_reference);
-        $html .= '</div>';
+        // Build a clean, icon-labeled details card
+        $date_fmt = get_option('hrb_date_format', 'd.m.Y');
+        $time_fmt = get_option('hrb_time_format', 'H:i');
 
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Customer:', 'hourly-room-booking') . '</strong> ' . esc_html($booking->customer_name);
-        $html .= '</div>';
+        $is_anonymous = !empty($booking->is_anonymous);
+        $customer_html = hrb_display_customer_info($booking, 'name_email');
 
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Email:', 'hourly-room-booking') . '</strong> ' . esc_html($booking->customer_email);
-        $html .= '</div>';
+        ob_start();
+        ?>
+        <div class="hrb-bd">
+            <div class="hrb-bd-grid">
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-hash"></i><?php _e('Reference', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo esc_html($booking->booking_reference); ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-person-fill"></i><?php _e('Customer', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo $customer_html; ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-door-closed-fill"></i><?php _e('Room', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo esc_html($booking->room_name); ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-calendar-event-fill"></i><?php _e('Date', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo esc_html(date_i18n($date_fmt, strtotime($booking->booking_date))); ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-clock-fill"></i><?php _e('Time', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo esc_html(date_i18n($time_fmt, strtotime($booking->start_time)) . ' – ' . date_i18n($time_fmt, strtotime($booking->end_time))); ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-flag-fill"></i><?php _e('Status', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo $this->get_status_badge($booking->status); ?></span>
+                </div>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-credit-card-fill"></i><?php _e('Payment Status', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo $this->get_payment_status_badge($booking->payment_status); ?></span>
+                </div>
+                <div class="hrb-bd-item hrb-bd-item-total">
+                    <span class="hrb-bd-label"><i class="bi bi-currency-euro"></i><?php _e('Total Amount', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value hrb-bd-amount"><?php echo esc_html(number_format((float) $booking->total_amount, 2)); ?> €</span>
+                </div>
+                <?php if (!empty($booking->extra_people) && $booking->extra_people > 0): ?>
+                <div class="hrb-bd-item">
+                    <span class="hrb-bd-label"><i class="bi bi-people-fill"></i><?php _e('Extra People', 'hourly-room-booking'); ?></span>
+                    <span class="hrb-bd-value"><?php echo (int) $booking->extra_people; ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
 
-        if ($booking->customer_phone) {
-            $html .= '<div class="hrb-detail-row">';
-            $html .= '<strong>' . __('Phone:', 'hourly-room-booking') . '</strong> ' . esc_html($booking->customer_phone);
-            $html .= '</div>';
-        }
+            <?php if (!empty($booking->special_requests) && trim($booking->special_requests) !== ''): ?>
+            <div class="hrb-bd-note hrb-bd-note-customer">
+                <div class="hrb-bd-note-header"><i class="bi bi-chat-square-quote-fill"></i> <?php _e('Special Requests', 'hourly-room-booking'); ?></div>
+                <div class="hrb-bd-note-body"><?php echo nl2br(esc_html($booking->special_requests)); ?></div>
+            </div>
+            <?php endif; ?>
 
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Room:', 'hourly-room-booking') . '</strong> ' . esc_html($booking->room_name);
-        $html .= '</div>';
-
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Date:', 'hourly-room-booking') . '</strong> ' . date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking->booking_date));
-        $html .= '</div>';
-
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Time:', 'hourly-room-booking') . '</strong> ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->start_time)) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking->end_time));
-        $html .= '</div>';
-
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Status:', 'hourly-room-booking') . '</strong> ' . $this->get_status_badge($booking->status);
-        $html .= '</div>';
-
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Payment Status:', 'hourly-room-booking') . '</strong> ' . $this->get_payment_status_badge($booking->payment_status);
-        $html .= '</div>';
-
-        $html .= '<div class="hrb-detail-row">';
-        $html .= '<strong>' . __('Total Amount:', 'hourly-room-booking') . '</strong> ' . number_format($booking->total_amount, 2) . ' €';
-        $html .= '</div>';
-
-        if ($booking->extra_people > 0) {
-            $html .= '<div class="hrb-detail-row">';
-            $html .= '<strong>' . __('Extra People:', 'hourly-room-booking') . '</strong> ' . $booking->extra_people;
-            $html .= '</div>';
-        }
-
-        $html .= '</div>';
+            <?php if (!empty($booking->admin_notes) && trim($booking->admin_notes) !== ''): ?>
+            <div class="hrb-bd-note hrb-bd-note-admin">
+                <div class="hrb-bd-note-header"><i class="bi bi-shield-lock-fill"></i> <?php _e('Admin Notes', 'hourly-room-booking'); ?></div>
+                <div class="hrb-bd-note-body"><?php echo nl2br(esc_html($booking->admin_notes)); ?></div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php
+        $html = ob_get_clean();
 
         wp_send_json_success(['html' => $html]);
     }
@@ -1910,7 +2718,7 @@ class HRB_Admin {
      */
     public function ajax_get_customer_details(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_customers')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -1925,10 +2733,10 @@ class HRB_Admin {
 
         global $wpdb;
 
-        // Get customer details
+        // Get customer details (exclude anonymous user)
         $customer = $wpdb->get_row($wpdb->prepare("
             SELECT * FROM {$wpdb->prefix}hrb_customers
-            WHERE id = %d
+            WHERE id = %d AND email != 'anonymous@example.com'
         ", $customer_id));
 
         if (!$customer) {
@@ -2036,6 +2844,7 @@ class HRB_Admin {
             $html .= '<table class="wp-list-table widefat striped">';
             $html .= '<thead>';
             $html .= '<tr>';
+            $html .= '<th>' . __('Reference', 'hourly-room-booking') . '</th>';
             $html .= '<th>' . __('Date', 'hourly-room-booking') . '</th>';
             $html .= '<th>' . __('Room', 'hourly-room-booking') . '</th>';
             $html .= '<th>' . __('Time', 'hourly-room-booking') . '</th>';
@@ -2047,6 +2856,7 @@ class HRB_Admin {
 
             foreach ($bookings as $booking) {
                 $html .= '<tr>';
+                $html .= '<td><strong>' . esc_html($booking->booking_reference) . '</strong></td>';
                 $html .= '<td>' . date_i18n(get_option('date_format'), strtotime($booking->booking_date)) . '</td>';
                 $html .= '<td>' . esc_html($booking->room_name) . '</td>';
                 $html .= '<td>' . esc_html($booking->start_time . ' - ' . $booking->end_time) . '</td>';
@@ -2074,7 +2884,7 @@ class HRB_Admin {
      */
     public function ajax_save_customer(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_manage_customers')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -2105,10 +2915,10 @@ class HRB_Admin {
 
         global $wpdb;
 
-        // Check if email is already taken by another customer
+        // Check if email is already taken by another customer (exclude anonymous user)
         $existing_customer = $wpdb->get_var($wpdb->prepare("
             SELECT id FROM {$wpdb->prefix}hrb_customers
-            WHERE email = %s AND id != %d
+            WHERE email = %s AND id != %d AND email != 'anonymous@example.com'
         ", $email, $customer_id));
 
         if ($existing_customer) {
@@ -2147,7 +2957,7 @@ class HRB_Admin {
      */
     public function ajax_export_customer_data(): void {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_export_data')) {
             wp_die(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -2210,10 +3020,11 @@ class HRB_Admin {
         // Booking history section
         if (!empty($bookings)) {
             fputcsv($output, ['Booking History']);
-            fputcsv($output, ['Date', 'Room', 'Start Time', 'End Time', 'Status', 'Amount', 'Booking Date Created']);
+            fputcsv($output, ['Reference', 'Date', 'Room', 'Start Time', 'End Time', 'Status', 'Amount', 'Booking Date Created']);
 
             foreach ($bookings as $booking) {
                 fputcsv($output, [
+                    $booking->booking_reference,
                     $booking->booking_date,
                     $booking->room_name,
                     $booking->start_time,
@@ -2235,7 +3046,7 @@ class HRB_Admin {
     public function ajax_get_extra_details() {
         check_ajax_referer('hrb_admin_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -2276,7 +3087,7 @@ class HRB_Admin {
     public function ajax_get_template() {
         check_ajax_referer('hrb_get_template', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('hrb_view_bookings')) {
             wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
             return;
         }
@@ -2310,6 +3121,133 @@ class HRB_Admin {
     }
     
     /**
+     * Email notification logs page (formerly Reminder Logs)
+     */
+    public function reminder_logs_page() {
+        $this->check_permissions('hrb_view_bookings');
+        
+        global $wpdb;
+        
+        // Handle delete action
+        if (isset($_POST['action']) && $_POST['action'] === 'delete_logs' && check_admin_referer('hrb_delete_logs', 'hrb_nonce')) {
+            if (current_user_can('hrb_manage_bookings')) {
+                $delete_days = intval($_POST['delete_days'] ?? 0);
+                if ($delete_days > 0) {
+                    $deleted = $wpdb->query($wpdb->prepare(
+                        "DELETE FROM {$wpdb->prefix}hrb_notification_logs 
+                         WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+                        $delete_days
+                    ));
+                    echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(__('%d log entries deleted successfully.', 'hourly-room-booking'), $deleted) . '</p></div>';
+                }
+            }
+        }
+        
+        // Get filters
+        $filters = array(
+            'type' => sanitize_text_field($_GET['type'] ?? ''),
+            'status' => sanitize_text_field($_GET['status'] ?? ''),
+            'event' => sanitize_text_field($_GET['event'] ?? ''),
+            'date_from' => sanitize_text_field($_GET['date_from'] ?? ''),
+            'date_to' => sanitize_text_field($_GET['date_to'] ?? ''),
+            'search' => sanitize_text_field($_GET['s'] ?? '')
+        );
+        
+        // Pagination
+        $page = intval($_GET['paged'] ?? 1);
+        $per_page = 50;
+        $offset = ($page - 1) * $per_page;
+        
+        // Build WHERE clause
+        $where_conditions = array('1=1');
+        $params = array();
+        
+        if (!empty($filters['type'])) {
+            $where_conditions[] = 'type = %s';
+            $params[] = $filters['type'];
+        }
+        
+        if (!empty($filters['status'])) {
+            $where_conditions[] = 'status = %s';
+            $params[] = $filters['status'];
+        }
+        
+        if (!empty($filters['event'])) {
+            $where_conditions[] = 'event = %s';
+            $params[] = $filters['event'];
+        }
+        
+        if (!empty($filters['date_from'])) {
+            $where_conditions[] = 'created_at >= %s';
+            $params[] = $filters['date_from'] . ' 00:00:00';
+        }
+        
+        if (!empty($filters['date_to'])) {
+            $where_conditions[] = 'created_at <= %s';
+            $params[] = $filters['date_to'] . ' 23:59:59';
+        }
+        
+        if (!empty($filters['search'])) {
+            $where_conditions[] = '(recipient LIKE %s OR subject LIKE %s OR booking_id = %d)';
+            $search_term = '%' . $wpdb->esc_like($filters['search']) . '%';
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = intval($filters['search']);
+        }
+        
+        $where_clause = implode(' AND ', $where_conditions);
+        
+        // Get total count
+        $count_params = $params;
+        $count_sql = "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_notification_logs WHERE $where_clause";
+        if (!empty($count_params)) {
+            $total_logs = $wpdb->get_var($wpdb->prepare($count_sql, $count_params));
+        } else {
+            $total_logs = $wpdb->get_var($count_sql);
+        }
+        
+        $total_pages = ceil($total_logs / $per_page);
+        
+        // Get logs
+        $query_params = $params;
+        $query_params[] = $per_page;
+        $query_params[] = $offset;
+        
+        $sql = "SELECT * FROM {$wpdb->prefix}hrb_notification_logs 
+                WHERE $where_clause 
+                ORDER BY created_at DESC 
+                LIMIT %d OFFSET %d";
+        
+        if (!empty($query_params)) {
+            $logs = $wpdb->get_results($wpdb->prepare($sql, $query_params));
+        } else {
+            $logs = $wpdb->get_results($sql);
+        }
+        
+        // Get overall stats
+        $stats = $wpdb->get_row("
+            SELECT 
+                COUNT(*) as total_logs,
+                SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_logs,
+                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_logs,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_logs,
+                SUM(CASE WHEN type = 'email' THEN 1 ELSE 0 END) as email_logs,
+                SUM(CASE WHEN type = 'sms' THEN 1 ELSE 0 END) as sms_logs,
+                SUM(CASE WHEN type = 'whatsapp' THEN 1 ELSE 0 END) as whatsapp_logs
+            FROM {$wpdb->prefix}hrb_notification_logs 
+        ");
+        
+        // Get unique events for filter dropdown
+        $events = $wpdb->get_col("SELECT DISTINCT event FROM {$wpdb->prefix}hrb_notification_logs ORDER BY event");
+        
+        // Get cron job status
+        $next_reminders = wp_next_scheduled('hrb_send_booking_reminders');
+        
+        // Include the view file
+        include HRB_PLUGIN_DIR . 'admin/views/notification-logs.php';
+    }
+    
+    /**
      * AJAX: Cleanup expired bookings
      */
     private function ajax_cleanup_expired_bookings() {
@@ -2333,6 +3271,918 @@ class HRB_Admin {
             'message' => sprintf(__('Fixed extra people pricing for %d bookings', 'hourly-room-booking'), $fixed_count)
         ));
     }
+    
+    /**
+     * AJAX: Test reminder system
+     */
+    public function ajax_test_reminders() {
+        check_ajax_referer('hrb_admin_nonce', 'nonce');
+        
+        if (!current_user_can('hrb_view_bookings')) {
+            wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
+            return;
+        }
+        
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        
+        try {
+            $result = $booking_manager->send_booking_reminders();
+            
+            $message = sprintf(
+                __('Reminder test completed: %d found, %d sent, %d skipped', 'hourly-room-booking'),
+                $result['total_found'],
+                $result['reminders_sent'],
+                $result['reminders_skipped']
+            );
+            
+            if (isset($result['reminders_failed']) && $result['reminders_failed'] > 0) {
+                $message .= sprintf(__(' (%d failed)', 'hourly-room-booking'), $result['reminders_failed']);
+            }
+            
+            wp_send_json_success(array('message' => $message, 'result' => $result));
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Test failed: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * AJAX: Delete single notification log
+     */
+    public function ajax_delete_notification_log() {
+        check_ajax_referer('hrb_admin_nonce', 'nonce');
+        
+        if (!current_user_can('hrb_manage_bookings')) {
+            wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
+            return;
+        }
+        
+        $log_id = intval($_POST['log_id'] ?? 0);
+        
+        if (!$log_id) {
+            wp_send_json_error(__('Invalid log ID', 'hourly-room-booking'));
+            return;
+        }
+        
+        global $wpdb;
+        
+        $deleted = $wpdb->delete(
+            $wpdb->prefix . 'hrb_notification_logs',
+            array('id' => $log_id),
+            array('%d')
+        );
+        
+        if ($deleted) {
+            wp_send_json_success(array('message' => __('Log entry deleted successfully.', 'hourly-room-booking')));
+        } else {
+            wp_send_json_error(__('Failed to delete log entry.', 'hourly-room-booking'));
+        }
+    }
 
+    /**
+     * AJAX: Resend a notification from log entry
+     */
+    public function ajax_resend_notification() {
+        check_ajax_referer('hrb_admin_nonce', 'nonce');
+        
+        if (!current_user_can('hrb_manage_bookings')) {
+            wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
+            return;
+        }
+        
+        $log_id = intval($_POST['log_id'] ?? 0);
+        
+        if (!$log_id) {
+            wp_send_json_error(__('Invalid log ID', 'hourly-room-booking'));
+            return;
+        }
+        
+        global $wpdb;
+        
+        // Get the log entry
+        $log = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_notification_logs WHERE id = %d",
+            $log_id
+        ));
+        
+        if (!$log) {
+            wp_send_json_error(__('Log entry not found', 'hourly-room-booking'));
+            return;
+        }
+        
+        // Only allow resending emails for now
+        if ($log->type !== 'email') {
+            wp_send_json_error(__('Only email notifications can be resent at this time', 'hourly-room-booking'));
+            return;
+        }
+        
+        // Check if log has a booking_id (required for resending)
+        if (!$log->booking_id || $log->booking_id <= 0) {
+            wp_send_json_error(__('Cannot resend notification: No booking associated with this log entry', 'hourly-room-booking'));
+            return;
+        }
+        
+        // Get the booking
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($log->booking_id);
+        
+        if (!$booking) {
+            wp_send_json_error(__('Booking not found', 'hourly-room-booking'));
+            return;
+        }
+        
+        // Check if booking is anonymous (skip notifications for anonymous bookings)
+        if ($booking->is_anonymous) {
+            wp_send_json_error(__('Cannot resend notification for anonymous bookings', 'hourly-room-booking'));
+            return;
+        }
+        
+        // Get the event from the log (remove _admin suffix if present)
+        $event = $log->event;
+        if (strpos($event, '_admin') !== false) {
+            // For admin notifications, we can't resend them directly
+            // Instead, we'll resend the customer notification
+            $event = str_replace('_admin', '', $event);
+        }
+        
+        // Resend the notification
+        $notification_manager = HRB_Notification_Manager::getInstance();
+        $result = $notification_manager->send_notification($log->booking_id, $event);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+            return;
+        }
+        
+        // Check if email was sent successfully
+        if (isset($result['email'])) {
+            if (is_wp_error($result['email'])) {
+                wp_send_json_error($result['email']->get_error_message());
+                return;
+            } elseif ($result['email'] === true || $result['email'] === 1) {
+                wp_send_json_success(array('message' => __('Notification resent successfully.', 'hourly-room-booking')));
+                return;
+            }
+        }
+        
+        wp_send_json_error(__('Failed to resend notification', 'hourly-room-booking'));
+    }
+
+    /**
+     * AJAX handler for checking customer bookings before deletion
+     */
+    public function ajax_check_customer_bookings(): void {
+        check_ajax_referer('hrb_admin_nonce', 'nonce');
+        if (!current_user_can('hrb_manage_customers')) {
+            wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
+            return;
+        }
+
+        $customer_id = intval($_POST['customer_id'] ?? 0);
+        if (!$customer_id) {
+            wp_send_json_error(__('Invalid customer ID', 'hourly-room-booking'));
+            return;
+        }
+
+        global $wpdb;
+
+        // Check for active bookings (not cancelled or completed)
+        $booking_count = $wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings 
+            WHERE customer_id = %d AND status NOT IN ('cancelled', 'completed')
+        ", $customer_id));
+
+        wp_send_json_success([
+            'booking_count' => intval($booking_count)
+        ]);
+    }
+
+    /**
+     * Send PayPal payment email when payment method is changed to PayPal
+     */
+    public function send_paypal_payment_email($booking_id) {
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            return false;
+        }
+        
+        // Get customer email
+        $customer_manager = HRB_Customer_Manager::getInstance();
+        $customer = $customer_manager->get_customer($booking->customer_id);
+        
+        if (!$customer || empty($customer->email) || $customer->email === 'anonymous@example.com') {
+            // No valid email address for PayPal payment
+            return false;
+        }
+        
+        // Generate PayPal payment link
+        $payment_link = $this->generate_paypal_payment_link($booking_id);
+        
+        if (!$payment_link) {
+            return false;
+        }
+        
+        // Use notification manager to send email with template
+        $notification_manager = HRB_Notification_Manager::getInstance();
+        
+        // Send notification with custom data including payment link
+        $custom_data = array(
+            'payment_link' => $payment_link
+        );
+        
+        return $notification_manager->send_notification($booking_id, 'paypal_payment_required', $custom_data);
+    }
+    
+    /**
+     * Generate PayPal payment link for existing booking
+     */
+    private function generate_paypal_payment_link($booking_id, $amount = null) {
+        // Get booking reference instead of using booking ID
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking || empty($booking->booking_reference)) {
+            return false;
+        }
+        
+        $site_url = home_url();
+        $link = $site_url . '/paypal-payment/?ref=' . urlencode($booking->booking_reference);
+        
+        global $wpdb;
+        
+        // For additional payments, find the payment record and use its token
+        if ($amount !== null && $amount > 0) {
+            // Find the pending payment record for additional services
+            $payment_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT payment_token FROM {$wpdb->prefix}hrb_payments 
+                WHERE booking_id = %d AND amount = %f AND status = 'pending' 
+                AND transaction_id LIKE 'ADD_%%'
+                ORDER BY id DESC LIMIT 1",
+                $booking_id,
+                $amount
+            ));
+            
+            if ($payment_record && !empty($payment_record->payment_token)) {
+                // Use payment token instead of amount or ID for security
+                $link .= '&token=' . urlencode($payment_record->payment_token);
+            }
+        } else {
+            // For initial payments, find the pending payment record (not additional)
+            $payment_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT payment_token FROM {$wpdb->prefix}hrb_payments 
+                WHERE booking_id = %d AND payment_method = 'paypal' AND status = 'pending'
+                AND (transaction_id IS NULL OR transaction_id NOT LIKE 'ADD_%%')
+                ORDER BY id DESC LIMIT 1",
+                $booking_id
+            ));
+            
+            if ($payment_record && !empty($payment_record->payment_token)) {
+                // Use payment token for security
+                $link .= '&token=' . urlencode($payment_record->payment_token);
+            }
+        }
+        
+        return $link;
+    }
+    
+    /**
+     * Send additional payment email when admin adds services to already-paid booking
+     */
+    public function send_additional_payment_email($booking_id, $additional_amount, $newly_added_extra_ids = array()) {
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            return false;
+        }
+        
+        // Get customer email
+        $customer_manager = HRB_Customer_Manager::getInstance();
+        $customer = $customer_manager->get_customer($booking->customer_id);
+        
+        if (!$customer || empty($customer->email) || $customer->email === 'anonymous@example.com') {
+            // No valid email address for payment
+            return false;
+        }
+        
+        // Get all pending payments for additional services (ADD_ prefix) to calculate total outstanding amount
+        global $wpdb;
+        $total_pending_amount = $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
+            WHERE booking_id = %d AND status = 'pending' AND transaction_id LIKE 'ADD_%%'",
+            $booking_id
+        ));
+        
+        // Use total pending amount for payment link (not just the current additional amount)
+        $payment_amount = $total_pending_amount > 0 ? $total_pending_amount : $additional_amount;
+        
+        // Generate PayPal payment link with total pending amount
+        $payment_link = $this->generate_paypal_payment_link($booking_id, $payment_amount);
+        
+        if (!$payment_link) {
+            return false;
+        }
+        
+        // Get details of what was added
+        $modifications = $booking_manager->get_booking_modifications($booking_id);
+        $extras_manager = HRB_Extras::getInstance();
+        $booking_extras = $extras_manager->get_booking_extras($booking_id);
+        
+        $added_services = array();
+        
+        // Check for hours modification
+        foreach ($modifications as $mod) {
+            if ($mod->modification_type === 'hours') {
+                $hours_increase = $mod->new_value - $mod->original_value;
+                $added_services[] = sprintf(__('+%s hours', 'hourly-room-booking'), number_format($hours_increase, 1));
+            } elseif ($mod->modification_type === 'extra_people') {
+                $people_increase = $mod->new_value - $mod->original_value;
+                $added_services[] = sprintf(__('+%d extra people', 'hourly-room-booking'), $people_increase);
+            }
+        }
+        
+        // Check for newly added extras (passed as parameter or check admin-added extras)
+        if (!empty($newly_added_extra_ids) && is_array($newly_added_extra_ids) && count($newly_added_extra_ids) > 0) {
+            // Convert to integers for comparison
+            $newly_added_extra_ids_int = array_map('intval', $newly_added_extra_ids);
+            // Use the passed newly added extra IDs
+            foreach ($booking_extras as $extra) {
+                // Compare with extra's id (which is the extra_id from extras table)
+                if (in_array(intval($extra->id), $newly_added_extra_ids_int)) {
+                    $added_services[] = $extra->name . ' (' . hrb_format_amount($extra->total_price) . ')';
+                }
+            }
+        }
+        
+        // Also check for admin-added extras (in case newly_added_extra_ids wasn't passed or is empty)
+        // This ensures we capture all admin-added extras
+        foreach ($booking_extras as $extra) {
+            if (!empty($extra->added_by_admin) && ($extra->added_by_admin == 1 || $extra->added_by_admin === '1' || $extra->added_by_admin === true)) {
+                // Only add if not already in the list (avoid duplicates)
+                $extra_text = $extra->name . ' (' . hrb_format_amount($extra->total_price) . ')';
+                if (!in_array($extra_text, $added_services)) {
+                    $added_services[] = $extra_text;
+                }
+            }
+        }
+        
+        // Format as HTML list for better readability in email
+        if (!empty($added_services)) {
+            $added_services_text = '<ul style="margin: 10px 0; padding-left: 20px;">';
+            foreach ($added_services as $service) {
+                $added_services_text .= '<li style="margin: 5px 0;">' . esc_html($service) . '</li>';
+            }
+            $added_services_text .= '</ul>';
+        } else {
+            // If no services found, try to get all admin-added extras as fallback
+            $added_services_text = '<p>' . __('Additional services', 'hourly-room-booking') . '</p>';
+        }
+        
+        // Use notification manager to send email with template
+        $notification_manager = HRB_Notification_Manager::getInstance();
+        
+        // Send notification with custom data including payment link, additional amount (will be formatted by notification manager), and services details
+        // Pass raw amount - notification manager will format it like total_amount
+        // Use total pending amount (not just current additional amount)
+        $custom_data = array(
+            'payment_link' => $payment_link,
+            'additional_amount' => $payment_amount, // Pass total pending amount, notification manager will format it
+            'added_services' => $added_services_text // Pass HTML formatted list
+        );
+        
+        return $notification_manager->send_notification($booking_id, 'additional_payment_required', $custom_data);
+    }
+    
+    /**
+     * AJAX handler: Send additional payment link email
+     */
+    public function ajax_send_additional_payment_link() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        // Check permissions
+        if (!current_user_can('hrb_manage_bookings')) {
+            wp_send_json_error(__('You do not have permission to perform this action', 'hourly-room-booking'));
+        }
+        
+        $booking_id = intval($_POST['booking_id']);
+        
+        if (!$booking_id) {
+            wp_send_json_error(__('Invalid booking ID', 'hourly-room-booking'));
+        }
+        
+        // Get booking details
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            wp_send_json_error(__('Booking not found', 'hourly-room-booking'));
+        }
+        
+        // Get pending payment amount
+        global $wpdb;
+        $total_pending_amount = $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
+            WHERE booking_id = %d AND status = 'pending' AND transaction_id LIKE 'ADD_%%'",
+            $booking_id
+        ));
+        
+        if ($total_pending_amount <= 0) {
+            wp_send_json_error(__('No pending payment found for this booking', 'hourly-room-booking'));
+        }
+        
+        // Get newly added extras (all admin-added extras)
+        $extras_manager = HRB_Extras::getInstance();
+        $booking_extras = $extras_manager->get_booking_extras($booking_id);
+        
+        $newly_added_extras = array();
+        foreach ($booking_extras as $extra) {
+            if (!empty($extra->added_by_admin) && ($extra->added_by_admin == 1 || $extra->added_by_admin === '1' || $extra->added_by_admin === true)) {
+                $newly_added_extras[] = intval($extra->id);
+            }
+        }
+        
+        // Send email
+        $result = $this->send_additional_payment_email($booking_id, $total_pending_amount, $newly_added_extras);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Payment link email sent successfully', 'hourly-room-booking')
+        ));
+    }
+    
+    /**
+     * AJAX handler: Mark additional payment as complete for onsite payments
+     */
+    public function ajax_mark_additional_payment_complete() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_admin_nonce')) {
+            wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        // Check permissions
+        if (!current_user_can('hrb_manage_bookings')) {
+            wp_send_json_error(__('You do not have permission to perform this action', 'hourly-room-booking'));
+        }
+        
+        $booking_id = intval($_POST['booking_id']);
+        
+        if (!$booking_id) {
+            wp_send_json_error(__('Invalid booking ID', 'hourly-room-booking'));
+        }
+        
+        // Get booking details
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            wp_send_json_error(__('Booking not found', 'hourly-room-booking'));
+        }
+        
+        // Verify payment method is onsite or cash
+        $payment_method_normalized = strtolower(trim($booking->payment_method ?? ''));
+        if (!in_array($payment_method_normalized, ['onsite', 'cash'])) {
+            wp_send_json_error(__('This action is only available for onsite/cash payment methods', 'hourly-room-booking'));
+        }
+        
+        // Get ALL pending payments for this booking (including original and additional service payments)
+        global $wpdb;
+        $pending_payments = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}hrb_payments 
+            WHERE booking_id = %d AND status = 'pending'",
+            $booking_id
+        ));
+        
+        if (empty($pending_payments)) {
+            wp_send_json_error(__('No pending payments found for this booking', 'hourly-room-booking'));
+        }
+        
+        // Check if there are already completed payments (to determine if this is first time or additional payment)
+        $existing_completed_payments = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_payments 
+            WHERE booking_id = %d AND status IN ('completed', 'paid')",
+            $booking_id
+        ));
+        
+        $is_first_payment = ($existing_completed_payments == 0);
+        
+        // Update all pending payments to 'completed'
+        $updated_count = 0;
+        foreach ($pending_payments as $payment) {
+            $result = $wpdb->update(
+                $wpdb->prefix . 'hrb_payments',
+                array(
+                    'status' => 'completed',
+                    'processed_at' => current_time('mysql')
+                ),
+                array('id' => $payment->id),
+                array('%s', '%s'),
+                array('%d')
+            );
+            
+            if ($result !== false) {
+                $updated_count++;
+            }
+        }
+        
+        if ($updated_count === 0) {
+            wp_send_json_error(__('Failed to update payment status', 'hourly-room-booking'));
+        }
+        
+        // Sync payment status to booking table
+        $booking_manager->update_booking($booking_id, array(
+            'payment_status' => 'completed'
+        ), false); // Don't send notification during update
+        
+        // Get updated booking
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if ($booking) {
+            // Ensure booking status is confirmed (required for invoice and email)
+            if ($booking->status !== 'confirmed') {
+                $booking_manager->update_booking($booking_id, array('status' => 'confirmed'), false);
+                $booking = $booking_manager->get_booking($booking_id);
+            }
+            
+            $invoice_generator = HRB_Invoice_Generator::getInstance();
+            
+            if ($is_first_payment) {
+                // First time payment: Generate invoice if it doesn't exist and send payment confirmation email
+                $existing_invoice = $invoice_generator->get_invoice_by_booking($booking_id);
+                
+                if (!$existing_invoice) {
+                    $invoice_id = $booking_manager->create_invoice($booking_id);
+                    if (!is_wp_error($invoice_id)) {
+                        // Generate PDF for the invoice
+                        $invoice_generator->generate_invoice_pdf($invoice_id);
+                    }
+                } else {
+                    // Ensure PDF exists
+                    if (empty($existing_invoice->pdf_file_path)) {
+                        $invoice_generator->generate_invoice_pdf($existing_invoice->id);
+                    }
+                }
+                
+                // Send payment confirmation email for first payment
+                $booking_manager->send_booking_notification($booking_id, 'payment_confirmation');
+            } else {
+                // Additional payment: Regenerate invoice (which automatically sends updated invoice email)
+                $invoice_result = $invoice_generator->regenerate_invoice($booking_id);
+                
+                if (is_wp_error($invoice_result)) {
+                    // Continue anyway - invoice regeneration failure shouldn't block payment completion
+                    // Log error but don't fail the operation
+                }
+                // regenerate_invoice() automatically sends the updated invoice email, so no need to send payment_confirmation
+            }
+        }
+        
+        wp_send_json_success(array(
+            'message' => sprintf(
+                __('Successfully marked %d payment(s) as complete', 'hourly-room-booking'),
+                $updated_count
+            )
+        ));
+    }
+    
+    /**
+     * AJAX handler for regenerating invoice
+     */
+    public function ajax_regenerate_invoice() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'hrb_nonce')) {
+            wp_send_json_error(__('Security check failed', 'hourly-room-booking'));
+        }
+        
+        // Check permissions
+        if (!current_user_can('hrb_manage_bookings')) {
+            wp_send_json_error(__('You do not have permission to perform this action', 'hourly-room-booking'));
+        }
+        
+        $booking_id = intval($_POST['booking_id']);
+        
+        if (!$booking_id) {
+            wp_send_json_error(__('Invalid booking ID', 'hourly-room-booking'));
+        }
+        
+        // Get booking details
+        $booking_manager = HRB_Booking_Manager::getInstance();
+        $booking = $booking_manager->get_booking($booking_id);
+        
+        if (!$booking) {
+            wp_send_json_error(__('Booking not found', 'hourly-room-booking'));
+        }
+        
+        // Regenerate invoice
+        $invoice_generator = HRB_Invoice_Generator::getInstance();
+        $result = $invoice_generator->regenerate_invoice($booking_id);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Invoice regenerated and sent via email successfully', 'hourly-room-booking')
+        ));
+    }
+
+    /**
+     * Render confirmation modal HTML in admin footer
+     * This makes it available on all admin pages
+     */
+    public function render_confirmation_modal() {
+        // Only render on plugin admin pages
+        $screen = get_current_screen();
+        if (!$screen || (strpos($screen->id, 'hrb-') === false && $screen->id !== 'toplevel_page_hrb-dashboard')) {
+            return;
+        }
+        ?>
+        <!-- Custom Confirmation Modal Styles -->
+        <style type="text/css">
+        #hrb-confirm-modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(4px);
+            z-index: 9999999999 !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            animation: fadeInOverlay 0.3s ease;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            overflow: auto !important;
+        }
+        #hrb-confirm-modal.show {
+            display: flex !important;
+        }
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #hrb-confirm-modal .hrb-confirm-content {
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            max-width: 480px !important;
+            width: 90% !important;
+            max-height: 90vh !important;
+            overflow: hidden !important;
+            animation: confirmSlideIn 0.3s ease;
+            transform: scale(0.9);
+            margin: auto !important;
+            position: relative !important;
+        }
+        #hrb-confirm-modal.show .hrb-confirm-content {
+            transform: scale(1) !important;
+        }
+        @keyframes confirmSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        #hrb-confirm-modal .hrb-confirm-icon {
+            width: 64px !important;
+            height: 64px !important;
+            margin: 0 auto 20px !important;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 32px !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3) !important;
+            animation: iconPulse 0.5s ease;
+        }
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        #hrb-confirm-modal .hrb-confirm-header {
+            padding: 30px 30px 20px !important;
+            text-align: center !important;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+        #hrb-confirm-modal .hrb-confirm-header h3 {
+            margin: 0 0 10px 0 !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            color: #1d2327 !important;
+            line-height: 1.4 !important;
+        }
+        #hrb-confirm-modal .hrb-confirm-body {
+            padding: 20px 30px !important;
+            text-align: center !important;
+            color: #646970 !important;
+            line-height: 1.6 !important;
+        }
+        #hrb-confirm-modal .hrb-confirm-message {
+            font-size: 15px;
+            margin-bottom: 20px;
+            color: #1d2327;
+        }
+        #hrb-confirm-modal .hrb-confirm-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: left;
+            border-left: 3px solid #0073aa;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-row:last-child {
+            border-bottom: none;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-label {
+            font-weight: 600;
+            color: #646970;
+            font-size: 14px;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-value {
+            font-weight: 600;
+            color: #1d2327;
+            font-size: 14px;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-value.original {
+            color: #dc3545;
+        }
+        #hrb-confirm-modal .hrb-confirm-detail-value.new {
+            color: #28a745;
+        }
+        #hrb-confirm-modal .hrb-confirm-footer {
+            padding: 20px 30px !important;
+            border-top: 1px solid #e1e5e9 !important;
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: flex-end !important;
+            background: #f8f9fa !important;
+        }
+        #hrb-confirm-modal .hrb-confirm-btn {
+            padding: 12px 24px !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease;
+            min-width: 100px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+        }
+        #hrb-confirm-modal .hrb-confirm-btn-cancel {
+            background: #f0f0f1;
+            color: #1d2327;
+            border: 1px solid #c3c4c7;
+        }
+        #hrb-confirm-modal .hrb-confirm-btn-cancel:hover {
+            background: #e0e0e1;
+            border-color: #a7aaad;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #hrb-confirm-modal .hrb-confirm-btn-confirm {
+            background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 115, 170, 0.3);
+        }
+        #hrb-confirm-modal .hrb-confirm-btn-confirm:hover {
+            background: linear-gradient(135deg, #005a87 0%, #004a70 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 115, 170, 0.4);
+        }
+        #hrb-confirm-modal .hrb-confirm-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Type variants: success, danger, warning */
+        #hrb-confirm-modal.type-success .hrb-confirm-icon {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+        }
+        #hrb-confirm-modal.type-success .hrb-confirm-details {
+            border-left-color: #28a745;
+        }
+        #hrb-confirm-modal.type-success .hrb-confirm-btn-confirm {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        #hrb-confirm-modal.type-success .hrb-confirm-btn-confirm:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+        #hrb-confirm-modal.type-success .hrb-confirm-warning-message {
+            color: #28a745;
+        }
+        
+        #hrb-confirm-modal.type-danger .hrb-confirm-icon {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+        }
+        #hrb-confirm-modal.type-danger .hrb-confirm-details {
+            border-left-color: #dc3545;
+        }
+        #hrb-confirm-modal.type-danger .hrb-confirm-btn-confirm {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        #hrb-confirm-modal.type-danger .hrb-confirm-btn-confirm:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+        }
+        #hrb-confirm-modal.type-danger .hrb-confirm-warning-message {
+            color: #dc3545;
+        }
+        
+        #hrb-confirm-modal.type-warning .hrb-confirm-icon {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3) !important;
+        }
+        #hrb-confirm-modal.type-warning .hrb-confirm-details {
+            border-left-color: #ffc107;
+        }
+        #hrb-confirm-modal.type-warning .hrb-confirm-btn-confirm {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+        #hrb-confirm-modal.type-warning .hrb-confirm-btn-confirm:hover {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
+        }
+        #hrb-confirm-modal.type-warning .hrb-confirm-warning-message {
+            color: #ff9800;
+        }
+        
+        #hrb-confirm-modal .hrb-confirm-warning-message {
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        @media (max-width: 480px) {
+            #hrb-confirm-modal .hrb-confirm-content {
+                width: 95%;
+                margin: 10px;
+            }
+            #hrb-confirm-modal .hrb-confirm-header,
+            #hrb-confirm-modal .hrb-confirm-body,
+            #hrb-confirm-modal .hrb-confirm-footer {
+                padding: 20px;
+            }
+            #hrb-confirm-modal .hrb-confirm-footer {
+                flex-direction: column;
+            }
+            #hrb-confirm-modal .hrb-confirm-btn {
+                width: 100%;
+            }
+        }
+        </style>
+        <!-- Custom Confirmation Modal -->
+        <div id="hrb-confirm-modal">
+            <div class="hrb-confirm-content">
+                <div class="hrb-confirm-header">
+                    <div class="hrb-confirm-icon">⚠️</div>
+                    <h3 id="hrb-confirm-title"><?php _e('Confirm Action', 'hourly-room-booking'); ?></h3>
+                </div>
+                <div class="hrb-confirm-body">
+                    <div class="hrb-confirm-message" id="hrb-confirm-message"></div>
+                    <div class="hrb-confirm-warning-message" id="hrb-confirm-warning-message"></div>
+                    <div class="hrb-confirm-details1" id="hrb-confirm-details"></div>
+                </div>
+                <div class="hrb-confirm-footer">
+                    <button type="button" class="hrb-confirm-btn hrb-confirm-btn-cancel" id="hrb-confirm-cancel">
+                        <?php _e('Cancel', 'hourly-room-booking'); ?>
+                    </button>
+                    <button type="button" class="hrb-confirm-btn hrb-confirm-btn-confirm" id="hrb-confirm-ok">
+                        <?php _e('Confirm', 'hourly-room-booking'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
 }
 ?>

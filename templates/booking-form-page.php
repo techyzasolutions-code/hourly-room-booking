@@ -62,75 +62,25 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
 <style>
     /* Enhanced Professional Booking Form Variables */
-    :root {
-    /* Primary Brand Colors */
-    --hrb-primary: #7a1618;
-    --hrb-primary-dark: #5a1012;
-    --hrb-primary-light: #9a3a3c;
-    --hrb-secondary: #c4622d;
-    --hrb-accent: #7a1618;
-    
-    /* Status Colors */
-    --hrb-success: #10b981;
-    --hrb-success-dark: #059669;
-    --hrb-success-light: #d1fae5;
-    --hrb-warning: #f59e0b;
-    --hrb-warning-light: #fef3c7;
-    --hrb-error: #ef4444;
-    --hrb-error-dark: #dc2626;
-    --hrb-error-light: #fef2f2;
-    
-    /* Text Colors */
-    --hrb-text: #1f2937;
-    --hrb-text-light: #6b7280;
-    --hrb-text-muted: #9ca3af;
-    
-    /* Background Colors */
-    --hrb-background: #ffffff;
-    --hrb-background-light: #f8fafc;
-    --hrb-background-dark: #f1f5f9;
-    
-    /* Border Colors */
-    --hrb-border: #e5e7eb;
-    --hrb-border-light: #f3f4f6;
-    
-    /* Box Shadows */
-    --hrb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --hrb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-    --hrb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --hrb-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
-    
-    /* Border Radius */
-    --hrb-radius: 8px;
-    --hrb-radius-lg: 12px;
-    --hrb-radius-xl: 16px;
-    
-    /* Transitions */
-    --hrb-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-    /* Enhanced Main Container */
+
+/* Main Container */
     .hrb-booking-form-wrapper {
-        background: var(--hrb-background);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
         border-radius: var(--hrb-radius-xl);
         padding: 0;
-        margin: 10px 0;
+    /* margin: 40px 0; */
         box-shadow: var(--hrb-shadow-xl);
         border: 1px solid var(--hrb-border-light);
         overflow: hidden;
         position: relative;
         backdrop-filter: blur(10px);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+    animation: slideInUp 0.6s ease-out;
     }
 
     .hrb-booking-form {
-        padding: 30px 10px;
+    padding: 20px;
         position: relative;
-    }
-
-    /* Add subtle animation */
-    .hrb-booking-form-wrapper {
-        animation: slideInUp 0.6s ease-out;
     }
 
     @keyframes slideInUp {
@@ -138,14 +88,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             opacity: 0;
             transform: translateY(30px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
-    /* Enhanced Room Info Header */
+/* Room Info Header */
     .hrb-room-info {
         background: linear-gradient(135deg, var(--hrb-primary) 0%, var(--hrb-secondary) 100%);
         color: white;
@@ -154,18 +103,6 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         border-radius: var(--hrb-radius-xl) var(--hrb-radius-xl) 0 0;
         position: relative;
         overflow: hidden;
-    }
-
-    .hrb-room-info::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        opacity: 0.3;
-        pointer-events: none;
     }
 
     .hrb-room-info h2.hrb-heading-md {
@@ -188,31 +125,16 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         font-weight: 400;
     }
 
-    /* Container Styles */
-    .hrb-container {
-        background: var(--hrb-background);
-        border-radius: 12px;
-        padding: 30px;
-        margin: 20px 0;
-        border: 1px solid var(--hrb-border);
-        box-shadow: var(--hrb-shadow);
-        transition: box-shadow 0.3s ease;
-    }
-
-    .hrb-container:hover {
-        box-shadow: var(--hrb-shadow-hover);
-    }
-
-    /* Compact Step Navigation */
+/* Step Navigation */
     .hrb-form-steps {
         display: flex;
         justify-content: space-between;
         margin-bottom: 30px;
         padding: 20px 25px;
         position: relative;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(135deg, var(--hrb-background) 0%, var(--hrb-background-light) 100%);
         border-radius: 15px;
-        border: 1px solid #e2e8f0;
+    border: 1px solid var(--hrb-border);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
         overflow: hidden;
     }
@@ -224,7 +146,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         left: 8%;
         right: 8%;
         height: 4px;
-        background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+    background: var(--hrb-border);
         transform: translateY(-50%);
         z-index: 1;
         border-radius: 2px;
@@ -232,13 +154,12 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
     .hrb-step {
         display: flex;
-        /* flex-direction: row; */
         align-items: center;
         position: relative;
         z-index: 2;
         background: transparent;
         padding: 8px 12px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--hrb-transition);
         cursor: pointer;
         min-width: 60px;
         border-radius: 8px;
@@ -254,15 +175,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: #f1f5f9;
-        color: #64748b;
+    background: var(--hrb-background-dark);
+    color: var(--hrb-text-light);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
         margin: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid #e2e8f0;
+    transition: var(--hrb-transition);
+    border: 2px solid var(--hrb-border);
         font-size: 16px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -270,166 +191,66 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         flex-shrink: 0;
     }
 
-    .hrb-step-icon::before {
-        content: '';
-        position: absolute;
-        top: -3px;
-        left: -3px;
-        right: -3px;
-        bottom: -3px;
-        background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .hrb-step:hover .hrb-step-icon::before {
-        opacity: 1;
-    }
-
     .hrb-step-label {
         font-size: 12px;
-        color: #64748b;
+    color: var(--hrb-text-light);
         text-align: left;
         font-weight: 600;
         letter-spacing: 0.3px;
         text-transform: uppercase;
         margin: 0;
-        transition: all 0.3s ease;
+    transition: var(--hrb-transition);
         line-height: 1.2;
         white-space: nowrap;
     }
 
     /* Active Step */
     .hrb-step.active .hrb-step-icon {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--hrb-primary) 0%, var(--hrb-primary-dark) 100%);
         color: white;
-        border-color: #6366f1;
+    border-color: var(--hrb-primary);
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         transform: scale(1.1);
         animation: activePulse 2s infinite;
     }
 
-    @keyframes activePulse {
-
-        0%,
-        100% {
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        50% {
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-    }
-
     .hrb-step.active .hrb-step-label {
-        color: #6366f1;
+    color: var(--hrb-primary);
         font-weight: 700;
-        transform: scale(1.02);
-    }
-
-    .hrb-step.active {
-        background: rgba(99, 102, 241, 0.08);
-        border-radius: 8px;
     }
 
     /* Completed Step */
     .hrb-step.completed .hrb-step-icon {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--hrb-success) 0%, var(--hrb-success-dark) 100%);
         color: white;
-        border-color: #10b981;
+    border-color: var(--hrb-success);
         box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
         transform: scale(1.05);
     }
 
-    /* Removed checkmark overlay since we're using icons */
-
     .hrb-step.completed .hrb-step-label {
-        color: #10b981;
+    color: var(--hrb-success);
         font-weight: 700;
     }
+.hrb-verification-code-section input {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    font-family: monospace;
+}
 
-    .hrb-step.completed {
-        background: rgba(16, 185, 129, 0.08);
-        border-radius: 8px;
+
+@keyframes activePulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
     }
-
-    /* Progress Line Animation */
-    .hrb-form-steps::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 8%;
-        height: 4px;
-        background: linear-gradient(90deg, #10b981 0%, #6366f1 100%);
-        transform: translateY(-50%);
-        z-index: 1;
-        border-radius: 2px;
-        transition: width 0.6s ease;
-        width: 0%;
+    50% {
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
+}
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .hrb-form-steps {
-            padding: 15px 20px;
-            margin-bottom: 25px;
-        }
-
-        .hrb-step {
-            padding: 6px 8px;
-            min-width: 50px;
-            gap: 6px;
-        }
-
-        .hrb-step-icon {
-            width: 28px;
-            height: 28px;
-            font-size: 14px;
-        }
-
-        .hrb-step-label {
-            font-size: 10px;
-            letter-spacing: 0.2px;
-        }
-
-        .hrb-form-steps::before,
-        .hrb-form-steps::after {
-            left: 10%;
-            right: 10%;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .hrb-form-steps {
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            display: flex !important;
-            justify-content: space-between !important;
-        }
-
-        .hrb-step {
-            padding: 4px 6px;
-            min-width: 40px;
-            gap: 4px;
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-        }
-
-        .hrb-step-icon {
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
-        }
-
-        .hrb-step-label {
-            display: none !important;
-            /* Hide text labels on mobile */
-        }
-    }
-
-    /* Enhanced Form Step Content */
+/* Form Content */
     .hrb-form-step-content {
         display: none;
     }
@@ -444,305 +265,16 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
-    /* Simplified Form Sections */
-    .hrb-form-step-content>div,
-    .hrb-form-step-content>section {
-        background: transparent;
-        padding: 0;
-        margin-bottom: 35px;
-        border: none;
-        box-shadow: none;
-    }
-
-    /* Fixed Form Groups and Alignment */
+/* Form Groups */
     .hrb-form-group {
         margin-bottom: 20px;
         position: relative;
-    }
-
-    .hrb-form-group:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Fix label alignment issues */
-    .hrb-form-step-content h3,
-    .hrb-form-step-content h4,
-    .hrb-heading-sm {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: var(--hrb-text) !important;
-        margin: 0 0 15px 0 !important;
-        padding: 0 !important;
-        line-height: 1.3 !important;
-    }
-
-    /* Ensure consistent section spacing */
-    .hrb-form-step-content>div,
-    .hrb-form-step-content>section {
-        margin-bottom: 25px !important;
-    }
-
-    /* Fix specific alignment issues */
-    .hrb-time-slots-grid,
-    .hrb-time-slots {
-        margin-top: 10px !important;
-    }
-
-    .hrb-extras-list {
-        margin-top: 10px !important;
-    }
-
-    .hrb-people-counter {
-        margin-top: 10px !important;
-        align-items: center !important;
-    }
-
-    .hrb-verification-methods {
-        margin-top: 10px !important;
-    }
-
-    .hrb-payment-methods {
-        margin-top: 10px !important;
-    }
-
-    /* Validation Error Styles */
-    .hrb-validation-error {
-        background: #fef2f2 !important;
-        color: #dc2626 !important;
-        padding: 12px 16px !important;
-        border: 1px solid #fecaca !important;
-        border-left: 4px solid #dc2626 !important;
-        border-radius: 6px !important;
-        margin-bottom: 20px !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1) !important;
-        display: flex !important;
-        align-items: center !important;
-        animation: slideDown 0.3s ease !important;
-    }
-
-    .hrb-validation-error::before {
-        content: "⚠️" !important;
-        margin-right: 8px !important;
-        font-size: 16px !important;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Enhanced Time Slots Grid Styling */
-    .hrb-time-slots {
-        /* display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); */
-        gap: 12px;
-        margin-top: 15px;
-        max-width: 100%;
-    }
-
-    .hrb-time-slots-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(35%, 1fr));
-        gap: 12px;
-        margin-top: 15px;
-        max-width: 100%;
-    }
-
-    .hrb-time-slot {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 70px;
-        padding: 12px 8px;
-        background: var(--hrb-background);
-        border: 2px solid var(--hrb-border);
-        border-radius: 8px;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.3s ease;
-        color: var(--hrb-text);
-        word-wrap: break-word;
-        overflow: hidden;
-    }
-
-    .hrb-time-slot.available {
-        border-color: #10b981;
-        background: #f0fdf4;
-        color: #065f46;
-    }
-
-    .hrb-time-slot.available:hover {
-        border-color: #059669;
-        background: #dcfce7;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-    }
-
-    .hrb-time-slot.selected {
-        border-color: var(--hrb-primary);
-        background: var(--hrb-primary);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.3);
-    }
-
-    .hrb-time-slot.unavailable {
-        background: var(--hrb-background-light);
-        color: var(--hrb-text-light);
-        cursor: not-allowed;
-        opacity: 0.6;
-        border-color: #ef4444;
-        background: #fef2f2;
-        color: #991b1b;
-    }
-
-    .hrb-time-slot.unavailable:hover {
-        border-color: #ef4444;
-        background: #fef2f2;
-        transform: none;
-        box-shadow: none;
-    }
-
-    .hrb-time-slot-time {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 4px;
-        color: inherit;
-        line-height: 1.2;
-    }
-
-    .hrb-time-slot-status {
-        font-size: 11px;
-        opacity: 0.8;
-        line-height: 1.2;
-    }
-
-    .hrb-time-slot-price {
-        font-size: 12px;
-        opacity: 0.8;
-        font-weight: 500;
-        line-height: 1.2;
-    }
-
-    /* Responsive Grid Adjustments */
-    @media (max-width: 768px) {
-
-        .hrb-time-slots,
-        .hrb-time-slots-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        .hrb-time-slot {
-            min-height: 60px;
-            padding: 10px 6px;
-        }
-
-        .hrb-time-slot-time {
-            font-size: 13px;
-        }
-
-        .hrb-time-slot-status,
-        .hrb-time-slot-price {
-            font-size: 10px;
-        }
-    }
-
-    @media (max-width: 480px) {
-
-        .hrb-time-slots,
-        .hrb-time-slots-grid {
-            /* grid-template-columns: repeat(2, 1fr); */
-            gap: 8px;
-        }
-
-        .hrb-time-slot {
-            min-height: 55px;
-            padding: 8px 4px;
-        }
-
-        .hrb-time-slot-time {
-            font-size: 12px;
-        }
-
-        .hrb-loading-spinner {
-            width: 32px;
-            height: 32px;
-        }
-
-        .hrb-loading-text {
-            font-size: 13px;
-        }
-    }
-
-    .hrb-loading {
-        text-align: center;
-        padding: 40px 20px;
-        color: var(--hrb-text-light);
-        font-style: italic;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .hrb-loading::before {
-        content: '';
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(59, 130, 246, 0.1);
-        border-radius: 50%;
-        border-top-color: #3b82f6;
-        border-right-color: #8b5cf6;
-        animation: hrb-spin-beautiful 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-        margin-bottom: 0;
-    }
-
-    .hrb-loading-spinner {
-        width: 35px;
-        height: 35px;
-        border: 2px solid #e5e7eb;
-        border-radius: 50%;
-        border-top-color: #6366f1;
-        animation: hrb-spin 1s linear infinite;
-        margin: 0 auto 16px;
-    }
-
-
-    .hrb-loading-text {
-        font-size: 16px;
-        color: #64748b;
-        font-weight: 500;
-        letter-spacing: 0.025em;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* Form Group and Input Styles */
-    .hrb-form-group {
-        margin-bottom: 20px;
     }
 
     .hrb-form-label {
@@ -750,69 +282,86 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         margin-bottom: 8px;
         font-weight: 600;
         color: var(--hrb-text);
-        font-size: 16px;
-    }
+    font-size: 14px;
+    letter-spacing: 0.01em;
+}
 
+.hrb-form-label.required::after {
+    content: ' *';
+    color: var(--hrb-error);
+    margin-left: 4px;
+    font-weight: 700;
+}
+
+/* Form Inputs */
     .hrb-form-input,
     .hrb-form-select,
-    .hrb-form-control {
+.hrb-form-control,
+.hrb-form-textarea {
         width: 100%;
-        padding: 16px 20px;
+    padding: 12px 16px;
         border: 2px solid var(--hrb-border);
         border-radius: var(--hrb-radius);
-        font-size: 16px;
-        font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
         transition: var(--hrb-transition);
         background: var(--hrb-background);
         color: var(--hrb-text);
         box-sizing: border-box;
         box-shadow: var(--hrb-shadow);
         line-height: 1.5;
+    font-family: inherit;
     }
 
     .hrb-form-input:hover,
     .hrb-form-select:hover,
-    .hrb-form-control:hover {
+.hrb-form-control:hover,
+.hrb-form-textarea:hover {
         border-color: var(--hrb-primary);
         box-shadow: var(--hrb-shadow-md);
         transform: translateY(-1px);
     }
 
-    .hrb-form-input::placeholder {
-        color: var(--hrb-text-light);
-    }
-
     .hrb-form-input:focus,
     .hrb-form-select:focus,
-    .hrb-form-control:focus {
+.hrb-form-control:focus,
+.hrb-form-textarea:focus {
         outline: none;
         border-color: var(--hrb-primary);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--hrb-shadow-lg);
-        transform: translateY(-2px);
-        background: var(--hrb-background);
-    }
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
 
-    .hrb-form-input.error {
-        border-color: #dc2626;
+.hrb-form-input.error,
+.hrb-form-select.error,
+.hrb-form-control.error {
+    border-color: var(--hrb-error-dark);
+    background: var(--hrb-error-light);
         box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
     }
 
+.hrb-form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Select Dropdown */
     .hrb-form-select {
         cursor: pointer;
-    }
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
 
-    .hrb-form-select option {
-        background: var(--hrb-background);
-        color: var(--hrb-text);
-    }
-
-    /* Enhanced Button Styles */
+/* Buttons */
     .hrb-btn {
-        padding: 16px 32px;
+    padding: 12px 24px;
         border: none;
         border-radius: var(--hrb-radius);
-        font-size: 16px;
-        font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
         cursor: pointer;
         transition: var(--hrb-transition);
         text-decoration: none;
@@ -820,354 +369,146 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         align-items: center;
         justify-content: center;
         text-align: center;
-        width: 100% !important;
+    /* min-width: 140px; */
         position: relative;
         overflow: hidden;
         box-shadow: var(--hrb-shadow);
         letter-spacing: 0.025em;
-        border: 1px solid transparent;
-    }
+}
 
+.hrb-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--hrb-shadow-lg);
+}
 
-
-    .hrb-btn:hover::before {
-        left: 100%;
+.hrb-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
     }
 
     .hrb-btn-primary {
         background: var(--hrb-primary);
         color: white;
-        border-color: var(--hrb-primary);
-    }
+}
 
-    .hrb-btn-primary:hover {
-        background: linear-gradient(135deg, var(--hrb-primary-dark), var(--hrb-secondary));
-        border-color: var(--hrb-secondary);
-        transform: translateY(-3px);
-        box-shadow: var(--hrb-shadow-xl);
+.hrb-btn-primary:hover:not(:disabled) {
+    background: var(--hrb-primary-dark);
     }
 
     .hrb-btn-secondary {
-        background: var(--hrb-background);
-        color: var(--hrb-primary);
-        border-color: var(--hrb-primary);
-    }
+    background: var(--hrb-text-light);
+    color: white;
+}
 
-    .hrb-btn-secondary:hover {
-        background: var(--hrb-primary);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: var(--hrb-shadow-hover);
+.hrb-btn-secondary:hover:not(:disabled) {
+    background: var(--hrb-text);
     }
 
     .hrb-btn-success {
         background: var(--hrb-success);
         color: white;
-        border-color: var(--hrb-success);
-    }
+}
 
-    .hrb-btn-success:hover {
-        background: #0d5a0d;
-        border-color: #0d5a0d;
-        transform: translateY(-1px);
-        box-shadow: var(--hrb-shadow-hover);
-    }
+.hrb-btn-success:hover:not(:disabled) {
+    background: var(--hrb-success-dark);
+}
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .hrb-container {
-            padding: 20px;
-            margin: 10px;
-        }
-
-        .hrb-form-steps {
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 15px 0;
-        }
-
-        .hrb-step {
-            flex: 1;
-            /* min-width: calc(50% - 5px); */
-        }
-
-        .hrb-step-icon {
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-        }
-
-        .hrb-step-label {
-            font-size: 11px;
-        }
-
-        .hrb-time-slots {
-            /* grid-template-columns: 1fr 1fr; */
-            gap: 10px;
-        }
-    }
-
-    /* Fixed Row Alignment to Match Form Steps */
-    .hrb-row {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-        padding: 0 !important;
-        /* Ensure no extra padding */
-        margin-left: 0 !important;
-        /* Align with form steps */
-        margin-right: 0 !important;
-        /* Align with form steps */
-    }
-
-    .hrb-col-6 {
-        flex: 1;
-    }
-
-    @media (max-width: 768px) {
-        .hrb-row {
-            flex-direction: column;
-            gap: 0;
-        }
-    }
-
-    .hrb-form-actions {
-        display: flex;
-        gap: 15px;
-        justify-content: flex-end;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid var(--hrb-border);
-    }
-
-    .hrb-heading-sm {
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin-bottom: 20px;
-    }
-
-    .required::after {
-        content: ' *';
-        color: #dc2626;
-    }
-
-    /* People Counter Styles */
-    .hrb-people-counter {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 8px;
-    }
-    
-
-    .hrb-people-counter .hrb-btn {
-        padding: 8px 12px;
-        font-size: 16px;
-        line-height: 1;
-        min-width: 40px;
-        flex: none;
-    }
-
-    .hrb-people-counter input {
-        text-align: center;
-        max-width: 80px;
-        flex: none;
-    }
-
-    .hrb-form-help {
+.hrb-btn-sm {
+    padding: 8px 16px;
         font-size: 12px;
-        color: var(--hrb-text-light);
-        margin-top: 6px;
+    min-width: auto;
     }
 
-    /* Time Slots Styles */
+/* Time Slots */
+.hrb-time-slots,
     .hrb-time-slots-grid {
-        /* display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
         gap: 12px;
         margin-top: 15px;
     }
 
     .hrb-time-slot {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 70px;
+    padding: 12px 8px;
+    background: var(--hrb-background);
         border: 2px solid var(--hrb-border);
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
+    border-radius: var(--hrb-radius);
         cursor: pointer;
-        transition: all 0.3s ease;
-        background: var(--hrb-background);
-        position: relative;
+    text-align: center;
+    transition: var(--hrb-transition);
+    color: var(--hrb-text);
     }
 
     .hrb-time-slot.available {
-        border-color: #10b981;
-        background: #f0fdf4;
+    border-color: var(--hrb-success);
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
     }
 
     .hrb-time-slot.available:hover {
-        border-color: #059669;
-        background: #dcfce7;
+    border-color: var(--hrb-success-dark);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
     }
 
     .hrb-time-slot.selected {
-        border-color: var(--hrb-primary);
-        background: var(--hrb-accent);
+    border-color: var(--hrb-accent);
+    background: var(--hrb-primary);
         color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
     .hrb-time-slot.unavailable {
-        border-color: #ef4444;
-        background: #fef2f2;
-        color: #991b1b;
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
         cursor: not-allowed;
         opacity: 0.6;
+    border-color: var(--hrb-error);
     }
 
     .hrb-time-slot-time {
-        font-weight: bold;
-        font-size: 14px;
+    font-weight: 600;
+    font-size: 16px;
         margin-bottom: 4px;
+    line-height: 1.2;
     }
 
-    .hrb-time-slot-status {
-        font-size: 12px;
+.hrb-time-slot-status,
+.hrb-time-slot-price {
+    font-size: 11px;
         opacity: 0.8;
-    }
+    line-height: 1.2;
+}
 
-    .hrb-no-slots,
-    .hrb-loading-message,
-    .hrb-error-message {
-        text-align: center;
-        padding: 20px;
-        border-radius: 6px;
-        margin-top: 15px;
-    }
-
-    .hrb-no-slots {
-        background: #fef3cd;
-        color: #996633;
-        border: 1px solid #fde68a;
-    }
-
-    .hrb-loading-message {
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-        color: var(--hrb-text-light);
-        border: 1px solid rgba(59, 130, 246, 0.1);
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        text-align: center;
-    }
-
-    @keyframes hrb-shimmer {
-        0% {
-            left: -100%;
-        }
-
-        100% {
-            left: 100%;
-        }
-    }
-
-    .hrb-error-message {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    /* Extras List Styles */
-    /* .hrb-extras-list {
-    border: 1px solid var(--hrb-border);
-    border-radius: 6px;
-    background: var(--hrb-background);
-} */
-
+/* Extras */
     .hrb-extra-item {
         border: 1px solid var(--hrb-border);
-        border-radius: 8px;
+    border-radius: var(--hrb-radius);
         cursor: pointer;
-        transition: all 0.3s ease;
-        /* overflow: hidden; */
+    transition: var(--hrb-transition);
         background: var(--hrb-background);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--hrb-shadow);
         margin-bottom: 15px;
         position: relative;
     }
 
     .hrb-extra-item:hover {
         border-color: var(--hrb-primary);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.15);
+    box-shadow: var(--hrb-shadow-md);
         transform: translateY(-2px);
     }
 
-    .hrb-extra-item input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        accent-color: var(--hrb-primary);
-        cursor: pointer;
-        flex-shrink: 0;
-        margin: 0;
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked~.hrb-extra-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked {
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-color: #10b981;
-        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked+.hrb-extra-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked~.hrb-extra-content .hrb-extra-icon {
-        border-color: var(--hrb-primary);
-        background: #f0f8ff;
-    }
-
-    /* Selected extra item styling */
     .hrb-extra-item:has(input[type="checkbox"]:checked) {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
         border-color: var(--hrb-primary);
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-        transform: translateY(-1px);
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-header {
-        background: rgba(99, 102, 241, 0.1);
-        border-radius: 8px;
-        padding: 8px;
-        margin: -8px;
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-icon {
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        color: white;
-        border-color: #6366f1;
-        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-title {
-        color: #6366f1;
-        font-weight: 700;
-    }
-
-    .hrb-extra-item:has(input[type="checkbox"]:checked) .hrb-extra-price {
-        color: #6366f1;
-        font-weight: 700;
     }
 
     .hrb-extra-content {
@@ -1175,10 +516,9 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         flex-direction: column;
         padding: 16px;
         gap: 12px;
-        transition: all 0.3s ease;
+    transition: var(--hrb-transition);
     }
 
-    /* First row: Icon + Title + Price */
     .hrb-extra-header {
         display: flex;
         align-items: center;
@@ -1186,12 +526,16 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         width: 100%;
     }
 
+.hrb-extra-checkbox {
+    display: none;
+    }
+
     .hrb-extra-icon {
         width: 40px;
         height: 40px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
+    background: var(--hrb-background-light);
+    border: 1px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1211,196 +555,59 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         font-size: 16px;
         margin: 0;
         line-height: 1.3;
-        /* white-space: nowrap; */
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .hrb-extra-price {
-        /* flex: none;
-    font-weight: 600;
-    color: var(--hrb-primary);
-    font-size: 16px;
-    white-space: nowrap; */
         flex: none;
         font-weight: bold;
-        color: #059669;
+    color: var(--hrb-success-dark);
         font-size: 16px;
-        background: #d1fae5;
+    background: var(--hrb-success-light);
         padding: 1px 5px;
         border-radius: 4px;
-        border: 1px solid #10b981;
-       
+    border: 1px solid var(--hrb-success);
     }
 
-    /* Second row: Description */
     .hrb-extra-description {
         color: var(--hrb-text-light);
         margin: 0;
-        font-size: 16px;
+    font-size: 14px;
         line-height: 1.4;
         padding: 8px 12px;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    background: linear-gradient(135deg, var(--hrb-background-light), var(--hrb-background-dark));
         border-radius: 6px;
         border-left: 3px solid var(--hrb-primary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-    input.hrb-extra-checkbox {
-            display: none;
-        }
-        .hrb-extra-price {
-            font-size: 13px;
-            position: absolute;
-            right: -5px;
-            top: -10px;
-            }
-    /* Mobile responsive adjustments */
-    @media (max-width: 768px) {
+    box-shadow: var(--hrb-shadow);
+}
 
-        .hrb-extra-content {
-            padding: 12px;
+/* People Counter */
+.hrb-people-counter {
+    display: flex;
+    /* align-items: center; */
             gap: 10px;
-        }
+    margin-top: 8px;
+}
 
-        .hrb-time-slots-grid {
-            grid-template-columns: repeat(2, minmax(135px, 1fr));
-        }
+.hrb-people-counter .hrb-btn {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    min-width: 32px !important;
+    border-radius: 4px !important;
+    flex: none !important;
+    font-weight: 600 !important;
+    background: var(--hrb-primary) !important;
+    color: white !important;
+    border: 1px solid var(--hrb-primary) !important;
+}
 
-        input.hrb-extra-checkbox {
-            display: none;
-        }
-
-        .hrb-extra-header {
-            gap: 10px;
-        }
-
-        .hrb-extra-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 16px;
-        }
-
-        .hrb-extra-title {
-            font-size: 16px;
-        }
-       
-        .hrb-extra-price {
-            font-size: 13px;
-            position: absolute;
-            right: -12px;
-            top: -9px;
-            }
-
-        .hrb-extra-description {
-            font-size: 13px;
-            padding: 6px 10px;
-        }
-    }
-
-    .hrb-extra-item input[type="checkbox"]:checked+.hrb-extra-content .hrb-extra-icon {
-        border-color: var(--hrb-primary);
-        background: #f0f8ff;
-    }
-
-
-    .hrb-extra-title {
-        font-weight: 700;
-        color: var(--hrb-text);
-        margin: 0 0 8px 0;
-        font-size: 15px;
-        letter-spacing: 0.025em;
-    }
-
-    .hrb-extra-description {
-        color: var(--hrb-text-muted);
-        font-size: 12px;
-        margin: 4px 0 0 0;
-        line-height: 1.5;
-        font-style: italic;
-        padding: 8px 12px;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-radius: 6px;
-        border-left: 3px solid var(--hrb-primary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease;
-    }
-
-    /* .hrb-extra-price {
-    flex: none;
-    font-weight: 600;
-    color: var(--hrb-primary);
-    font-size: 14px;
-} */
-
-    .hrb-no-extras {
+.hrb-people-counter input {
         text-align: center;
-        padding: 20px;
-        color: var(--hrb-text-light);
-        font-style: italic;
-    }
+    max-width: 80px;
+    flex: none;
+}
 
-    /* Form Textarea */
-    .hrb-form-textarea {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid var(--hrb-border);
-        border-radius: 6px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        background: var(--hrb-background);
-        color: var(--hrb-text);
-        box-sizing: border-box;
-        resize: vertical;
-        min-height: 80px;
-        font-family: inherit;
-    }
-
-    .hrb-form-textarea:focus {
-        outline: none;
-        border-color: var(--hrb-primary);
-        box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1);
-    }
-
-    /* Alert Styles */
-    .hrb-alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        font-size: 16px;
-        border: 1px solid transparent;
-    }
-
-    .hrb-alert-error {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fecaca;
-    }
-
-    .hrb-alert-success {
-        background: #f0fdf4;
-        color: #166534;
-        border-color: #bbf7d0;
-    }
-
-    .hrb-alert-warning {
-        background: #fefce8;
-        color: #a16207;
-        border-color: #fef08a;
-    }
-
-    .hrb-alert-info {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-color: #dbeafe;
-    }
-
-    .hrb-alert-success {
-        background: #dcfce7;
-        color: #15803d;
-        border-color: #bbf7d0;
-    }
-
-    /* Enhanced Verification Section Styles */
+/* Verification Methods */
     .hrb-verification-methods {
         display: flex;
         flex-direction: column;
@@ -1410,24 +617,23 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
     .hrb-verification-method {
         border: 2px solid var(--hrb-border);
-        border-radius: 8px;
+    border-radius: var(--hrb-radius);
         cursor: pointer;
-        transition: all 0.3s ease;
+    transition: var(--hrb-transition);
         overflow: hidden;
-        margin: 0;
     }
 
     .hrb-verification-method:hover {
         border-color: var(--hrb-primary);
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.1);
+    box-shadow: var(--hrb-shadow-md);
     }
 
     .hrb-verification-method input[type="radio"] {
         display: none;
     }
 
-    .hrb-verification-method input[type="radio"]:checked+.hrb-verification-method-content {
-        background: #f0f8ff;
+.hrb-verification-method input[type="radio"]:checked + .hrb-verification-method-content {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
         border-left: 4px solid var(--hrb-primary);
     }
 
@@ -1436,128 +642,10 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         align-items: center;
         gap: 15px;
         padding: 16px;
-        transition: all 0.3s ease;
-    }
+    transition: var(--hrb-transition);
+}
 
-    .hrb-verification-icon {
-        font-size: 24px;
-        flex-shrink: 0;
-    }
-
-    .hrb-verification-method-content div {
-        flex: 1;
-    }
-
-    .hrb-verification-method-content strong {
-        display: block;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin-bottom: 4px;
-    }
-
-    .hrb-verification-method-content p {
-        margin: 0;
-        font-size: 12px;
-        color: var(--hrb-text-light);
-        line-height: 1.4;
-    }
-
-    .hrb-contact-display {
-        background: var(--hrb-background-light);
-        color: var(--hrb-text);
-        font-weight: 600;
-        padding: 12px 16px;
-        border: 2px solid var(--hrb-border);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-    }
-
-    .hrb-contact-display::before {
-        margin-right: 8px;
-    }
-
-    #verification-email-display::before {
-        content: '✉️';
-    }
-
-    #verification-phone-display::before {
-        content: '📱';
-    }
-
-    .hrb-contact-info {
-        margin: 15px 0;
-    }
-
-    .hrb-contact-item {
-        margin-bottom: 15px;
-    }
-
-    .hrb-contact-item:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Verification Container Styles */
-    .hrb-verification-container {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-    }
-
-    .hrb-heading-xs {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--hrb-text);
-        margin: 0 0 15px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid var(--hrb-primary);
-    }
-
-    .hrb-verification-code-section input {
-        text-align: center;
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: 3px;
-        font-family: monospace;
-    }
-
-    .hrb-verification-section {
-        position: relative;
-    }
-
-    .hrb-verification-loading {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        z-index: 10;
-    }
-
-    .hrb-verification-loading .hrb-spinner {
-        width: 24px;
-        height: 24px;
-        border: 2px solid #e5e7eb;
-        border-radius: 50%;
-        border-top-color: #6366f1;
-        animation: hrb-spin 1s linear infinite;
-    }
-
-
-    .hrb-btn-sm {
-        padding: 8px 16px;
-        font-size: 12px;
-    }
-
-    /* Enhanced Payment Method Styles */
+/* Payment Methods */
     .hrb-payment-methods {
         display: flex;
         flex-direction: column;
@@ -1567,17 +655,17 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
     .hrb-payment-method {
         border: 2px solid var(--hrb-border);
-        border-radius: 12px;
+    border-radius: var(--hrb-radius-lg);
         cursor: pointer;
-        transition: all 0.3s ease;
+    transition: var(--hrb-transition);
         overflow: hidden;
         background: var(--hrb-background);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--hrb-shadow);
     }
 
     .hrb-payment-method:hover {
         border-color: var(--hrb-primary);
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.15);
+    box-shadow: var(--hrb-shadow-md);
         transform: translateY(-2px);
     }
 
@@ -1585,535 +673,523 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         display: none;
     }
 
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content {
-        background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-        border-color: var(--hrb-primary);
-    }
+.hrb-payment-method input[type="radio"]:checked ~ .hrb-payment-method-content,
+.hrb-payment-method input[type="radio"]:checked + .hrb-payment-method-content {
+    background: #dc3545 !important;
+    color: white !important;
+    border-left: 4px solid #dc3545 !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) {
+    background: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked):hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) strong {
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) p {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) .hrb-payment-method-content {
+    color: white !important;
+}
+
+.hrb-payment-method:has(input[type="radio"]:checked) .hrb-payment-method-content div {
+    color: white !important;
+}
+
+/* Smooth transition for payment method selection */
+.hrb-payment-method .hrb-radio-label {
+    transition: all 0.3s ease;
+}
 
     .hrb-payment-method-content {
         display: flex;
         align-items: center;
         padding: 20px;
         gap: 15px;
-        transition: all 0.3s ease;
-    }
+    transition: var(--hrb-transition);
+}
 
-    .hrb-payment-method-content img {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-        border-radius: 8px;
-        background: #f8f9fa;
-        padding: 8px;
-        border: 1px solid #e9ecef;
-    }
+/* Messages & Alerts */
+.hrb-alert {
+    padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid transparent;
+    border-left-width: 4px;
+}
 
-    .hrb-payment-method-content div {
-        flex: 1;
-    }
+.hrb-alert-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border-color: var(--hrb-error);
+}
 
-    .hrb-payment-method-content strong {
-        display: block;
-        color: var(--hrb-text);
-        font-size: 16px;
-        margin-bottom: 4px;
-        font-weight: 600;
-    }
+.hrb-alert-success {
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
+    border-color: var(--hrb-success);
+}
 
-    .hrb-payment-method-content p {
-        color: var(--hrb-text-light);
-        margin: 0;
-        font-size: 16px;
-        line-height: 1.4;
-    }
+.hrb-alert-warning {
+    background: var(--hrb-warning-light);
+    color: var(--hrb-warning);
+    border-color: var(--hrb-warning);
+}
 
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content img {
+.hrb-alert-info {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--hrb-primary-dark);
         border-color: var(--hrb-primary);
-        background: #f0f8ff;
+}
+
+/* Validation Error */
+.hrb-validation-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    padding: 12px 16px;
+    border: 1px solid var(--hrb-error);
+    border-left-width: 4px;
+    border-radius: var(--hrb-radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--hrb-shadow);
+    display: flex;
+    align-items: center;
+    animation: slideDown 0.3s ease;
+}
+
+.hrb-validation-error::before {
+    content: "⚠️";
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading States */
+.hrb-loading,
+.hrb-loading-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--hrb-text-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.hrb-loading-spinner {
+    width: 35px;
+    height: 35px;
+    border: 2px solid var(--hrb-border);
+    border-radius: 50%;
+    border-top-color: var(--hrb-primary);
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+.hrb-loading-text {
+    font-size: 14px;
+    color: var(--hrb-text-light);
+    font-weight: 500;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Form Actions */
+.hrb-form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hrb-border);
+}
+
+/* Row & Column Layout */
+.hrb-row {
+    display: flex;
+    gap: 20px;
+    margin: 0px;
+}
+
+.hrb-col-12 {
+    /* flex: 1; */
+}
+
+/* Headings */
+.hrb-heading-sm,
+.hrb-heading-xs {
+    font-weight: 600;
+    color: var(--hrb-text);
+    margin: 0 0 15px 0;
+}
+
+.hrb-heading-sm {
+    font-size: 18px;
+}
+
+.hrb-heading-xs {
+    font-size: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--hrb-primary);
+}
+
+/* Helpers */
+.hrb-form-help {
+        font-size: 12px;
+        color: var(--hrb-text-light);
+    margin-top: 6px;
+}
+
+.hrb-no-slots,
+.hrb-no-extras,
+.hrb-error-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: var(--hrb-radius);
+    margin-top: 15px;
+}
+
+.hrb-no-slots,
+.hrb-no-extras {
+    background: var(--hrb-warning-light);
+    color: var(--hrb-warning);
+    border: 1px solid var(--hrb-warning);
+}
+
+.hrb-error-message {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border: 1px solid var(--hrb-error);
+}
+
+/* Contact Display */
+.hrb-contact-display {
+    background: rgba(99, 102, 241, 0.03);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    color: var(--hrb-text);
+    font-weight: 500;
+        padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+    min-height: 44px;
+        display: flex;
+        align-items: center;
+}
+
+/* Verification Container */
+.hrb-verification-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--hrb-background-light);
+    border: 1px solid var(--hrb-border);
+    border-radius: var(--hrb-radius);
+}
+
+.hrb-verification-section {
+    position: relative;
+    background: rgba(99, 102, 241, 0.02);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: var(--hrb-radius);
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.hrb-verification-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--hrb-radius);
+    z-index: 10;
+}
+
+.hrb-verification-success,
+    .hrb-verification-error {
+        padding: 12px 16px;
+    border-radius: var(--hrb-radius);
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    border-left-width: 4px;
+}
+
+.hrb-verification-success {
+    background: var(--hrb-success-light);
+    color: var(--hrb-success-dark);
+    border: 1px solid var(--hrb-success);
+}
+
+.hrb-verification-error {
+    background: var(--hrb-error-light);
+    color: var(--hrb-error-dark);
+    border: 1px solid var(--hrb-error);
+}
+
+/* Payment Processing */
+.hrb-payment-processing {
+    position: relative;
+    pointer-events: none;
+}
+
+.hrb-payment-processing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    border-radius: var(--hrb-radius);
+    animation: fadeIn 0.3s ease;
+}
+
+.hrb-payment-processing::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(99, 102, 241, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--hrb-primary);
+    border-right-color: var(--hrb-secondary);
+    animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    z-index: 1001;
+}
+.hrb-btn-accent {
+    background: var(--hrb-accent);
+    color: white;
+}
+.hrb-badge-important {
+    background: var(--hrb-accent);
+    color: white;
+}
+.some-element:hover {
+    border-color: var(--hrb-accent);
+}
+.hrb-payment-method-content img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8f9fa;
+    padding: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.hrb-payment-method-content p {
+    color: var(--hrb-text-light);
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.4;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .hrb-booking-form-wrapper {
+        margin: 10px 0;
     }
 
-    /* Enhanced Step Navigation with Click Support */
+    .hrb-booking-form {
+        padding: 10px;
+    }
+
+    .hrb-room-info {
+        margin: -20px -20px 30px -20px;
+        padding: 30px 20px;
+    }
+
+    .hrb-room-info h2.hrb-heading-md {
+        font-size: 2rem;
+    }
+
+    .hrb-form-steps {
+        padding: 15px 20px;
+        margin-bottom: 25px;
+    }
+
     .hrb-step {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .hrb-step:hover .hrb-step-icon {
-        transform: scale(1.05);
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.2);
-    }
-
-    .hrb-step.completed {
-        cursor: pointer;
-    }
-
-    .hrb-step.completed:hover .hrb-step-icon {
-        background: #0d5a0d;
-        transform: scale(1.1);
-    }
-
-    .hrb-step.active:hover .hrb-step-icon {
-        background: var(--hrb-secondary);
-        transform: scale(1.05);
+        padding: 6px 8px;
+        min-width: 50px;
+        gap: 6px;
     }
 
     .hrb-step-icon {
-        position: relative;
-        overflow: hidden;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
     }
 
-    .hrb-step-icon::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
+    .hrb-step-label {
+        font-size: 10px;
+        letter-spacing: 0.2px;
     }
 
-    .hrb-step:hover .hrb-step-icon::before {
-        opacity: 1;
+    .hrb-time-slots,
+    .hrb-time-slots-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
     }
 
-    .hrb-step-clickable .hrb-step-icon {
-        background: #0d5a0d !important;
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);
-    }
-
-    .hrb-step-clickable .hrb-step-label {
-        color: #0d5a0d !important;
-        font-weight: 700;
-    }
-
-    /* Payment Method Responsive Design */
-    @media (max-width: 768px) {
-        .hrb-payment-method-content {
-            padding: 15px;
-            gap: 12px;
-        }
-
-        .hrb-payment-method-content img {
-            width: 40px;
-            height: 40px;
-            padding: 6px;
-        }
-
-        .hrb-payment-method-content strong {
-            font-size: 15px;
-        }
-
-        .hrb-payment-method-content p {
-            font-size: 13px;
-        }
-    }
-
-    .hrb-countdown-timer {
-        font-size: 12px;
-        color: var(--hrb-text-light);
-        margin-top: 5px;
-    }
-
-    .hrb-verification-success {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin: 15px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .hrb-verification-success::before {
-        content: '✅';
-    }
-
-    .hrb-verification-error {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin: 15px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .hrb-verification-error::before {
-        content: '❌';
-    }
-
-    /* Fixed Form Input Styling */
-    .hrb-form-label {
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        letter-spacing: 0.01em;
-        line-height: 1.4;
-        margin-bottom: 8px !important;
-        display: block !important;
-    }
-
-    .hrb-form-label.required::after {
-        content: '*' !important;
-        color: #dc2626;
-        margin-left: 4px;
-        font-weight: 700;
-    }
-
-    .hrb-form-input,
-    .hrb-form-select,
-    .hrb-form-control {
-        padding: 12px 16px !important;
-        border-radius: 6px !important;
-        font-size: 14px !important;
-        font-weight: 400;
-        background: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease !important;
-        line-height: 1.4;
-        height: auto !important;
-        min-height: 44px !important;
-    }
-
-    .hrb-form-input:hover,
-    .hrb-form-select:hover,
-    .hrb-form-control:hover {
-        border-color: rgba(0, 115, 170, 0.3) !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .hrb-form-input:focus,
-    .hrb-form-select:focus,
-    .hrb-form-control:focus {
-        border-color: var(--hrb-primary) !important;
-        box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1) !important;
-        background: #ffffff !important;
-    }
-
-    .hrb-form-input.error,
-    .hrb-form-select.error,
-    .hrb-form-control.error {
-        border-color: #dc2626 !important;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-        background: #fef2f2 !important;
-    }
-
-    .hrb-form-input::placeholder {
-        font-weight: 400;
-        opacity: 0.6;
-    }
-
-    /* Fixed Select Styling */
-    .hrb-form-select {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-        background-position: right !important;
-        background-repeat: no-repeat !important;
-        background-size: 40px !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-    }
-
-    .hrb-form-select:focus {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230073aa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-        background-repeat: no-repeat !important;
-        background-position: right !important;
-    }
-
-    /* Fixed Textarea */
-    textarea.hrb-form-control {
-        resize: vertical !important;
-        min-height: 100px !important;
-        font-family: inherit !important;
-        line-height: 1.5 !important;
-        padding: 12px 16px !important;
-    }
-
-    /* Fixed Contact Display Fields */
-    .hrb-contact-display {
-        background: rgba(0, 115, 170, 0.03) !important;
-        border: 1px solid rgba(0, 115, 170, 0.15) !important;
-        color: var(--hrb-text) !important;
-        font-weight: 500 !important;
-        padding: 12px 16px !important;
-        border-radius: 6px !important;
-        min-height: 44px !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    /* Simplified Button Styles */
-    .hrb-btn {
-        padding: 12px 24px !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-        text-align: center !important;
-        border: 1px solid transparent !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .hrb-btn:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .hrb-btn-primary {
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        border-color: var(--hrb-primary) !important;
-    }
-
-    .hrb-btn-primary:hover {
-        background: var(--hrb-secondary) !important;
-        border-color: var(--hrb-secondary) !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn-secondary {
-        background: #6c757d !important;
-        color: white !important;
-        border-color: #6c757d !important;
-    }
-
-    .hrb-btn-secondary:hover {
-        background: #5a6268 !important;
-        border-color: #5a6268 !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn-success {
-        background: var(--hrb-success) !important;
-        color: white !important;
-        border-color: var(--hrb-success) !important;
-    }
-
-    .hrb-btn-success:hover {
-        background: #0d5a0d !important;
-        border-color: #0d5a0d !important;
-        color: white !important;
-        text-decoration: none !important;
-    }
-
-    .hrb-btn:disabled,
-    .hrb-btn[disabled] {
-        background: #e9ecef !important;
-        color: #6c757d !important;
-        border-color: #e9ecef !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-        box-shadow: none !important;
-        opacity: 0.6 !important;
-    }
-
-    .hrb-btn:disabled:hover,
-    .hrb-btn[disabled]:hover {
-        background: #e9ecef !important;
-        color: #6c757d !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    /* Simplified Time Slot Buttons */
     .hrb-time-slot {
-        border: 1px solid var(--hrb-border) !important;
-        border-radius: 6px !important;
-        padding: 12px !important;
-        text-align: center !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        background: #ffffff !important;
+        min-height: 60px;
+        padding: 10px 6px;
     }
 
-    .hrb-time-slot.available {
-        border-color: #10b981 !important;
-        background: #f0fdf4 !important;
+    .hrb-time-slot-time {
+        font-size: 14px;
     }
 
-    .hrb-time-slot.available:hover {
-        border-color: #059669 !important;
-        background: #dcfce7 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+    .hrb-time-slot-status,
+    .hrb-time-slot-price {
+        font-size: 10px;
     }
 
-    .hrb-time-slot.selected {
-        border-color: var(--hrb-primary) !important;
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        box-shadow: 0 2px 8px rgba(0, 115, 170, 0.3) !important;
+    .hrb-row {
+        flex-direction: column;
+        gap: 0;
     }
 
-    .hrb-time-slot.unavailable {
-        border-color: #ef4444 !important;
-        background: #fef2f2 !important;
-        color: #991b1b !important;
-        cursor: not-allowed !important;
-        opacity: 0.7 !important;
+    .hrb-extra-content {
+        padding: 12px;
+        gap: 10px;
     }
 
-    /* Fixed People Counter Buttons */
-    .hrb-people-counter .hrb-btn {
-        padding: 8px 12px !important;
-        font-size: 14px !important;
-        line-height: 1 !important;
-        min-width: 32px !important;
-        border-radius: 4px !important;
-        flex: none !important;
-        font-weight: 600 !important;
-        background: var(--hrb-primary) !important;
-        color: white !important;
-        border: 1px solid var(--hrb-primary) !important;
+    .hrb-extra-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
     }
 
-    .hrb-people-counter .hrb-btn:hover {
-        background: var(--hrb-secondary) !important;
-        border-color: var(--hrb-secondary) !important;
+    .hrb-extra-title {
+        font-size: 14px;
     }
 
-    .hrb-people-counter input {
-        max-width: 60px !important;
-        text-align: center !important;
-        padding: 8px 12px !important;
-        min-height: 32px !important;
+    .hrb-extra-price {
+        font-size: 13px;
+        position: absolute;
+        right: -12px;
+        top: -9px;
     }
 
-    /* Simplified Visual Effects */
-
-    /* Simplified Extras List */
-    /* .hrb-extras-list {
-    border: 1px solid rgba(0, 115, 170, 0.15) !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-    overflow: hidden !important;
-} */
-
-    .hrb-extra-item {
-        border-bottom: 1px solid rgba(0, 115, 170, 0.1) !important;
-        transition: background-color 0.2s ease !important;
+    .hrb-extra-description {
+        font-size: 13px;
+        padding: 6px 10px;
     }
 
-    .hrb-extra-item:hover {
-        background: rgba(0, 115, 170, 0.03) !important;
+    .hrb-payment-method-content {
+        padding: 15px;
+        gap: 12px;
     }
 
-    .hrb-checkbox-label {
-        padding: 20px !important;
-        gap: 16px !important;
+    .hrb-payment-method-content img {
+        width: 40px;
+        height: 40px;
+        padding: 6px;
     }
 
-    .hrb-checkbox-label input[type="checkbox"] {
-        width: 20px !important;
-        height: 20px !important;
-        accent-color: var(--hrb-primary) !important;
-        position: relative !important;
+    .hrb-payment-method-content strong {
+        font-size: 15px;
     }
 
-    /* Simplified Verification Section */
-    .hrb-verification-section {
-        background: rgba(0, 115, 170, 0.02) !important;
-        border: 1px solid rgba(0, 115, 170, 0.1) !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin: 20px 0 !important;
+    .hrb-payment-method-content p {
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .hrb-form-steps {
+        padding: 12px 15px;
+        margin-bottom: 20px;
     }
 
-    /* Simplified Success/Error Messages */
-    .hrb-verification-success,
-    .hrb-alert-success {
-        background: #f0fdf4 !important;
-        border: 1px solid #10b981 !important;
-        border-radius: 6px !important;
-        padding: 12px 16px !important;
-        border-left: 4px solid #10b981 !important;
+    .hrb-step {
+        padding: 4px 6px;
+        min-width: 40px;
+        gap: 4px;
     }
 
-    .hrb-verification-error,
-    .hrb-alert-error {
-        background: #fef2f2 !important;
-        border: 1px solid #ef4444 !important;
-        border-radius: 6px !important;
-        padding: 12px 16px !important;
-        border-left: 4px solid #ef4444 !important;
+    .hrb-step-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
 
-    /* Simplified Payment Methods */
-    .hrb-payment-methods {
-        gap: 15px !important;
-        margin: 20px 0 !important;
+    .hrb-step-label {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .hrb-time-slots,
+    .hrb-time-slots-grid {
+        gap: 8px;
     }
 
-    .hrb-payment-method {
-        border: 1px solid rgba(0, 115, 170, 0.15) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease !important;
-        overflow: hidden !important;
+    .hrb-time-slot {
+        min-height: 55px;
+        padding: 8px 4px;
     }
 
-    .hrb-payment-method:hover {
-        border-color: var(--hrb-primary) !important;
-        box-shadow: 0 4px 12px rgba(0, 115, 170, 0.1) !important;
+    .hrb-time-slot-time {
+        font-size: 12px;
     }
 
-    .hrb-payment-method input[type="radio"]:checked+.hrb-payment-method-content {
-        background: #f0f8ff !important;
-        border-left: 3px solid var(--hrb-primary) !important;
+    .hrb-loading-spinner {
+        width: 32px;
+        height: 32px;
     }
 
-    /* Simplified Room Info */
-
-    /* Enhanced Responsive Design Elements */
-    @media (max-width: 768px) {
-        .hrb-booking-form {
-            padding: 20px !important;
-        }
-
-        .hrb-room-info {
-            margin: -20px -20px 30px -20px !important;
-            padding: 30px 20px !important;
-        }
-
-        .hrb-room-info h2.hrb-heading-md {
-            font-size: 2rem !important;
-        }
-
-        .hrb-form-steps {
-            padding: 20px 15px !important;
-            margin-bottom: 30px !important;
-        }
-
-        .hrb-step-icon {
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 14px !important;
-        }
-
-        .hrb-step-label {
-            font-size: 12px !important;
-        }
-
-        .hrb-btn {
-            padding: 14px 24px !important;
-            font-size: 14px !important;
-        }
+    .hrb-loading-text {
+        font-size: 13px;
     }
-    .hrb-people-counter .hrb-btn {
-        width: unset !important;
     }
 </style>
 
@@ -2148,7 +1224,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
             <!-- Step 1: Date & Time Selection -->
             <div class="hrb-form-step-content active" data-step="1">
-                <!-- <h3 class="hrb-heading-sm"><?php _e('Select Date & Time', 'hourly-room-booking'); ?></h3> -->
+                <h3 class="hrb-heading-sm"><?php _e('Select Date & Time', 'hourly-room-booking'); ?></h3>
 
                 <div class="hrb-row">
                     <div class="hrb-col-12">
@@ -2368,8 +1444,23 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             <div class="hrb-form-step-content" data-step="3">
                 <h3 class="hrb-heading-sm"><?php _e('Your Details', 'hourly-room-booking'); ?></h3>
                 
+                <!-- Anonymous Booking Option (only for bookings < 4 hours) -->
+                <div id="hrb-anonymous-booking-option" class="hrb-anonymous-booking-option" style="display: none;">
+                    <div class="hrb-form-group1">
+                        <label class="hrb-checkbox-label">
+                            <input type="checkbox" id="hrb-anonymous-booking" name="is_anonymous" value="1">
+                            <span class="hrb-checkbox-custom"></span>
+                            <span class="hrb-checkbox-text">
+                                <?php _e('Ich möchte eine 100 % anonyme Buchung vornehmen und bin mir bewusst, dass ich keine Nachrichten zu dieser Buchung erhalten werde.', 'hourly-room-booking'); ?>
+                                <?php _e('Anonyme Buchungen sind nur für Buchungen unter 4 Stunden verfügbar.', 'hourly-room-booking'); ?>
+                                
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
                 <!-- Anonymous Booking Information -->
-                <div class="hrb-static-info" style="margin-bottom: 20px;">
+                <div class="hrb-static-info" style="margin-bottom: 20px; display: none !important;">
                     <h4><?php _e('Note on anonymous booking', 'hourly-room-booking'); ?></h4>
                     <p><?php _e('You can complete this booking anonymously. The "Last Name" field is therefore not a mandatory field – it is sufficient if you enter a synonym or an abbreviation.', 'hourly-room-booking'); ?></p>
                     <p><?php _e('Please note, however: To successfully complete the booking, an email verification is required. We will send a confirmation code to the email address you provided, which you must enter in the next step.', 'hourly-room-booking'); ?></p>
@@ -2385,19 +1476,13 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 $user_company = '';
 
                 if (is_user_logged_in()) {
-                    // Use booking-specific meta fields for auto-fill
-                    $booking_first_name = get_user_meta($current_user->ID, 'hrb_booking_first_name', true);
-                    $booking_last_name = get_user_meta($current_user->ID, 'hrb_booking_last_name', true);
-                    $booking_email = get_user_meta($current_user->ID, 'hrb_booking_email', true);
-                    $booking_phone = get_user_meta($current_user->ID, 'hrb_booking_phone', true);
-                    $booking_company = get_user_meta($current_user->ID, 'hrb_booking_company', true);
-
-                    // Use booking meta if available, fallback to user data if booking meta is empty
-                    $user_first_name = !empty($booking_first_name) ? $booking_first_name : $current_user->first_name;
-                    $user_last_name = !empty($booking_last_name) ? $booking_last_name : $current_user->last_name;
-                    $user_email = !empty($booking_email) ? $booking_email : $current_user->user_email;
-                    $user_phone = !empty($booking_phone) ? $booking_phone : get_user_meta($current_user->ID, 'phone', true);
-                    $user_company = !empty($booking_company) ? $booking_company : get_user_meta($current_user->ID, 'company', true);
+                    // Use WordPress user data for auto-fill (not booking-specific meta fields)
+                    // This ensures each booking starts fresh with account data, not previous booking data
+                    $user_first_name = $current_user->first_name;
+                    $user_last_name = $current_user->last_name;
+                    $user_email = $current_user->user_email;
+                    $user_phone = get_user_meta($current_user->ID, 'phone', true);
+                    $user_company = get_user_meta($current_user->ID, 'company', true);
 
                     // If still no first/last name, try to extract from display name
                     if (empty($user_first_name) && empty($user_last_name) && !empty($current_user->display_name)) {
@@ -2416,7 +1501,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 <?php endif; ?>
 
                 <div class="hrb-row">
-                    <div class="hrb-col-12">
+                    <div class="hrb-col-12 hrb-name-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label required" for="first-name-<?php echo $room_id; ?>">
                                 <?php _e('First Name', 'hourly-room-booking'); ?>
@@ -2429,7 +1514,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 required>
                         </div>
                     </div>
-                    <div class="hrb-col-12">
+                    <div class="hrb-col-12 hrb-name-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label" for="last-name-<?php echo $room_id; ?>">
                                 <?php _e('Last Name', 'hourly-room-booking'); ?>
@@ -2444,7 +1529,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 </div>
 
                 <div class="hrb-row">
-                    <div class="hrb-col-12">
+                    <div class="hrb-col-12 hrb-email-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label required" for="email-<?php echo $room_id; ?>">
                                 <?php _e('Email Address', 'hourly-room-booking'); ?>
@@ -2457,7 +1542,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                                 required>
                         </div>
                     </div>
-                    <div class="hrb-col-12">
+                    <div class="hrb-col-12 hrb-phone-field">
                         <div class="hrb-form-group">
                             <label class="hrb-form-label" for="phone-<?php echo $room_id; ?>">
                                 <?php _e('Phone Number', 'hourly-room-booking'); ?>
@@ -2474,7 +1559,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
 
                 <!-- Contact Verification Section -->
-                <div class="hrb-verification-container">
+                <div class="hrb-verification-container hrb-verification-field">
                     <h4 class="hrb-heading-xs"><?php _e('Contact Verification', 'hourly-room-booking'); ?></h4>
 
                     <?php
@@ -2640,9 +1725,9 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 <div class="hrb-payment-notice hrb-info-box hrb-alert-info">
                     <strong><?php _e('Payment Policy:', 'hourly-room-booking'); ?></strong>
                     <ul>
-                        <li><?php _e('Bookings 4+ hours: PayPal payment required, full amount upfront, no refunds', 'hourly-room-booking'); ?></li>
-                        <li><?php _e('Bookings under 4 hours: PayPal or on-site payment available', 'hourly-room-booking'); ?></li>
-                        <li><?php _e('PayPal payments include a 3% processing fee', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('For bookings of 4 hours or more, payment via PayPal in advance is required. Please note that no refunds are possible in this case.', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('For bookings under 4 hours, you can pay either via PayPal or on site.', 'hourly-room-booking'); ?></li>
+                        <li><?php _e('There is a 3% processing fee for PayPal payments.', 'hourly-room-booking'); ?></li>
                     </ul>
                 </div>
 
@@ -2658,7 +1743,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
             <!-- Step 5: Confirmation -->
             <div class="hrb-form-step-content" data-step="5">
-                <h3 class="hrb-heading-sm"><?php _e('Booking Confirmation', 'hourly-room-booking'); ?></h3>
+                <h3 class="hrb-heading-sm"><?php _e('Booking overview', 'hourly-room-booking'); ?></h3>
 
                 <div class="hrb-booking-review">
                     <div class="hrb-row">
@@ -2706,13 +1791,30 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 <div class="hrb-terms-acceptance">
                     <label class="hrb-checkbox-label">
                         <input type="checkbox" name="accept_terms">
-                        <span>
+                        <span class="hrb-checkbox-custom"></span>
+                        <span class="hrb-checkbox-text">
+                            <?php 
+                            // Get Terms & Conditions and Privacy Policy page URLs from settings
+                            $terms_page_id = $settings->get('hrb_terms_page', '');
+                            $privacy_page_id = $settings->get('hrb_privacy_page', '');
+                            
+                            $terms_url = !empty($terms_page_id) ? get_permalink($terms_page_id) : '#';
+                            $privacy_url = !empty($privacy_page_id) ? get_permalink($privacy_page_id) : '#';
+                            ?>
                             <?php _e('I accept the', 'hourly-room-booking'); ?>
-                            <a href="#" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
+                            <a href="<?php echo esc_url($terms_url); ?>" target="_blank"><?php _e('Terms & Conditions', 'hourly-room-booking'); ?></a>
                             <?php _e('and', 'hourly-room-booking'); ?>
-                            <a href="#" target="_blank"><?php _e('Privacy Policy', 'hourly-room-booking'); ?></a>
+                            <a href="<?php echo esc_url($privacy_url); ?>" target="_blank"><?php _e('Privacy Policy', 'hourly-room-booking'); ?></a>
                         </span>
                     </label>
+                </div>
+
+                <!-- PayPal Payment Warning -->
+                <div id="hrb-paypal-warning" class="hrb-paypal-warning" style="display: none;">
+                    <div class="hrb-alert hrb-alert-warning">
+                        <strong>⚠️ <?php _e('Important:', 'hourly-room-booking'); ?></strong>
+                        <?php _e('Nach dem Klick auf „Buchung abschließen" bitte die PayPal-Zahlung direkt durchführen. Andernfalls kann der Vorgang abgebrochen werden.', 'hourly-room-booking'); ?>
+                    </div>
                 </div>
 
                 <div class="hrb-alert hrb-alert-success">
@@ -2741,6 +1843,35 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         <!-- PayPal Container -->
         <div id="paypal-button-container" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Anonymous Booking Confirmation Modal (Outside form container) -->
+<div id="hrb-anonymous-modal" class="hrb-modal" style="display: none;">
+    <div class="hrb-modal-overlay"></div>
+    <div class="hrb-modal-content">
+        <div class="hrb-modal-header">
+            <h3><?php _e('Wichtiger Hinweis zur anonymen Buchung', 'hourly-room-booking'); ?></h3>
+            <button type="button" class="hrb-modal-close">&times;</button>
+        </div>
+        <div class="hrb-modal-body">
+            <p><strong><?php _e('Du hast eine 100 % anonyme Buchung gewählt.', 'hourly-room-booking'); ?></strong></p>
+            <p><?php _e('Das bedeutet:', 'hourly-room-booking'); ?></p>
+            <ul>
+                <li><?php _e('Du erhältst keine Buchungsbestätigung, Erinnerungen oder Änderungsmöglichkeiten per E-Mail.', 'hourly-room-booking'); ?></li>
+                <li><?php _e('Du kannst deine Buchung nicht online bearbeiten oder stornieren. Solltest du nach einer Buchung diese wieder stornieren wollen, ist dies nur mit der Buchungs-ID telefonisch oder per E-Mail an: <a href=mailto:info@wi-stundenzimmer.de> info@wi-stundenzimmer.de </a> möglich.', 'hourly-room-booking'); ?></li>
+                <li><?php _e('Die einmalig angezeigte Buchungs-ID dient als einziger Nachweis deiner Buchung.', 'hourly-room-booking'); ?></li>
+            </ul>
+            <p><?php _e('Bitte notiere oder speichere diese ID nach Abschluss deiner Buchung, da sie nicht erneut angezeigt oder per E-Mail gesendet wird.', 'hourly-room-booking'); ?></p>
+        </div>
+        <div class="hrb-modal-footer">
+            <button type="button" class="hrb-btn hrb-btn-secondary" id="hrb-anonymous-cancel">
+                <?php _e('Abbrechen', 'hourly-room-booking'); ?>
+            </button>
+            <button type="button" class="hrb-btn hrb-btn-primary" id="hrb-anonymous-continue">
+                <?php _e('Anonyme Buchung fortsetzen', 'hourly-room-booking'); ?>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -2775,7 +1906,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         height: 50px;
         border: 4px solid rgba(59, 130, 246, 0.1);
         border-radius: 50%;
-        border-top-color: #3b82f6;
+        border-top-color: var(--hrb-loading-primary);
         border-right-color: #8b5cf6;
         animation: hrb-spin-beautiful 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
         z-index: 1001;
@@ -2785,7 +1916,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         position: relative;
         pointer-events: none;
         opacity: 0.9;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, var(--hrb-loading-primary), var(--hrb-alert-info-text));
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         transform: scale(0.98);
         transition: all 0.3s ease;
@@ -2809,7 +1940,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         height: 16px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
-        border-top-color: #ffffff;
+        border-top-color: var(--hrb-ffffff);
         animation: hrb-spin 1s linear infinite;
         margin-right: 8px;
     }
@@ -2893,7 +2024,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
     }
 
     .hrb-payment-redirect-message {
-        background: linear-gradient(135deg, #0073aa, #005a87);
+        background: linear-gradient(135deg, var(--hrb-0073aa), var(--hrb-005a87));
         color: white;
         padding: 30px;
         border-radius: 12px;
@@ -2962,15 +2093,257 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
     /* Loading button styles */
     .hrb-submit-btn:disabled {
-        background-color: #6c757d !important;
+        background-color: var(--hrb-text-muted) !important;
         cursor: not-allowed !important;
         opacity: 0.7 !important;
     }
 
     .hrb-submit-btn.hrb-loading:disabled {
-        background-color: #0073aa !important;
+        background-color: var(--hrb-0073aa) !important;
         cursor: not-allowed !important;
         opacity: 1 !important;
+    }
+
+    /* Anonymous Booking Styles */
+    .hrb-anonymous-booking-option {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        border-left: 4px solid var(--hrb-primary);
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--hrb-primary-dark);
+        border-color: var(--hrb-primary);
+        opacity: 1 !important;
+    }
+
+    .hrb-checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--hrb-text);
+    }
+
+    .hrb-checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--hrb-border);
+        border-radius: 4px;
+        background: var(--hrb-background);
+        position: relative;
+        flex-shrink: 0;
+        transition: var(--hrb-transition);
+    }
+
+    .hrb-checkbox-label input[type="checkbox"] {
+        display: none;
+    }
+
+    .hrb-checkbox-label input[type="checkbox"]:checked + .hrb-checkbox-custom {
+        background: var(--hrb-primary);
+        border-color: var(--hrb-primary);
+    }
+
+    .hrb-checkbox-label input[type="checkbox"]:checked + .hrb-checkbox-custom::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .hrb-checkbox-text {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    /* Modal Styles - Anonymous Booking Modal Only */
+    #hrb-anonymous-modal.hrb-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    #hrb-anonymous-modal.hrb-modal.show {
+        display: flex;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-content {
+        position: relative;
+        background: var(--hrb-background);
+        border-radius: var(--hrb-radius-xl);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+        margin: auto;
+        transform: translateY(0);
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    #hrb-anonymous-modal .hrb-modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid var(--hrb-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        /* background: linear-gradient(135deg, var(--hrb-primary), var(--hrb-primary-dark)); */
+        color: white;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--hrb-transition);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body {
+        padding: 20px 25px;
+        line-height: 1.6;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body p {
+        margin-bottom: 15px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-body li {
+        margin-bottom: 8px;
+    }
+
+    #hrb-anonymous-modal .hrb-modal-footer {
+        padding: 20px 25px;
+        border-top: 1px solid var(--hrb-border);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        background: var(--hrb-background-light);
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+
+    /* Email field hiding for anonymous bookings */
+    .hrb-anonymous-booking-active .hrb-email-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-phone-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-verification-field {
+        display: none !important;
+    }
+
+    .hrb-anonymous-booking-active .hrb-name-field {
+        display: none !important;
+    }
+
+    /* Responsive adjustments for anonymous modal */
+    @media (max-height: 600px) {
+        #hrb-anonymous-modal .hrb-modal-content {
+            max-height: 95vh;
+            margin: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-body {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer {
+            padding: 15px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        #hrb-anonymous-modal .hrb-modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-header {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-body {
+            padding: 15px 20px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer {
+            padding: 15px 20px;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        #hrb-anonymous-modal .hrb-modal-footer button {
+            width: 100%;
+        }
     }
 </style>
 
@@ -3071,7 +2444,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
         // Enhanced HRB utils check
         if (!window.HRB || !window.HRB.utils || !window.HRB.utils.showMessage) {
-            console.warn('HRB.utils.showMessage not available, using fallback');
+            /* removed debug warn: HRB.utils.showMessage fallback */
             window.HRB = window.HRB || {};
             window.HRB.utils = window.HRB.utils || {};
             window.HRB.utils.showMessage = window.showMessageFallback;
@@ -3112,7 +2485,22 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     break;
 
                 case 3:
-                    // Validate customer details
+                    // Check if this is an anonymous booking
+                    const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+                    
+                    if (isAnonymous) {
+                        // For anonymous bookings, validate first_name is required (same as admin)
+                        const firstName = form.find('input[name="first_name"]').val();
+                        
+                        if (!firstName || !firstName.trim()) {
+                            // Ensure name field is visible for validation
+                            form.find('.hrb-name-field').show();
+                            form.find('input[name="first_name"]').focus();
+                            showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                            return false;
+                        }
+                    } else {
+                        // For regular bookings, validate all customer details
                     const firstName = form.find('input[name="first_name"]').val();
                     const lastName = form.find('input[name="last_name"]').val();
                     const email = form.find('input[name="email"]').val();
@@ -3132,6 +2520,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     if (!verificationVerified) {
                         showValidationError('<?php _e('Please verify your contact information to continue', 'hourly-room-booking'); ?>');
                         return false;
+                        }
                     }
 
                     break;
@@ -3253,6 +2642,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         form.find('select[name="duration"]').on('change', function() {
             applyPaymentMethodRestriction();
             updateBookingSummary();
+            checkBookingDuration(); // Check if anonymous booking option should be shown
         });
 
 
@@ -3465,6 +2855,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
 
             loadTimeSlots(roomId, date, duration);
             updateBookingSummary();
+            checkBookingDuration(); // Check if anonymous booking option should be shown
         });
 
         function generateTimeSlots(duration) {
@@ -3490,27 +2881,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 const endHourSlot = Math.floor(endTimeMinutesSlot / 60);
                 const endMinuteSlot = endTimeMinutesSlot % 60;
                 
-                // Check if the slot exceeds the end time (handle day overflow)
-                let endHourDisplay = endHourSlot;
-                let slotExceedsEndTime = false;
-                
-                if (endHourSlot >= 24) {
-                    // Slot crosses midnight - check if it's within the same day
-                    endHourDisplay = endHourSlot - 24;
-                    // If the slot ends after midnight, it exceeds the end time
-                    slotExceedsEndTime = true;
-                } else {
-                    // Check if slot ends after the configured end time
-                    slotExceedsEndTime = endTimeMinutesSlot > endTimeMinutes;
-                }
-                
                 // Skip this slot if it exceeds the end time
-                if (slotExceedsEndTime) {
+                if (endTimeMinutesSlot > endTimeMinutes) {
                     continue;
                 }
                 
                 const startTime = String(startHourSlot).padStart(2, '0') + ':' + String(startMinuteSlot).padStart(2, '0');
-                const endTime = String(endHourDisplay).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
+                const endTime = (endHourSlot === 24 && endMinuteSlot === 0)
+                    ? '24:00'
+                    : String(endHourSlot).padStart(2, '0') + ':' + String(endMinuteSlot).padStart(2, '0');
                 const display = startTime + ' - ' + endTime;
 
                 // Calculate price based on duration
@@ -3554,7 +2933,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             );
 
             // Add extras and additional people info to confirmation section
-            const bookingDetails = $('.hrb-booking-review .hrb-col-6').first();
+            const bookingDetails = $('.hrb-booking-review .hrb-col-12').first();
 
             // Remove existing extras/people info
             bookingDetails.find('.hrb-review-extras, .hrb-review-people').remove();
@@ -3586,12 +2965,28 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handlePayPalPayment() {
+            // Validate anonymous booking name before payment
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return;
+                }
+            }
 
             // Get form data
             const formData = getFormData();
 
             // Validate required fields before creating PayPal order
-            if (!formData.first_name || !formData.email) {
+            if (!formData.first_name || (!isAnonymous && !formData.email)) {
                 showValidationError('Please fill in all required customer details before proceeding with payment.');
                 return;
             }
@@ -3629,6 +3024,23 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function handleOnsitePayment() {
+            // Validate anonymous booking name before payment
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return;
+                }
+            }
+            
             // Show loading state
             showPaymentLoading();
             submitBooking();
@@ -3648,6 +3060,7 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 last_name: form.find('input[name="last_name"]').val(),
                 email: form.find('input[name="email"]').val(),
                 phone: form.find('input[name="phone"]').val(),
+                is_anonymous: form.find('input[name="is_anonymous"]:checked').val() || '0',
             };
 
             // Get selected extras
@@ -3709,6 +3122,30 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function submitBooking() {
+            // Validate anonymous booking name before submission
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            if (isAnonymous) {
+                const firstName = form.find('input[name="first_name"]').val();
+                
+                if (!firstName || !firstName.trim()) {
+                    // Ensure name field is visible and focusable
+                    form.find('.hrb-name-field').show();
+                    // Remove required attribute temporarily to prevent browser validation error
+                    form.find('input[name="first_name"]').prop('required', false);
+                    // Scroll to name field
+                    $('html, body').animate({
+                        scrollTop: form.find('input[name="first_name"]').offset().top - 100
+                    }, 500);
+                    form.find('input[name="first_name"]').focus();
+                    // Re-add required attribute
+                    form.find('input[name="first_name"]').prop('required', true);
+                    
+                    hidePaymentLoading();
+                    showValidationError('<?php _e('Bitte geben Sie einen Namen ein', 'hourly-room-booking'); ?>');
+                    return false;
+                }
+            }
+            
             HRB.app.submitBooking(form).then(response => {
                 // Redirect to success page
                 window.location.href = '<?php echo site_url('/booking-success/'); ?>?ref=' + response.booking_reference;
@@ -3938,15 +3375,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             // Calculate subtotal
             const subtotal = basePrice + extrasPrice + additionalPeoplePrice;
 
-            // Calculate VAT (19% in Germany)
-            const taxRate = <?php echo floatval(get_option('hrb_tax_rate', 19)); ?>;
-            const taxAmount = subtotal * (taxRate / 100);
-
             // Calculate PayPal fee only if PayPal is explicitly selected
             let paypalFee = 0;
             if (paymentMethod && paymentMethod === 'paypal') {
                 paypalFee = subtotal * 0.03; // 3% fee
             }
+
+            // Calculate VAT (19% in Germany)
+            const taxRate = <?php echo floatval(get_option('hrb_tax_rate', 19)); ?>;
+            const taxAmount = subtotal * (taxRate / 100);
 
             // Calculate total
             const total = subtotal + taxAmount + paypalFee;
@@ -3985,13 +3422,15 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 </div>
             `;
 
-            // Add VAT line
-            summaryHtml += `
-                <div class="hrb-summary-item hrb-summary-vat">
-                    <span>zzgl. ${taxRate}% MwSt.</span>
-                    <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
-                </div>
-            `;
+            // Add VAT line only if tax rate is greater than 0
+            if (taxRate > 0) {
+                summaryHtml += `
+                    <div class="hrb-summary-item hrb-summary-vat">
+                        <span>zzgl. ${taxRate}% MwSt.</span>
+                        <span>${window.HRB.utils.formatPrice(taxAmount)}</span>
+                    </div>
+                `;
+            }
 
             if (paypalFee > 0 && paymentMethod === 'paypal') {
                 summaryHtml += `
@@ -4007,8 +3446,18 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                     <span><strong><?php _e('Total', 'hourly-room-booking'); ?></strong></span>
                     <span><strong>${window.HRB.utils.formatPrice(total)}</strong></span>
                 </div>
-            </div>
-        `;
+            `;
+            
+            // Add VAT message if tax rate is 0 or blank
+            if (taxRate === 0) {
+                summaryHtml += `
+                    <div class="hrb-vat-message">
+                        <small><?php _e('Preise verstehen sich inkl. der gesetzlichen Mehrwertsteuer.', 'hourly-room-booking'); ?></small>
+                    </div>
+                `;
+            }
+            
+            summaryHtml += `</div>`;
 
             $('#booking-summary-<?php echo $room_id; ?>').html(summaryHtml);
         }
@@ -4122,6 +3571,18 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
         }
 
         function checkVerificationStatus(email) {
+            // Check if this is an anonymous booking
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            
+            if (isAnonymous) {
+                // For anonymous bookings, skip verification entirely
+                verificationCompleted = true;
+                verificationVerified = true;
+                $('#details-and-verification-next').prop('disabled', false);
+                $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+                return;
+            }
+            
             // Clear previous status messages
             $('.hrb-verification-success, .hrb-verification-error').remove();
 
@@ -4362,5 +3823,180 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
                 }
             }, 1000);
         }
+
+        // Anonymous Booking Logic
+        function checkBookingDuration() {
+            const duration = parseInt(form.find('select[name="duration"]').val());
+            const anonymousOption = $('#hrb-anonymous-booking-option');
+            
+            if (duration && duration < 4) {
+                anonymousOption.show();
+            } else {
+                anonymousOption.hide();
+                // Uncheck anonymous booking if duration is 4+ hours
+                $('#hrb-anonymous-booking').prop('checked', false);
+                handleAnonymousBookingChange();
+            }
+        }
+
+        function setAnonymousFieldRequirements(isAnonymous) {
+            // For anonymous bookings: keep name fields visible and make first_name required
+            // Hide email, phone, and verification fields
+            const emailPhoneVerificationInputs = form.find('.hrb-email-field input, .hrb-phone-field input, .hrb-verification-field input');
+            const nameInputs = form.find('.hrb-name-field input');
+            
+            if (isAnonymous) {
+                // Disable email, phone, and verification fields
+                emailPhoneVerificationInputs.each(function() {
+                    const $input = $(this);
+                    if ($input.prop('required')) {
+                        $input.data('hrb-required-was', true);
+                    }
+                    $input.prop('required', false).attr('aria-required', 'false').prop('disabled', true);
+                });
+                
+                // Keep name fields enabled and make first_name required (same as admin)
+                nameInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    // Make first_name required for anonymous bookings
+                    if ($input.attr('name') === 'first_name') {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+            } else {
+                // Re-enable all fields for regular bookings
+                emailPhoneVerificationInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    if ($input.data('hrb-required-was')) {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+                
+                nameInputs.each(function() {
+                    const $input = $(this);
+                    $input.prop('disabled', false);
+                    if ($input.data('hrb-required-was')) {
+                        $input.prop('required', true).attr('aria-required', 'true');
+                    }
+                });
+            }
+        }
+
+        function handleAnonymousBookingChange() {
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            const formContainer = form.closest('.hrb-booking-form-container');
+            
+            if (isAnonymous) {
+                // Show modal
+                $('#hrb-anonymous-modal').show().addClass('show');
+            } else {
+                // Show all fields for regular bookings
+                formContainer.removeClass('hrb-anonymous-booking-active');
+                form.find('.hrb-email-field, .hrb-phone-field, .hrb-verification-field, .hrb-name-field').show();
+                setAnonymousFieldRequirements(false);
+                applyAnonymousPaymentVisibility(false);
+            }
+        }
+
+        // Check duration on page load and when duration changes
+        checkBookingDuration();
+        
+        // Listen for duration changes (using select, not input)
+        form.find('select[name="duration"]').on('change', function() {
+            checkBookingDuration();
+        });
+
+        // Handle anonymous booking checkbox change
+        $(document).on('change', '#hrb-anonymous-booking', function() {
+            if ($(this).is(':checked')) {
+                handleAnonymousBookingChange();
+                // Enable the button immediately for anonymous bookings
+                verificationCompleted = true;
+                verificationVerified = true;
+                $('#details-and-verification-next').prop('disabled', false);
+                $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+            } else {
+                handleAnonymousBookingChange();
+                // Reset verification state for regular bookings
+                resetVerificationState();
+            }
+        });
+
+        // Handle modal buttons
+        $(document).on('click', '#hrb-anonymous-continue', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+            const formContainer = form.closest('.hrb-booking-form-container');
+            formContainer.addClass('hrb-anonymous-booking-active');
+            
+            // Hide email, phone, and verification fields, but keep name fields visible
+            form.find('.hrb-email-field, .hrb-phone-field, .hrb-verification-field').hide();
+            form.find('.hrb-name-field').show(); // Keep name fields visible
+            
+            setAnonymousFieldRequirements(true);
+            applyAnonymousPaymentVisibility(true);
+            
+            // Enable the button for anonymous bookings
+            verificationCompleted = true;
+            verificationVerified = true;
+            $('#details-and-verification-next').prop('disabled', false);
+            $('#details-and-verification-next').text('<?php _e('Continue', 'hourly-room-booking'); ?>');
+        });
+
+        $(document).on('click', '#hrb-anonymous-cancel', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+            $('#hrb-anonymous-booking').prop('checked', false);
+            handleAnonymousBookingChange();
+            // Reset verification state when canceling anonymous booking
+            resetVerificationState();
+        });
+
+        // Handle modal close
+        $(document).on('click', '.hrb-modal-close, .hrb-modal-overlay', function() {
+            $('#hrb-anonymous-modal').hide().removeClass('show');
+        });
+
+        // Prevent native validation errors on hidden inputs across steps
+        form.on('submit', function() {
+            const isAnonymous = $('#hrb-anonymous-booking').is(':checked');
+            form.find(':input[required]').each(function() {
+                const $input = $(this);
+                // For anonymous bookings, keep first_name required even if hidden temporarily
+                // We'll validate it manually and show it if needed
+                if (!$input.is(':visible')) {
+                    // Don't remove required from first_name for anonymous bookings
+                    if (isAnonymous && $input.attr('name') === 'first_name') {
+                        // Keep it required, we'll handle validation manually
+                        return;
+                    }
+                    $input.data('hrb-required-was', true).prop('required', false).prop('disabled', true);
+                }
+            });
+        });
+
+        // Hide/show PayPal option depending on anonymous booking
+        function applyAnonymousPaymentVisibility(isAnonymous) {
+            const paypalOption = form.find('input[name="payment_method"][value="paypal"]').closest('.hrb-payment-method');
+            const onsiteOption = form.find('#onsite-payment-option');
+            if (isAnonymous) {
+                paypalOption.hide();
+                onsiteOption.show();
+                form.find('input[name="payment_method"][value="onsite"]').prop('checked', true).trigger('change');
+                updateBookingSummary();
+            } else {
+                paypalOption.show();
+                // Re-apply standard duration-based restriction
+                const duration = parseInt(form.find('select[name=\"duration\"]').val());
+                if (duration >= 4) {
+                    onsiteOption.hide();
+                    form.find('input[name=\"payment_method\"][value=\"paypal\"]').prop('checked', true).trigger('change');
+                } else {
+                    onsiteOption.show();
+                }
+                updateBookingSummary();
+            }
+        }
+
     });
 </script>

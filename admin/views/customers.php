@@ -11,6 +11,60 @@ if (!defined('ABSPATH')) {
 
 global $wpdb;
 
+// Handle customer deletion
+if (isset($_POST['action']) && $_POST['action'] === 'delete_customer' && isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'hrb_admin_action')) {
+    $customer_id = intval($_POST['customer_id']);
+    
+    if ($customer_id > 0) {
+        // Check if customer has active bookings
+        $booking_count = $wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(*) FROM {$wpdb->prefix}hrb_bookings 
+            WHERE customer_id = %d AND status NOT IN ('cancelled', 'completed')
+        ", $customer_id));
+        
+        if ($booking_count > 0) {
+            $error_message = sprintf(
+                __('Cannot delete customer. Customer has %d active booking(s). Please cancel or complete all bookings first.', 'hourly-room-booking'),
+                $booking_count
+            );
+            echo '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    var notice = document.createElement("div");
+                    notice.className = "notice notice-error is-dismissible";
+                    notice.innerHTML = "<p>' . esc_js($error_message) . '</p>";
+                    document.querySelector(".hrb-admin-page").insertBefore(notice, document.querySelector(".hrb-admin-page").firstChild);
+                });
+            </script>';
+        } else {
+            // Delete customer (this will cascade delete their bookings due to foreign key)
+            $customer_manager = HRB_Customer_Manager::getInstance();
+            $result = $customer_manager->delete_customer($customer_id, true);
+            
+            if (is_wp_error($result)) {
+                echo '<script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        var notice = document.createElement("div");
+                        notice.className = "notice notice-error is-dismissible";
+                        notice.innerHTML = "<p>' . esc_js($result->get_error_message()) . '</p>";
+                        document.querySelector(".hrb-admin-page").insertBefore(notice, document.querySelector(".hrb-admin-page").firstChild);
+                    });
+                </script>';
+            } else {
+                // Set success flag for JavaScript to show message
+                $success_message = __('Customer deleted successfully.', 'hourly-room-booking');
+                echo '<script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        var notice = document.createElement("div");
+                        notice.className = "notice notice-success is-dismissible";
+                        notice.innerHTML = "<p>' . esc_js($success_message) . '</p>";
+                        document.querySelector(".hrb-admin-page").insertBefore(notice, document.querySelector(".hrb-admin-page").firstChild);
+                    });
+                </script>';
+            }
+        }
+    }
+}
+
 // Pagination
 $per_page = 20;
 $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
@@ -23,6 +77,9 @@ $status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) :
 // Build query
 $where_conditions = ['1=1'];
 $query_params = [];
+
+// Always exclude anonymous user from the table
+$where_conditions[] = "email != 'anonymous@example.com'";
 
 if (!empty($search)) {
     $where_conditions[] = "(first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR phone LIKE %s)";
@@ -72,15 +129,17 @@ $customers_query = "
 $final_params = array_merge($query_params, [$per_page, $offset]);
 $customers = $wpdb->get_results($wpdb->prepare($customers_query, $final_params));
 
-// Quick stats
+// Quick stats (excluding anonymous user)
 $stats = [
-    'total' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers"),
-    'verified' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE is_verified = 1"),
-    'linked_users' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE wp_user_id IS NOT NULL AND wp_user_id > 0"),
-    'guest_customers' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE wp_user_id IS NULL OR wp_user_id = 0"),
-    'this_month' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)"),
-    'avg_bookings' => $wpdb->get_var("SELECT AVG(booking_count) FROM (SELECT COUNT(b.id) as booking_count FROM {$wpdb->prefix}hrb_customers c LEFT JOIN {$wpdb->prefix}hrb_bookings b ON c.id = b.customer_id GROUP BY c.id) as subq")
+    'total' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE email != 'anonymous@example.com'"),
+    'verified' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE is_verified = 1 AND email != 'anonymous@example.com'"),
+    'linked_users' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE wp_user_id IS NOT NULL AND wp_user_id > 0 AND email != 'anonymous@example.com'"),
+    'guest_customers' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE (wp_user_id IS NULL OR wp_user_id = 0) AND email != 'anonymous@example.com'"),
+    'this_month' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hrb_customers WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH) AND email != 'anonymous@example.com'"),
+    'avg_bookings' => $wpdb->get_var("SELECT AVG(booking_count) FROM (SELECT COUNT(b.id) as booking_count FROM {$wpdb->prefix}hrb_customers c LEFT JOIN {$wpdb->prefix}hrb_bookings b ON c.id = b.customer_id WHERE c.email != 'anonymous@example.com' GROUP BY c.id) as subq")
 ];
+
+// Success messages are now handled via JavaScript after form submission
 ?>
 
 <div class="hrb-admin-page">
@@ -195,7 +254,7 @@ $stats = [
                                     </div>
                                     <div class="customer-details">
                                         <strong><?php echo esc_html($customer->first_name . ' ' . $customer->last_name); ?></strong>
-                                        <div class="customer-id"><?php printf(__('Customer ID: %d', 'hourly-room-booking'), $customer->id); ?></div>
+                                        <div class="customer-id" style="display: none;"><?php printf(__('Customer ID: %d', 'hourly-room-booking'), $customer->id); ?></div>
                                         <?php if (!empty($customer->wp_user_id)): ?>
                                             <?php
                                             $wp_user = get_user_by('ID', $customer->wp_user_id);
@@ -247,7 +306,7 @@ $stats = [
                                     <?php if ($customer->last_booking_date): ?>
                                         <div class="last-booking">
                                             <?php printf(
-                                                __('Last: %s', 'hourly-room-booking'),
+                                                __('Zuletzt: %s', 'hourly-room-booking'),
                                                 date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($customer->last_booking_date))
                                             ); ?>
                                         </div>
@@ -282,9 +341,9 @@ $stats = [
                                             <?php wp_nonce_field('hrb_admin_action', '_wpnonce'); ?>
                                             <input type="hidden" name="action" value="verify_customer">
                                             <input type="hidden" name="customer_id" value="<?php echo $customer->id; ?>">
-                                            <button type="submit" class="button button-small hrb-verify-btn" title="<?php _e('Verify Customer', 'hourly-room-booking'); ?>">
+                                            <!-- <button type="submit" class="button button-small hrb-verify-btn" title="<?php _e('Verify Customer', 'hourly-room-booking'); ?>">
                                                 <span class="dashicons dashicons-yes"></span>
-                                            </button>
+                                            </button> -->
                                         </form>
                                     <?php endif; ?>
 
@@ -756,6 +815,213 @@ $stats = [
         color: white;
     }
 
+    /* Custom Alert Modal Styles */
+    .hrb-custom-alert-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .hrb-custom-alert-modal {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 480px;
+        width: 90%;
+        max-height: 90vh;
+        overflow: hidden;
+        animation: slideIn 0.3s ease-out;
+        position: relative;
+    }
+
+    .hrb-custom-alert-header {
+        padding: 24px 32px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .hrb-custom-alert-header.error {
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        border-left: 4px solid #ef4444;
+    }
+
+    .hrb-custom-alert-header.warning {
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        border-left: 4px solid #f59e0b;
+    }
+
+    .hrb-custom-alert-header.success {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-left: 4px solid #22c55e;
+    }
+
+    .hrb-custom-alert-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .hrb-custom-alert-header.error .hrb-custom-alert-icon {
+        background: #ef4444;
+        color: white;
+    }
+
+    .hrb-custom-alert-header.warning .hrb-custom-alert-icon {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .hrb-custom-alert-header.success .hrb-custom-alert-icon {
+        background: #22c55e;
+        color: white;
+    }
+
+    .hrb-custom-alert-icon .dashicons {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .hrb-custom-alert-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+        flex: 1;
+    }
+
+    .hrb-custom-alert-close {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .hrb-custom-alert-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #374151;
+    }
+
+    .hrb-custom-alert-close .dashicons {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+
+    .hrb-custom-alert-body {
+        padding: 24px 32px;
+    }
+
+    .hrb-custom-alert-body p {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #4b5563;
+    }
+
+    .hrb-custom-alert-footer {
+        padding: 16px 32px 24px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+
+    .hrb-custom-alert-footer .button {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .hrb-custom-alert-footer .button:not(.button-primary) {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .hrb-custom-alert-footer .button:not(.button-primary):hover {
+        background: #e5e7eb;
+    }
+
+    .hrb-custom-alert-footer .button-primary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .hrb-custom-alert-footer .hrb-delete-confirm {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    }
+
+    .hrb-custom-alert-footer .hrb-delete-confirm:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .hrb-custom-alert-modal {
+            width: 95%;
+            margin: 20px;
+        }
+        
+        .hrb-custom-alert-header,
+        .hrb-custom-alert-body,
+        .hrb-custom-alert-footer {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        
+        .hrb-custom-alert-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 12px;
+        }
+        
+        .hrb-custom-alert-footer {
+            flex-direction: column;
+        }
+        
+        .hrb-custom-alert-footer .button {
+            width: 100%;
+        }
+    }
+
     /* Modern Dropdown */
     .hrb-dropdown {
         position: relative;
@@ -1147,14 +1413,134 @@ $stats = [
     }
 
     function closeCustomerModal() {
+        // Hide the modal
         document.getElementById('customer-modal').style.display = 'none';
+        
+        // Clear the modal body content
+        document.getElementById('customer-modal-body').innerHTML = '';
+        
+        // Reset modal title
+        document.getElementById('customer-modal-title').textContent = '<?php _e('Customer Details', 'hourly-room-booking'); ?>';
     }
 
     function deleteCustomer(customerId, customerName) {
-        if (confirm('<?php _e('Are you sure you want to delete this customer?', 'hourly-room-booking'); ?>\n\n' + customerName + '\n\n<?php _e('This will also delete all their bookings and cannot be undone.', 'hourly-room-booking'); ?>')) {
-            document.getElementById('delete-customer-id').value = customerId;
-            document.getElementById('delete-customer-form').submit();
+        // First check if customer has active bookings
+        jQuery.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hrb_check_customer_bookings',
+                customer_id: customerId,
+                nonce: '<?php echo wp_create_nonce('hrb_admin_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    const bookingCount = response.data.booking_count;
+                    if (bookingCount > 0) {
+                        showCustomAlert('error', '<?php _e('Cannot Delete Customer', 'hourly-room-booking'); ?>', '<?php _e('Cannot delete customer. Customer has', 'hourly-room-booking'); ?> ' + bookingCount + ' <?php _e('active booking(s). Please cancel or complete all bookings first.', 'hourly-room-booking'); ?>');
+                        return;
+                    }
+                    
+                    // Proceed with deletion if no active bookings
+                    window.hrbShowAlertDialog(
+                        <?php echo json_encode(__('Are you sure you want to delete this customer?', 'hourly-room-booking')); ?>,
+                        {
+                            warningMessage: <?php echo json_encode(__('This will also delete all their bookings and cannot be undone.', 'hourly-room-booking')); ?>,
+                            title: <?php echo json_encode(__('Delete Customer', 'hourly-room-booking')); ?>,
+                            details: [
+                                {
+                                    label: <?php echo json_encode(__('Customer:', 'hourly-room-booking')); ?>,
+                                    value: customerName,
+                                    class: 'original'
+                                }
+                            ],
+                            confirmText: <?php echo json_encode(__('Delete', 'hourly-room-booking')); ?>,
+                            cancelText: <?php echo json_encode(__('Cancel', 'hourly-room-booking')); ?>,
+                            type: 'danger'
+                        },
+                        function() {
+                            document.getElementById('delete-customer-id').value = customerId;
+                            document.getElementById('delete-customer-form').submit();
+                        }
+                    );
+                } else {
+                    showCustomAlert('error', '<?php _e('Error', 'hourly-room-booking'); ?>', '<?php _e('Error checking customer bookings.', 'hourly-room-booking'); ?>');
+                }
+            },
+            error: function() {
+                showCustomAlert('error', '<?php _e('Error', 'hourly-room-booking'); ?>', '<?php _e('Error checking customer bookings.', 'hourly-room-booking'); ?>');
+            }
+        });
+    }
+
+    function showCustomAlert(type, title, message) {
+        const alertHtml = `
+            <div id="hrb-custom-alert" class="hrb-custom-alert-overlay">
+                <div class="hrb-custom-alert-modal">
+                    <div class="hrb-custom-alert-header ${type}">
+                        <div class="hrb-custom-alert-icon">
+                            ${type === 'error' ? '<span class="dashicons dashicons-warning"></span>' : '<span class="dashicons dashicons-yes-alt"></span>'}
+                        </div>
+                        <h3>${title}</h3>
+                        <button class="hrb-custom-alert-close" onclick="closeCustomAlert()">
+                            <span class="dashicons dashicons-no-alt"></span>
+                        </button>
+                    </div>
+                    <div class="hrb-custom-alert-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="hrb-custom-alert-footer">
+                        <button class="button button-primary" onclick="closeCustomAlert()"><?php _e('OK', 'hourly-room-booking'); ?></button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+    }
+
+    function showCustomConfirm(title, message, onConfirm) {
+        const confirmHtml = `
+            <div id="hrb-custom-alert" class="hrb-custom-alert-overlay">
+                <div class="hrb-custom-alert-modal">
+                    <div class="hrb-custom-alert-header warning">
+                        <div class="hrb-custom-alert-icon">
+                            <span class="dashicons dashicons-trash"></span>
+                        </div>
+                        <h3>${title}</h3>
+                        <button class="hrb-custom-alert-close" onclick="closeCustomAlert()">
+                            <span class="dashicons dashicons-no-alt"></span>
+                        </button>
+                    </div>
+                    <div class="hrb-custom-alert-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="hrb-custom-alert-footer">
+                        <button class="button" onclick="closeCustomAlert()"><?php _e('Cancel', 'hourly-room-booking'); ?></button>
+                        <button class="button button-primary hrb-delete-confirm" onclick="confirmDelete()"><?php _e('Delete', 'hourly-room-booking'); ?></button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Store the confirm callback globally
+        window.hrbConfirmCallback = onConfirm;
+        document.body.insertAdjacentHTML('beforeend', confirmHtml);
+    }
+
+    function confirmDelete() {
+        if (window.hrbConfirmCallback) {
+            window.hrbConfirmCallback();
         }
+        closeCustomAlert();
+    }
+
+    function closeCustomAlert() {
+        const alert = document.getElementById('hrb-custom-alert');
+        if (alert) {
+            alert.remove();
+        }
+        window.hrbConfirmCallback = null;
     }
 
     function exportCustomerData(customerId) {
