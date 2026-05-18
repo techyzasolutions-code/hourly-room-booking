@@ -764,7 +764,7 @@ table.widefat {
 
 .hrb-table-container {
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -1057,15 +1057,15 @@ span.stockInfo
 }
 
 .hrb-extra-item:hover {
-    border-color: #6366f1;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    border-color: #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
     transform: translateY(-1px);
 }
 
 .hrb-extra-item input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: #6366f1;
+    accent-color: #dc2626;
     cursor: pointer;
     flex-shrink: 0;
     margin: 0;
@@ -1073,11 +1073,11 @@ span.stockInfo
 
 .hrb-extra-item input[type="checkbox"]:checked ~ .hrb-extra-content {
     background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-    border-color: #6366f1;
+    border-color: #dc2626;
 }
 
 .hrb-extra-item input[type="checkbox"]:checked ~ .hrb-extra-content .hrb-extra-icon {
-    border-color: #6366f1;
+    border-color: #dc2626;
     background: #f0f8ff;
 }
 
@@ -1106,7 +1106,7 @@ span.stockInfo
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    color: #6366f1;
+    color: #dc2626;
     flex-shrink: 0;
 }
 
@@ -1150,7 +1150,7 @@ span.stockInfo
     padding: 6px 10px;
     background: #f8fafc;
     border-radius: 4px;
-    border-left: 2px solid #6366f1;
+    border-left: 2px solid #dc2626;
 }
 
 .hrb-no-extras {
@@ -1197,7 +1197,7 @@ span.stockInfo
 #hrb-anonymous-modal .hrb-modal-content {
     position: relative;
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 6px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     width: 90%;

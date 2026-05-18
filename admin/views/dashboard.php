@@ -35,7 +35,7 @@ $month_end = date('Y-m-t');
             <!-- Today's Bookings -->
             <div class="hrb-stat-card hrb-stat-today">
                 <div class="hrb-stat-icon">
-                    <span class="dashicons dashicons-calendar-alt"></span>
+                    <i class="bi bi-calendar2-check-fill"></i>
                 </div>
                 <div class="hrb-stat-content">
                     <div class="hrb-stat-number">
@@ -50,7 +50,7 @@ $month_end = date('Y-m-t');
             <!-- This Month's Revenue -->
             <div class="hrb-stat-card hrb-stat-revenue">
                 <div class="hrb-stat-icon">
-                    <span class="dashicons dashicons-money-alt"></span>
+                    <i class="bi bi-graph-up-arrow"></i>
                 </div>
                 <div class="hrb-stat-content">
                     <div class="hrb-stat-number">
@@ -65,7 +65,7 @@ $month_end = date('Y-m-t');
             <!-- Total Rooms -->
             <div class="hrb-stat-card hrb-stat-rooms">
                 <div class="hrb-stat-icon">
-                    <span class="dashicons dashicons-admin-home"></span>
+                    <i class="bi bi-door-open-fill"></i>
                 </div>
                 <div class="hrb-stat-content">
                     <div class="hrb-stat-number">
@@ -80,7 +80,7 @@ $month_end = date('Y-m-t');
             <!-- Pending Payments -->
             <div class="hrb-stat-card hrb-stat-pending">
                 <div class="hrb-stat-icon">
-                    <span class="dashicons dashicons-clock"></span>
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div class="hrb-stat-content">
                     <div class="hrb-stat-number">
@@ -399,83 +399,126 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .hrb-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
 }
 
 .hrb-stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    /* Default brand accent — used by any card without a variant class.
+       Site brand is red (matches the frontend logo + "SEARCH ROOMS" button). */
+    --hrb-from: #dc2626;
+    --hrb-to:   #991b1b;
+    --hrb-glow: rgba(220, 38, 38, 0.22);
+    --hrb-tint: rgba(220, 38, 38, 0.08);
+
+    background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    /* padding: 24px; */
+    border-radius: 6px;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
+/* Soft tinted wash in the top-right corner — sits behind content */
 .hrb-stat-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-    border-radius: 16px 16px 0 0;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, var(--hrb-tint) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .hrb-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #3b82f6;
+    border-color: var(--hrb-from);
+    box-shadow: 0 6px 16px -8px var(--hrb-glow);
 }
 
-.hrb-stat-today::before { background: linear-gradient(90deg, #10b981, #059669); }
-.hrb-stat-revenue::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.hrb-stat-rooms::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
-.hrb-stat-pending::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+/* Per-variant accent colour vars. Each metric keeps its own categorical
+   colour so cards remain distinguishable at a glance. Purple "rooms"
+   was swapped for slate so it doesn't fight the red brand. */
+.hrb-stat-today {
+    --hrb-from: #10b981;
+    --hrb-to:   #059669;
+    --hrb-glow: rgba(16, 185, 129, 0.30);
+    --hrb-tint: rgba(16, 185, 129, 0.10);
+}
+.hrb-stat-revenue {
+    --hrb-from: #f59e0b;
+    --hrb-to:   #d97706;
+    --hrb-glow: rgba(245, 158, 11, 0.30);
+    --hrb-tint: rgba(245, 158, 11, 0.10);
+}
+.hrb-stat-rooms {
+    --hrb-from: #475569;
+    --hrb-to:   #334155;
+    --hrb-glow: rgba(71, 85, 105, 0.25);
+    --hrb-tint: rgba(71, 85, 105, 0.08);
+}
+.hrb-stat-pending {
+    --hrb-from: #dc2626;
+    --hrb-to:   #991b1b;
+    --hrb-glow: rgba(220, 38, 38, 0.30);
+    --hrb-tint: rgba(220, 38, 38, 0.10);
+}
 
 .hrb-stat-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    color: white;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    font-size: 22px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--hrb-from), var(--hrb-to));
+    box-shadow: 0 4px 8px -2px var(--hrb-glow);
+    position: relative;
+    z-index: 1;
 }
 
-.hrb-stat-today .hrb-stat-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
-.hrb-stat-revenue .hrb-stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
-.hrb-stat-rooms .hrb-stat-icon { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
-.hrb-stat-pending .hrb-stat-icon { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+.hrb-stat-icon .bi {
+    line-height: 1;
+    color: #fff;
+}
 
 .hrb-stat-content {
     flex: 1;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
 }
 
 .hrb-stat-number {
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 800;
-    color: #1e293b;
-    line-height: 1;
+    color: #0f172a;
+    line-height: 1.1;
     margin-bottom: 4px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hrb-stat-label {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
 /* Dashboard Content */
@@ -495,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .hrb-dashboard-section {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -603,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .hrb-action-btn {
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 14px 20px;
     display: flex;
     align-items: center;
@@ -653,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 16px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 4px;
     transition: all 0.2s ease;
 }
 
@@ -678,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #d1fae5;
     color: #059669;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -689,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #fee2e2;
     color: #dc2626;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -721,7 +764,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .hrb-status-value {
     padding: 4px 10px;
-    border-radius: 12px;
+    border-radius: 4px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;

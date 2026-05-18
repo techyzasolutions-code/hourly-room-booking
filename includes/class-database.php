@@ -1598,10 +1598,32 @@ class HRB_Database {
     }
     
     /**
-     * Check if booking conflicts with existing bookings
+     * Check if booking conflicts with existing bookings.
+     *
+     * @param int      $room_id
+     * @param string   $booking_date
+     * @param string   $start_time
+     * @param string   $end_time
+     * @param int|null $exclude_booking_id
+     * @param bool     $acquire_room_lock When true, acquires a row-level lock
+     *        on the room (SELECT ... FOR UPDATE) to serialise concurrent
+     *        booking attempts for the same room. MUST be called inside an
+     *        active SQL transaction; the lock is released on COMMIT/ROLLBACK.
+     *        On autocommit (no transaction) the lock is acquired and released
+     *        immediately, which provides no protection — so write-paths must
+     *        wrap this call in a transaction.
      */
-    public static function check_booking_conflict($room_id, $booking_date, $start_time, $end_time, $exclude_booking_id = null) {
+    public static function check_booking_conflict($room_id, $booking_date, $start_time, $end_time, $exclude_booking_id = null, $acquire_room_lock = false) {
         global $wpdb;
+
+        if ($acquire_room_lock) {
+            // Lock the room row so no other booking transaction can pass its
+            // own conflict check and insert for the same room concurrently.
+            $wpdb->query($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}hrb_rooms WHERE id = %d FOR UPDATE",
+                $room_id
+            ));
+        }
 
         // Get cooldown minutes setting (default 30 minutes)
         $cooldown_minutes = 30;

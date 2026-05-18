@@ -71,7 +71,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
                 <?php _e('Pending', 'hourly-room-booking'); ?>
             </div>
             <div class="legend-item">
-                <span class="legend-color" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"></span>
+                <span class="legend-color" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></span>
                 <?php _e('Completed', 'hourly-room-booking'); ?>
             </div>
             <div class="legend-item">
@@ -136,12 +136,12 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .hrb-page-header {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     color: white;
     padding: 32px;
-    border-radius: 16px;
+    border-radius: 6px;
     margin-bottom: 32px;
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15);
     position: relative;
     overflow: hidden;
     display: flex
@@ -192,7 +192,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 12px 24px;
-    border-radius: 12px;
+    border-radius: 4px;
     font-weight: 600;
     text-decoration: none;
     display: inline-flex;
@@ -211,7 +211,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-calendar-controls {
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -238,7 +238,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .hrb-room-filter select {
     padding: 8px 16px;
     border: 2px solid #e5e7eb;
-    border-radius: 10px;
+    border-radius: 4px;
     background: white;
     color: #374151;
     font-weight: 500;
@@ -257,7 +257,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     gap: 8px;
     background: #f9fafb;
     padding: 4px;
-    border-radius: 12px;
+    border-radius: 4px;
 }
 
 .calendar-view-btn {
@@ -272,8 +272,8 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .calendar-view-btn.active {
-    border: 2px solid #8b5cf6 !important;
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    border: 2px solid #b91c1c !important;
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
     color: #fff !important;
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
@@ -319,12 +319,12 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .legend-color.completed {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
 .hrb-calendar-container {
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 30px;
     margin-bottom: 30px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -344,7 +344,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-stat-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 24px;
     text-align: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -411,7 +411,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-modal-content {
     background: white;
-    border-radius: 20px;
+    border-radius: 6px;
     width: 90%;
     max-width: 600px;
     max-height: 90%;
@@ -478,7 +478,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-modal-footer .button {
     padding: 10px 20px;
-    border-radius: 10px;
+    border-radius: 4px;
     font-weight: 500;
     transition: all 0.3s ease;
 }
@@ -495,6 +495,19 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 /* ===== Booking details modal v2 ===== */
+/* Booking reference subtitle inside calendar event cards */
+.fc-event-ref {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.3px;
+}
+
+.fc-event-ref .fc-event-icon {
+    font-size: 10px;
+}
+
 .hrb-bd {
     display: flex;
     flex-direction: column;
@@ -513,14 +526,14 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     gap: 4px;
     padding: 10px 12px;
     background: #f9fafb;
-    border-radius: 10px;
+    border-radius: 4px;
     border: 1px solid #eef0f3;
     min-width: 0;
 }
 
 .hrb-bd-item-total {
-    background: linear-gradient(135deg, #eef2ff, #ede9fe);
-    border-color: #ddd6fe;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-color: #fecaca;
 }
 
 .hrb-bd-label {
@@ -535,7 +548,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .hrb-bd-label .bi {
-    color: #6366f1;
+    color: #dc2626;
     font-size: 13px;
 }
 
@@ -556,12 +569,12 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 .hrb-bd-amount {
     font-size: 18px;
-    color: #4f46e5;
+    color: #dc2626;
 }
 
 /* Notes blocks */
 .hrb-bd-note {
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 14px 16px;
     border: 1px solid;
 }
@@ -595,10 +608,10 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .hrb-bd-note-customer .hrb-bd-note-header { color: #92400e; }
 
 .hrb-bd-note-admin {
-    background: #ede9fe;
-    border-color: #ddd6fe;
+    background: #fee2e2;
+    border-color: #fecaca;
 }
-.hrb-bd-note-admin .hrb-bd-note-header { color: #5b21b6; }
+.hrb-bd-note-admin .hrb-bd-note-header { color: #991b1b; }
 
 /* Loading state */
 .hrb-bd-loading {
@@ -614,7 +627,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     width: 38px;
     height: 38px;
     border: 3px solid #e5e7eb;
-    border-top-color: #6366f1;
+    border-top-color: #dc2626;
     border-radius: 50%;
     animation: hrb-bd-spin 0.8s linear infinite;
     margin-bottom: 12px;
@@ -632,7 +645,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #fecaca;
-    border-radius: 10px;
+    border-radius: 4px;
     font-weight: 500;
 }
 
@@ -839,7 +852,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .fc-event-status-completed {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
     color: white !important;
 }
 
@@ -1015,7 +1028,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .fc-event-completed {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
 .fc-header-toolbar {
@@ -1023,8 +1036,8 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 
 .fc-button-primary {
-    /* border: 2px solid #8b5cf6; */
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    /* border: 2px solid #b91c1c; */
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
     border: none;
     border-radius: 8px;
     padding: 8px 16px;
@@ -1219,7 +1232,9 @@ function initializeCalendar() {
             }
 
             let anonymousBadge = '';
-            if (arg.event.extendedProps.is_anonymous) {
+            // Use loose-equality vs. truthy: PHP/JSON may serialise tinyint(1)
+            // as the string "0", which is truthy in JS. == 1 is correct here.
+            if (arg.event.extendedProps.is_anonymous == 1) {
                 anonymousBadge = '<div class="fc-event-anon-badge"><i class="bi bi-incognito"></i><span><?php _e('Anonymous', 'hourly-room-booking'); ?></span></div>';
             }
 
@@ -1229,10 +1244,16 @@ function initializeCalendar() {
                 ? '<div class="fc-event-row fc-event-room"><i class="bi bi-door-closed-fill fc-event-icon"></i><span>' + roomName + '</span></div>'
                 : '';
 
+            const bookingRef = arg.event.extendedProps.booking_reference || '';
+            let refRow = bookingRef
+                ? '<div class="fc-event-row fc-event-ref"><i class="bi bi-hash fc-event-icon"></i><span>' + bookingRef + '</span></div>'
+                : '';
+
             return {
                 html: '<div class="fc-event-content">' +
                       customerRow +
                       roomRow +
+                      refRow +
                       '<div class="fc-event-row fc-event-time"><i class="bi bi-clock-fill fc-event-icon"></i><span>' + timeText + '</span></div>' +
                       '<div class="fc-event-badges">' +
                           anonymousBadge +

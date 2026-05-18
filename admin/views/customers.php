@@ -416,10 +416,10 @@ $stats = [
     }
 
     .hrb-page-header {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
         color: white;
         padding: 32px;
-        border-radius: 16px;
+        border-radius: 6px;
         margin-bottom: 32px;
         box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
         position: relative;
@@ -495,7 +495,7 @@ $stats = [
 
     .hrb-stat-card {
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         /* padding: 32px; */
         text-align: center;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -524,7 +524,7 @@ $stats = [
     }
 
     .hrb-stat-card:nth-child(4)::before {
-        background: linear-gradient(90deg, #ef4444, #8b5cf6);
+        background: linear-gradient(90deg, #ef4444, #b91c1c);
     }
 
     .hrb-stat-card:hover {
@@ -556,7 +556,7 @@ $stats = [
     .hrb-filters {
         background: white;
         padding: 24px;
-        border-radius: 12px;
+        border-radius: 4px;
         margin-bottom: 24px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -611,7 +611,7 @@ $stats = [
     /* Modern Table Container */
     .hrb-table-container {
         background: white;
-        border-radius: 12px;
+        border-radius: 4px;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -752,7 +752,7 @@ $stats = [
 
     .hrb-status {
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -796,7 +796,7 @@ $stats = [
     }
 
     .hrb-actions .button-small {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
     }
 
@@ -833,7 +833,7 @@ $stats = [
 
     .hrb-custom-alert-modal {
         background: white;
-        border-radius: 12px;
+        border-radius: 4px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         max-width: 480px;
         width: 90%;
@@ -1169,7 +1169,7 @@ $stats = [
 
     .hrb-modal-content {
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         width: 90%;
         max-width: 800px;
         max-height: 90%;
@@ -1197,7 +1197,7 @@ $stats = [
         justify-content: space-between;
         align-items: center;
         background: #f8f9fa;
-        border-radius: 16px 16px 0 0;
+        border-radius: 6px 16px 0 0;
     }
 
     .hrb-modal-header h2 {

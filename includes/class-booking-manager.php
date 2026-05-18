@@ -72,12 +72,13 @@ class HRB_Booking_Manager {
         if (is_wp_error($validation)) {
             return $validation;
         }
-        
-        // Check for conflicts
-        if (HRB_Database::check_booking_conflict($data['room_id'], $data['booking_date'], $data['start_time'], $data['end_time'])) {
-            return new WP_Error('booking_conflict', __('Selected time slot is not available', 'hourly-room-booking'));
-        }
-        
+
+        // Conflict check moved INSIDE the transaction below so that the room
+        // row lock (SELECT ... FOR UPDATE) actually holds across the
+        // check-then-insert critical section. Doing it here, outside the
+        // transaction, left a race window where two concurrent requests
+        // could both pass the check and both insert.
+
         // Calculate pricing
         $pricing = $this->calculate_booking_price($data);
         
@@ -112,8 +113,23 @@ class HRB_Booking_Manager {
         
         // Start transaction
         $wpdb->query('START TRANSACTION');
-        
+
         try {
+            // Atomic conflict check: lock the room row, then verify the slot
+            // is still free. Any concurrent booking attempt for the same room
+            // will block here until this transaction commits or rolls back.
+            if (HRB_Database::check_booking_conflict(
+                $booking_data['room_id'],
+                $booking_data['booking_date'],
+                $booking_data['start_time'],
+                $booking_data['end_time'],
+                null,
+                true // acquire_room_lock
+            )) {
+                $wpdb->query('ROLLBACK');
+                return new WP_Error('booking_conflict', __('Selected time slot is not available', 'hourly-room-booking'));
+            }
+
             // Insert booking
             $result = $wpdb->insert(
                 $wpdb->prefix . 'hrb_bookings',
@@ -766,17 +782,35 @@ class HRB_Booking_Manager {
             return new WP_Error('booking_not_found', __('Booking not found', 'hourly-room-booking'));
         }
         
-        // Validate updates
-        if (isset($data['booking_date']) || isset($data['start_time']) || isset($data['end_time']) || isset($data['room_id'])) {
+        // If room/date/time is changing, we need an atomic conflict check
+        // against the destination slot. Use the same locked check as
+        // create_booking() so two concurrent moves can't land on the
+        // same slot.
+        $slot_change = isset($data['booking_date']) || isset($data['start_time']) || isset($data['end_time']) || isset($data['room_id']);
+
+        if ($slot_change) {
             $check_data = array(
                 'room_id' => isset($data['room_id']) ? $data['room_id'] : $booking->room_id,
                 'booking_date' => isset($data['booking_date']) ? $data['booking_date'] : $booking->booking_date,
                 'start_time' => isset($data['start_time']) ? $data['start_time'] : $booking->start_time,
                 'end_time' => isset($data['end_time']) ? $data['end_time'] : $booking->end_time
             );
-            
-            // Check for conflicts (excluding current booking)
-            if (HRB_Database::check_booking_conflict($check_data['room_id'], $check_data['booking_date'], $check_data['start_time'], $check_data['end_time'], $booking_id)) {
+
+            // Wrap the locked check + the subsequent UPDATE in a transaction
+            // so the room-row lock acquired by check_booking_conflict() is
+            // held until we commit. The transaction is committed at the end
+            // of this block after the wpdb->update() call.
+            $wpdb->query('START TRANSACTION');
+
+            if (HRB_Database::check_booking_conflict(
+                $check_data['room_id'],
+                $check_data['booking_date'],
+                $check_data['start_time'],
+                $check_data['end_time'],
+                $booking_id,
+                true // acquire_room_lock
+            )) {
+                $wpdb->query('ROLLBACK');
                 return new WP_Error('booking_conflict', __('Updated time slot conflicts with existing booking', 'hourly-room-booking'));
             }
             
@@ -847,11 +881,19 @@ class HRB_Booking_Manager {
             $format,
             array('%d')
         );
-        
+
         if ($result === false) {
+            if ($slot_change) {
+                $wpdb->query('ROLLBACK');
+            }
             return new WP_Error('update_failed', __('Failed to update booking', 'hourly-room-booking'));
         }
-        
+
+        // Release the room-row lock acquired by the conflict check above.
+        if ($slot_change) {
+            $wpdb->query('COMMIT');
+        }
+
         // Auto-cancel payment status for all payment methods when booking is cancelled
         if (isset($data['status']) && $data['status'] === 'cancelled' && $booking->payment_status === 'pending') {
             $wpdb->update(

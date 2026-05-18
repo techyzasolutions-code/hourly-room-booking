@@ -42,7 +42,9 @@ class HRB_Admin {
         add_action('wp_ajax_hrb_send_additional_payment_link', array($this, 'ajax_send_additional_payment_link'));
         add_action('wp_ajax_hrb_mark_additional_payment_complete', array($this, 'ajax_mark_additional_payment_complete'));
         add_action('wp_ajax_hrb_regenerate_invoice', array($this, 'ajax_regenerate_invoice'));
+        add_action('wp_ajax_hrb_check_new_bookings', array($this, 'ajax_check_new_bookings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_notification_assets'));
         add_action('admin_notices', array($this, 'add_admin_notices'));
         add_action('wp_dashboard_setup', array($this, 'add_dashboard_widgets'));
         add_action('admin_footer', array($this, 'render_confirmation_modal'));
@@ -2171,7 +2173,7 @@ class HRB_Admin {
                     'textColor' => '#fff',
                     'extendedProps' => array(
                         'booking_reference' => $event->booking_reference,
-                        'is_anonymous' => $event->is_anonymous,
+                        'is_anonymous' => (int) $event->is_anonymous,
                         'customer_name' => $customer_name,
                         'room_name' => $event->room_name,
                         'room_color' => $room_color,
@@ -2293,6 +2295,142 @@ class HRB_Admin {
         );
 
         return isset($colors[$status]) ? $colors[$status] : '#007bff';
+    }
+
+    /**
+     * Enqueue the booking notification toast/poller on every admin page
+     * for users with hrb_view_bookings (admins + Room Booking Staff).
+     *
+     * @since 1.3.0
+     */
+    public function enqueue_notification_assets(): void {
+        if (!is_user_logged_in() || !current_user_can('hrb_view_bookings')) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'hrb-bootstrap-icons-toast',
+            HRB_ASSETS_URL . 'vendor/bootstrap-icons/bootstrap-icons.min.css',
+            array(),
+            '1.11.3'
+        );
+
+        wp_enqueue_style(
+            'hrb-notifications',
+            HRB_PLUGIN_URL . 'admin/assets/css/notifications.css',
+            array('hrb-bootstrap-icons-toast'),
+            HRB_VERSION
+        );
+
+        wp_enqueue_script(
+            'hrb-notifications',
+            HRB_PLUGIN_URL . 'admin/assets/js/notifications.js',
+            array('jquery'),
+            HRB_VERSION,
+            true
+        );
+
+        wp_localize_script('hrb-notifications', 'hrbNotifications', array(
+            'ajaxUrl'      => admin_url('admin-ajax.php'),
+            'nonce'        => wp_create_nonce('hrb_admin_nonce'),
+            'pollInterval' => 60000, // 60 seconds — paused while tab is hidden
+            'strings'      => array(
+                'newBooking' => __('New booking', 'hourly-room-booking'),
+                'view'       => __('View', 'hourly-room-booking'),
+                'dismiss'    => __('Dismiss', 'hourly-room-booking'),
+                'anonymous'  => __('Anonymous', 'hourly-room-booking'),
+            ),
+        ));
+    }
+
+    /**
+     * AJAX handler — return customer-made bookings created after $since_id.
+     *
+     * The first call (since_id = 0) returns no bookings and only the current
+     * max id, so existing bookings don't spam toasts on initial load.
+     *
+     * Admin-created bookings (created_by_admin = 1) are excluded — staff
+     * already know about those.
+     *
+     * @since 1.3.0
+     */
+    public function ajax_check_new_bookings(): void {
+        check_ajax_referer('hrb_admin_nonce', 'nonce');
+
+        if (!current_user_can('hrb_view_bookings')) {
+            wp_send_json_error(__('Insufficient permissions', 'hourly-room-booking'));
+            return;
+        }
+
+        global $wpdb;
+        $since_id = intval($_POST['since_id'] ?? 0);
+
+        // Bootstrap call — establish baseline without showing toasts for
+        // every pre-existing booking.
+        if ($since_id <= 0) {
+            $max_id = (int) $wpdb->get_var("SELECT COALESCE(MAX(id), 0) FROM {$wpdb->prefix}hrb_bookings");
+            wp_send_json_success(array(
+                'bookings'  => array(),
+                'latest_id' => $max_id,
+            ));
+            return;
+        }
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT b.id, b.booking_reference, b.is_anonymous, b.booking_date,
+                    b.start_time, b.end_time,
+                    b.first_name AS booking_first_name, b.last_name AS booking_last_name,
+                    r.name AS room_name,
+                    c.first_name AS cust_first, c.last_name AS cust_last
+             FROM {$wpdb->prefix}hrb_bookings b
+             LEFT JOIN {$wpdb->prefix}hrb_rooms r ON b.room_id = r.id
+             LEFT JOIN {$wpdb->prefix}hrb_customers c ON b.customer_id = c.id
+             WHERE b.id > %d
+               AND (b.created_by_admin IS NULL OR b.created_by_admin = 0)
+             ORDER BY b.id ASC
+             LIMIT 10",
+            $since_id
+        ));
+
+        $date_fmt = get_option('hrb_date_format', 'd.m.Y');
+        $bookings = array();
+        foreach ($rows as $b) {
+            if ((int) $b->is_anonymous === 1) {
+                $name = trim(($b->booking_first_name ?? '') . ' ' . ($b->booking_last_name ?? ''));
+                if ($name === '' || $name === '0') {
+                    $name = __('Anonymous', 'hourly-room-booking');
+                }
+            } else {
+                $name = trim(($b->cust_first ?? '') . ' ' . ($b->cust_last ?? ''));
+                if ($name === '') {
+                    $name = __('Customer', 'hourly-room-booking');
+                }
+            }
+
+            $bookings[] = array(
+                'id'            => (int) $b->id,
+                'reference'     => (string) $b->booking_reference,
+                'customer_name' => $name,
+                'is_anonymous'  => (int) $b->is_anonymous === 1,
+                'room_name'     => (string) $b->room_name,
+                'date'          => date_i18n($date_fmt, strtotime($b->booking_date)),
+                'time'          => date_i18n('H:i', strtotime($b->start_time)) . ' – ' . date_i18n('H:i', strtotime($b->end_time)),
+                'edit_url'      => admin_url('admin.php?page=hrb-bookings&action=edit&booking_id=' . (int) $b->id),
+            );
+        }
+
+        // Use the true current max id as the next baseline so admin-created
+        // bookings (excluded above) don't re-trigger on the next poll.
+        $latest_id = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(MAX(id), %d) FROM {$wpdb->prefix}hrb_bookings WHERE id >= %d",
+            $since_id,
+            $since_id
+        ));
+
+        wp_send_json_success(array(
+            'bookings'  => $bookings,
+            'latest_id' => $latest_id,
+        ));
     }
 
     /**

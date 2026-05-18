@@ -770,16 +770,16 @@ jQuery(document).ready(function($) {
 }
 
 .hrb-settings-wrap h1 {
-    background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #b91c1c 0%, #3b82f6 100%);
     color: white;
     margin: 0 0 32px 0;
     padding: 32px;
-    border-radius: 16px;
+    border-radius: 6px;
     font-size: 2.5rem;
     font-weight: 700;
     letter-spacing: -0.025em;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15);
     position: relative;
     overflow: hidden;
 }
@@ -800,7 +800,7 @@ jQuery(document).ready(function($) {
     margin-bottom: 32px;
     padding: 24px;
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -820,14 +820,14 @@ jQuery(document).ready(function($) {
 }
 
 .hrb-settings-actions .button-primary {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
+    background: #b91c1c;
+    border-color: #b91c1c;
     color: white;
 }
 
 .hrb-settings-actions .button-primary:hover {
-    background: #7c3aed;
-    border-color: #7c3aed;
+    background: #991b1b;
+    border-color: #991b1b;
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
@@ -850,7 +850,7 @@ jQuery(document).ready(function($) {
 
 .hrb-settings-tabs-wrapper {
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -885,8 +885,8 @@ jQuery(document).ready(function($) {
 }
 
 .hrb-tab-button.active {
-    border-bottom-color: #8b5cf6;
-    color: #8b5cf6;
+    border-bottom-color: #b91c1c;
+    color: #b91c1c;
     background: white;
 }
 
@@ -919,7 +919,7 @@ jQuery(document).ready(function($) {
     left: 0;
     width: 60px;
     height: 2px;
-    background: #8b5cf6;
+    background: #b91c1c;
 }
 
 .hrb-settings-fields {
@@ -934,7 +934,7 @@ jQuery(document).ready(function($) {
     align-items: start;
     padding: 24px;
     background: #f8f9fa;
-    border-radius: 12px;
+    border-radius: 4px;
     border: 1px solid #e5e7eb;
     transition: all 0.3s ease;
 }
@@ -969,9 +969,9 @@ jQuery(document).ready(function($) {
 .hrb-setting-field input:focus,
 .hrb-setting-field select:focus,
 .hrb-setting-field textarea:focus {
-    border-color: #8b5cf6;
+    border-color: #b91c1c;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .hrb-setting-field input[type="password"] {
@@ -1011,8 +1011,8 @@ jQuery(document).ready(function($) {
 }
 
 .hrb-checkbox-wrapper input[type="checkbox"]:checked {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
+    background: #b91c1c;
+    border-color: #b91c1c;
 }
 
 .hrb-checkbox-wrapper input[type="checkbox"]:checked::after {
@@ -1029,7 +1029,7 @@ jQuery(document).ready(function($) {
 }
 
 .hrb-checkbox-wrapper input[type="checkbox"]:focus {
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .hrb-checkbox-label {

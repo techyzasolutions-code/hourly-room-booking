@@ -14,6 +14,14 @@ if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
 
+// This admin view uses $_SESSION to preserve booking-form values across
+// redirects. The plugin no longer starts a session globally (it kills
+// page caching), so we lazily start one here. Admin pages are excluded
+// from page caching by every major cache plugin, so this has no impact.
+if (!session_id() && !headers_sent()) {
+    session_start();
+}
+
 /**
  * Get invoice file URL by booking ID
  */
@@ -3169,12 +3177,12 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
 <style>
     .hrb-page-header {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
         color: white;
         /* padding: 32px; */
-        border-radius: 16px;
+        border-radius: 6px;
         /* margin-bottom: 32px; */
-        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+        box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15);
         position: relative;
         overflow: hidden;
         display: flex;
@@ -3196,12 +3204,12 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     .wrap.hrb-admin-bookings .wp-heading-inline,
     .wrap.hrb-admin-booking-view .wp-heading-inline,
     .wrap.hrb-admin-booking-edit .wp-heading-inline {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
         color: white;
         padding: 32px;
-        border-radius: 16px;
+        border-radius: 6px;
         /* margin-bottom: 32px; */
-        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+        box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15);
         position: relative;
         overflow: hidden;
         display: block;
@@ -3231,7 +3239,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: white;
         padding: 12px 24px;
-        border-radius: 12px;
+        border-radius: 4px;
         font-weight: 600;
         text-decoration: none;
         display: inline-flex;
@@ -3255,11 +3263,11 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     /* Enhanced Filters Section */
     .hrb-filters-section {
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         padding: 24px;
         margin: 24px 0;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-filters-grid {
@@ -3282,7 +3290,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         width: 100%;
         padding: 10px 16px;
         border: 2px solid #e5e7eb;
-        border-radius: 10px;
+        border-radius: 4px;
         background: white;
         color: #374151;
         font-weight: 500;
@@ -3291,8 +3299,8 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-filter-item input:focus,
     .hrb-filter-item select:focus {
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         outline: none;
     }
 
@@ -3307,17 +3315,17 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-filter-actions .button {
         padding: 10px 20px;
-        border-radius: 10px;
+        border-radius: 4px;
         font-weight: 600;
         transition: all 0.3s ease;
-        border: 2px solid #8b5cf6;
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border: 2px solid #b91c1c;
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
     }
 
     .hrb-filter-actions .button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
     }
 
     /* Enhanced Table Section */
@@ -3342,14 +3350,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-bookings-table {
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-bookings-table th {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
         padding: 16px 12px;
         font-weight: 600;
@@ -3406,14 +3414,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .column-booking-id a {
-        color: #8b5cf6;
+        color: #b91c1c;
         font-weight: 700;
         text-decoration: none;
         transition: color 0.3s ease;
     }
 
     .column-booking-id a:hover {
-        color: #6366f1;
+        color: #dc2626;
         text-decoration: underline;
     }
 
@@ -3442,7 +3450,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         background: linear-gradient(135deg, #f59e0b, #d97706);
         color: white;
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -3454,7 +3462,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         background: linear-gradient(135deg, #10b981, #059669);
         color: white;
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -3466,7 +3474,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         background: linear-gradient(135deg, #6b7280, #4b5563);
         color: white;
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -3478,7 +3486,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         background: linear-gradient(135deg, #ef4444, #dc2626);
         color: white;
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -3490,7 +3498,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         background: linear-gradient(135deg, #ef4444, #dc2626);
         color: white;
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -3669,7 +3677,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-actions .button-small {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
     }
 
@@ -3688,14 +3696,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         text-align: center;
         padding: 80px 20px;
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-no-data-icon {
         font-size: 64px;
-        color: #8b5cf6;
+        color: #b91c1c;
         margin-bottom: 24px;
         opacity: 0.6;
     }
@@ -3715,20 +3723,20 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-no-data .button-primary {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
         padding: 12px 24px;
-        border-radius: 12px;
+        border-radius: 4px;
         font-weight: 600;
         transition: all 0.3s ease;
         border: none;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
         text-decoration: none;
     }
 
     .hrb-no-data .button-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
     }
 
     /* Enhanced Pagination */
@@ -3740,10 +3748,10 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     .hrb-pagination .tablenav-pages {
         background: white;
         padding: 16px 24px;
-        border-radius: 16px;
+        border-radius: 6px;
         display: inline-block;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-pagination a,
@@ -3757,32 +3765,32 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-pagination a {
-        color: #8b5cf6;
+        color: #b91c1c;
         background: #f8fafc;
     }
 
     .hrb-pagination a:hover {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
         transform: translateY(-1px);
     }
 
     .hrb-pagination .current {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
-        box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
     }
 
     /* Enhanced Booking Details View */
     .hrb-booking-details {
         background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
         border: none;
-        border-radius: 20px;
+        border-radius: 6px;
         padding: 0;
         margin: 32px 0;
-        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.15);
+        box-shadow: 0 8px 30px rgba(220, 38, 38, 0.15);
         overflow: hidden;
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-details-grid {
@@ -3919,7 +3927,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         left: 0;
         right: 0;
         height: 5px;
-        background: linear-gradient(90deg, #8b5cf6, #6366f1);
+        background: linear-gradient(90deg, #b91c1c, #dc2626);
     }
 
     .hrb-details-section h3 {
@@ -3939,8 +3947,8 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: linear-gradient(45deg, #8b5cf6, #6366f1);
-        box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        background: linear-gradient(45deg, #b91c1c, #dc2626);
+        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
     }
 
     .hrb-details-section table {
@@ -3979,21 +3987,21 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-details-section td a {
-        color: #8b5cf6;
+        color: #b91c1c;
         text-decoration: none;
         font-weight: 600;
         transition: color 0.3s ease;
     }
 
     .hrb-details-section td a:hover {
-        color: #6366f1;
+        color: #dc2626;
         text-decoration: underline;
     }
 
     .hrb-special-requests {
         background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
         padding: 24px;
-        border-radius: 12px;
+        border-radius: 4px;
         border: 1px solid #e9d5ff;
         margin-top: 24px;
         position: relative;
@@ -4008,7 +4016,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         top: -8px;
         left: 20px;
         font-size: 56px;
-        color: #8b5cf6;
+        color: #b91c1c;
         opacity: 0.3;
         font-family: serif;
     }
@@ -4023,7 +4031,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-booking-actions .button {
-        border-radius: 12px;
+        border-radius: 4px;
         font-weight: 600;
         padding: 12px 24px;
         transition: all 0.3s ease;
@@ -4033,14 +4041,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-booking-actions .button-primary {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
         color: white;
     }
 
     .hrb-booking-actions .button-primary:hover {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #dc2626 100%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
         color: white;
     }
 
@@ -4052,7 +4060,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-booking-actions .button-secondary:hover {
         background: #f9fafb;
-        border-color: #8b5cf6;
+        border-color: #b91c1c;
         transform: translateY(-2px);
         color: #374151;
     }
@@ -4060,10 +4068,10 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     /* Enhanced Edit Form */
     .hrb-edit-booking-form {
         background: #fff;
-        border-radius: 20px;
+        border-radius: 6px;
         overflow: hidden;
-        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.15);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        box-shadow: 0 8px 30px rgba(220, 38, 38, 0.15);
+        border: 1px solid rgba(220, 38, 38, 0.1);
     }
 
     .hrb-edit-grid {
@@ -4092,7 +4100,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         left: 0;
         right: 0;
         height: 5px;
-        background: linear-gradient(90deg, #8b5cf6, #6366f1);
+        background: linear-gradient(90deg, #b91c1c, #dc2626);
     }
 
     .hrb-edit-section h3 {
@@ -4112,8 +4120,8 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: linear-gradient(45deg, #8b5cf6, #6366f1);
-        box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        background: linear-gradient(45deg, #b91c1c, #dc2626);
+        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
     }
 
     .hrb-edit-section .form-table {
@@ -4136,7 +4144,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     .hrb-edit-section select,
     .hrb-edit-section textarea {
         border: 2px solid #e5e7eb;
-        border-radius: 10px;
+        border-radius: 4px;
         padding: 14px 18px;
         font-size: 14px;
         transition: all 0.3s ease;
@@ -4147,8 +4155,8 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     .hrb-edit-section input:focus,
     .hrb-edit-section select:focus,
     .hrb-edit-section textarea:focus {
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         outline: none;
     }
 
@@ -4168,7 +4176,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-edit-section .submit .button {
-        border-radius: 12px;
+        border-radius: 4px;
         font-weight: 600;
         padding: 14px 28px;
         transition: all 0.3s ease;
@@ -4179,14 +4187,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-edit-section .submit .button-primary {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
         color: white;
     }
 
     .hrb-edit-section .submit .button-primary:hover {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #dc2626 100%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
     }
 
     .hrb-edit-section .submit .button-secondary {
@@ -4197,7 +4205,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-edit-section .submit .button-secondary:hover {
         background: #f9fafb;
-        border-color: #8b5cf6;
+        border-color: #b91c1c;
         transform: translateY(-2px);
         color: #374151;
     }
@@ -4205,7 +4213,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     .hrb-anonymous-booking-notice {
         background: linear-gradient(135deg, #fef3c7, #fde68a);
         border: 2px solid #f59e0b;
-        border-radius: 12px;
+        border-radius: 4px;
         padding: 20px;
         margin: 20px 0;
     }
@@ -4249,7 +4257,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-modal-content {
         background: white;
-        border-radius: 20px;
+        border-radius: 6px;
         width: 90%;
         max-width: 500px;
         overflow: hidden;
@@ -4266,7 +4274,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-modal-header {
         padding: 24px 32px;
-        /* background: linear-gradient(135deg, #8b5cf6, #6366f1); */
+        /* background: linear-gradient(135deg, #b91c1c, #dc2626); */
         /* color: white; */
         display: flex;
         justify-content: space-between;
@@ -4319,7 +4327,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         width: 100%;
         padding: 14px 18px;
         border: 2px solid #e5e7eb;
-        border-radius: 10px;
+        border-radius: 4px;
         font-size: 14px;
         transition: all 0.3s ease;
         resize: vertical;
@@ -4327,8 +4335,8 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-modal-body textarea:focus {
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         outline: none;
     }
 
@@ -4349,7 +4357,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-modal-footer .button {
         padding: 12px 24px;
-        border-radius: 10px;
+        border-radius: 4px;
         font-weight: 600;
         transition: all 0.3s ease;
         border: none;
@@ -4357,14 +4365,14 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
     }
 
     .hrb-modal-footer .button-primary {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
     }
 
     .hrb-modal-footer .button-primary:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
     }
 
     .hrb-modal-footer .button-secondary {
@@ -4375,7 +4383,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .hrb-modal-footer .button-secondary:hover {
         background: #f9fafb;
-        border-color: #8b5cf6;
+        border-color: #b91c1c;
         color: #374151;
     }
 

@@ -335,12 +335,12 @@ $currency_symbol = hrb_get_currency_symbol();
     }
 
     .hrb-page-header {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
         color: white;
         padding: 32px;
-        border-radius: 16px;
+        border-radius: 6px;
         margin-bottom: 32px;
-        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+        box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15);
         position: relative;
         overflow: hidden;
         display: flex;
@@ -413,12 +413,13 @@ $currency_symbol = hrb_get_currency_symbol();
     }
 
     .hrb-stat-card {
-        background: white;
-        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 18px 20px;
         text-align: center;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         position: relative;
         overflow: hidden;
     }
@@ -426,55 +427,59 @@ $currency_symbol = hrb_get_currency_symbol();
     .hrb-stat-card::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #10b981, #3b82f6);
+        top: -40px;
+        right: -40px;
+        width: 140px;
+        height: 140px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
     }
 
     .hrb-stat-card:nth-child(2)::before {
-        background: linear-gradient(90deg, #3b82f6, #f59e0b);
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.10) 0%, transparent 70%);
     }
 
     .hrb-stat-card:nth-child(3)::before {
-        background: linear-gradient(90deg, #f59e0b, #ef4444);
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 70%);
     }
 
     .hrb-stat-card:nth-child(4)::before {
-        background: linear-gradient(90deg, #ef4444, #8b5cf6);
+        background: radial-gradient(circle, rgba(220, 38, 38, 0.10) 0%, transparent 70%);
     }
 
     .hrb-stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+        border-color: #dc2626;
+        box-shadow: 0 6px 16px -8px rgba(220, 38, 38, 0.22);
     }
 
     .hrb-stat-number {
-        font-size: 32px;
+        font-size: 26px;
         font-weight: 800;
-        color: #1f2937;
-        line-height: 1;
-        margin-bottom: 8px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #0f172a;
+        line-height: 1.1;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+        position: relative;
+        z-index: 1;
     }
 
     .hrb-stat-label {
-        font-size: 0.95rem;
-        color: #6b7280;
-        font-weight: 500;
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.6px;
+        position: relative;
+        z-index: 1;
     }
 
     /* Modern Filters */
     .hrb-filters {
         background: white;
         padding: 24px;
-        border-radius: 12px;
+        border-radius: 4px;
         margin-bottom: 24px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -513,9 +518,9 @@ $currency_symbol = hrb_get_currency_symbol();
 
     .hrb-filter-group select:focus,
     .hrb-filter-group input:focus {
-        border-color: #6366f1;
+        border-color: #dc2626;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
     }
 
     .hrb-filter-actions {
@@ -532,7 +537,7 @@ $currency_symbol = hrb_get_currency_symbol();
     /* Modern Table Container */
     .hrb-table-container {
         background: white;
-        border-radius: 12px;
+        border-radius: 4px;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -625,7 +630,7 @@ $currency_symbol = hrb_get_currency_symbol();
     }
 
     .hrb-actions .button-small {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
         color: white;
     }
 
@@ -668,7 +673,7 @@ $currency_symbol = hrb_get_currency_symbol();
 
     .payment-method {
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -699,7 +704,7 @@ $currency_symbol = hrb_get_currency_symbol();
 
     .hrb-status {
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -775,8 +780,8 @@ $currency_symbol = hrb_get_currency_symbol();
 
     .hrb-pagination .page-numbers:hover,
     .hrb-pagination .page-numbers.current {
-        background: #6366f1;
-        border-color: #6366f1;
+        background: #dc2626;
+        border-color: #dc2626;
         color: white;
     }
 
@@ -808,7 +813,7 @@ $currency_symbol = hrb_get_currency_symbol();
 
     .hrb-modal-content {
         background: white;
-        border-radius: 16px;
+        border-radius: 6px;
         width: 90%;
         max-width: 600px;
         max-height: 90%;
@@ -836,7 +841,7 @@ $currency_symbol = hrb_get_currency_symbol();
         justify-content: space-between;
         align-items: center;
         background: #f8f9fa;
-        border-radius: 16px 16px 0 0;
+        border-radius: 6px 16px 0 0;
     }
 
     .hrb-modal-header h2 {
@@ -893,9 +898,9 @@ $currency_symbol = hrb_get_currency_symbol();
     .hrb-modal-body input:focus,
     .hrb-modal-body textarea:focus,
     .hrb-modal-body select:focus {
-        border-color: #6366f1;
+        border-color: #dc2626;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
     }
 
     .hrb-modal-footer {
@@ -914,8 +919,8 @@ $currency_symbol = hrb_get_currency_symbol();
     }
 
     .hrb-modal-footer .button-primary {
-        background: #6366f1;
-        border-color: #6366f1;
+        background: #dc2626;
+        border-color: #dc2626;
     }
 
     /* Responsive Design */

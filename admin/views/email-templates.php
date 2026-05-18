@@ -437,7 +437,7 @@ if (!defined('ABSPATH')) {
 
 .hrb-modal-content {
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     width: 90%;
     max-width: 800px;
     max-height: 90vh;

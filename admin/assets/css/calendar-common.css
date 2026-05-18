@@ -15,8 +15,8 @@
 }
 
 .hrb-page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    border-radius: 6px;
     padding: 32px;
     margin-bottom: 24px;
     color: white;
@@ -63,7 +63,7 @@
 /* Calendar Controls */
 .hrb-calendar-controls {
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -92,7 +92,7 @@
 }
 
 .hrb-room-filter select:focus {
-    border-color: #667eea;
+    border-color: #dc2626;
     outline: none;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -100,7 +100,7 @@
 /* Calendar Styling */
 .hrb-calendar-container {
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     min-height: 600px;
@@ -173,7 +173,7 @@
 .hrb-modal-content {
     position: relative;
     background: white;
-    border-radius: 20px;
+    border-radius: 6px;
     width: 90%;
     max-width: 600px;
     max-height: 90vh;

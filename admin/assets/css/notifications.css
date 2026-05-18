@@ -1,0 +1,159 @@
+/* Booking notification toast (admin + Room Booking Staff) */
+
+#hrb-toast-container {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.hrb-toast {
+    display: flex;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(220, 38, 38, 0.08);
+    overflow: hidden;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    border-left: 4px solid #dc2626;
+    pointer-events: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hrb-toast-visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.hrb-toast-leaving {
+    transform: translateX(120%);
+    opacity: 0;
+}
+
+.hrb-toast-icon {
+    padding: 14px 0 14px 16px;
+    color: #dc2626;
+    font-size: 22px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.hrb-toast-body {
+    flex: 1;
+    padding: 12px 10px;
+    min-width: 0;
+}
+
+.hrb-toast-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #dc2626;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.hrb-toast-customer {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 3px;
+    word-break: break-word;
+}
+
+.hrb-toast-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+.hrb-toast-meta .bi {
+    color: #9ca3af;
+    margin-right: 4px;
+}
+
+.hrb-toast-ref {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.hrb-toast-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 9px;
+    font-weight: 700;
+    background: #fde68a;
+    color: #92400e;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.hrb-toast-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border-left: 1px solid #f3f4f6;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.hrb-toast-view {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff !important;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 0;
+}
+
+.hrb-toast-view:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    color: #fff !important;
+}
+
+.hrb-toast-close {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    align-self: center;
+    padding: 0;
+    transition: background 0.15s ease;
+}
+
+.hrb-toast-close:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+@media (max-width: 520px) {
+    #hrb-toast-container {
+        right: 8px;
+        left: 8px;
+        max-width: none;
+    }
+}

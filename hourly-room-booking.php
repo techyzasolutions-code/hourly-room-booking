@@ -29,10 +29,13 @@ if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
 
-// Start session for email verification (only if not already started)
-if (!session_id() && !headers_sent()) {
-    session_start();
-}
+// NOTE: We intentionally do NOT call session_start() globally here.
+// A global session breaks page caching (WP Rocket, W3TC, etc.), serialises
+// concurrent AJAX requests under PHP's file-based session lock, and
+// pollutes the otherwise stateless REST API. The two places that actually
+// need $_SESSION (the OTP verification helpers in class-ajax-handler.php
+// and admin/views/bookings.php for form-data preservation) start the
+// session lazily, only when they are invoked.
 
 // Prevent multiple plugin instances
 if (defined('HRB_VERSION')) {

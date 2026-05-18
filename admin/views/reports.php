@@ -599,10 +599,10 @@ $currency_symbol = hrb_get_currency_symbol();
 
 /* Page Header */
 .hrb-page-header {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     color: white ;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 32px;
     display: flex;
     justify-content: space-between;
@@ -642,7 +642,7 @@ $currency_symbol = hrb_get_currency_symbol();
 }
 
 .hrb-page-actions .button {
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 12px 20px;
     display: flex;
     align-items: center;
@@ -679,7 +679,7 @@ $currency_symbol = hrb_get_currency_symbol();
 .hrb-date-range-filter {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 24px;
     margin-bottom: 32px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -750,20 +750,20 @@ $currency_symbol = hrb_get_currency_symbol();
 
 .hrb-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
 }
 
 .hrb-stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    /* padding: 28px; */
+    border-radius: 6px;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     position: relative;
     overflow: hidden;
 }
@@ -771,52 +771,71 @@ $currency_symbol = hrb_get_currency_symbol();
 .hrb-stat-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-    border-radius: 16px 16px 0 0;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }
+
+.hrb-stat-card:nth-child(2)::before { background: radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 70%); }
+.hrb-stat-card:nth-child(3)::before { background: radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 70%); }
+.hrb-stat-card:nth-child(4)::before { background: radial-gradient(circle, rgba(71, 85, 105, 0.08) 0%, transparent 70%); }
 
 .hrb-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #3b82f6;
+    border-color: #dc2626;
+    box-shadow: 0 6px 16px -8px rgba(220, 38, 38, 0.22);
 }
 
 .hrb-stat-icon {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border-radius: 20px;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 32px;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 4px 8px -2px rgba(220, 38, 38, 0.30);
+    position: relative;
+    z-index: 1;
 }
+
+.hrb-stat-card:nth-child(2) .hrb-stat-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 8px -2px rgba(16, 185, 129, 0.30); }
+.hrb-stat-card:nth-child(3) .hrb-stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 8px -2px rgba(245, 158, 11, 0.30); }
+.hrb-stat-card:nth-child(4) .hrb-stat-icon { background: linear-gradient(135deg, #475569, #334155); box-shadow: 0 4px 8px -2px rgba(71, 85, 105, 0.25); }
+
+.hrb-stat-icon .dashicons,
+.hrb-stat-icon .bi { line-height: 1; color: #fff; }
 
 .hrb-stat-content {
     flex: 1;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
 }
 
 .hrb-stat-number {
-    font-size: 32px;
-    font-weight: 900;
-    color: #1e293b;
-    line-height: 1;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
     margin-bottom: 4px;
+    letter-spacing: -0.5px;
 }
 
 .hrb-stat-label {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: #64748b;
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
 .hrb-stat-change {
@@ -824,7 +843,7 @@ $currency_symbol = hrb_get_currency_symbol();
     font-weight: 700;
     margin-top: 8px;
     padding: 4px 8px;
-    border-radius: 12px;
+    border-radius: 4px;
     display: inline-block;
 }
 
@@ -853,7 +872,7 @@ $currency_symbol = hrb_get_currency_symbol();
 .hrb-chart-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 28px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -909,7 +928,7 @@ $currency_symbol = hrb_get_currency_symbol();
 .hrb-analytics-table {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -1011,7 +1030,7 @@ $currency_symbol = hrb_get_currency_symbol();
 .hrb-customer-stat-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 24px;
     text-align: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -1028,7 +1047,7 @@ $currency_symbol = hrb_get_currency_symbol();
     right: 0;
     height: 3px;
     background: linear-gradient(90deg, #10b981, #059669);
-    border-radius: 16px 16px 0 0;
+    border-radius: 6px 16px 0 0;
 }
 
 .hrb-customer-stat-card:hover {
