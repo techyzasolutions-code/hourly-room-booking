@@ -613,6 +613,68 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 }
 .hrb-bd-note-admin .hrb-bd-note-header { color: #991b1b; }
 
+/* Extras section in booking details */
+.hrb-bd-extras-section {
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: #f0f9ff;
+    border: 1px solid #bfdbfe;
+    margin-top: 6px;
+}
+
+.hrb-bd-extras-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e40af;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.hrb-bd-extras-header .bi {
+    font-size: 15px;
+    color: #3b82f6;
+}
+
+.hrb-bd-extras-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hrb-bd-extra-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 3px;
+    border: 1px solid #dbeafe;
+    font-size: 13px;
+}
+
+.hrb-bd-extra-name {
+    flex: 1;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.hrb-bd-extra-qty {
+    color: #6b7280;
+    font-size: 12px;
+    margin: 0 8px;
+}
+
+.hrb-bd-extra-price {
+    font-weight: 600;
+    color: #3b82f6;
+    text-align: right;
+    min-width: 60px;
+}
+
 /* Loading state */
 .hrb-bd-loading {
     display: flex;
@@ -914,9 +976,10 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 .fc-event-extras-text {
     flex: 1;
     white-space: normal;
-    word-wrap: break-word;
-    line-height: 1.3;
+    word-break: break-word;
+    line-height: 1.35;
     overflow: visible;
+    word-spacing: 0;
 }
 
 .fc-event-status-no_show {

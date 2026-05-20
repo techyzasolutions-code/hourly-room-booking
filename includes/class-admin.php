@@ -2847,6 +2847,33 @@ class HRB_Admin {
                 <?php endif; ?>
             </div>
 
+            <?php
+            // Get extras for this booking
+            $extras = $wpdb->get_results($wpdb->prepare(
+                "SELECT e.name, be.quantity, be.unit_price, be.total_price
+                 FROM {$wpdb->prefix}hrb_booking_extras be
+                 JOIN {$wpdb->prefix}hrb_extras e ON be.extra_id = e.id
+                 WHERE be.booking_id = %d
+                 ORDER BY e.name",
+                $booking_id
+            ));
+
+            if (!empty($extras)):
+            ?>
+            <div class="hrb-bd-extras-section">
+                <div class="hrb-bd-extras-header"><i class="bi bi-plus-circle-fill"></i> <?php _e('Add-ons & Extras', 'hourly-room-booking'); ?></div>
+                <div class="hrb-bd-extras-list">
+                    <?php foreach ($extras as $extra): ?>
+                    <div class="hrb-bd-extra-item">
+                        <span class="hrb-bd-extra-name"><?php echo esc_html($extra->name); ?></span>
+                        <span class="hrb-bd-extra-qty">x<?php echo (int) $extra->quantity; ?></span>
+                        <span class="hrb-bd-extra-price"><?php echo esc_html(number_format((float) $extra->total_price, 2)); ?> €</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <?php if (!empty($booking->special_requests) && trim($booking->special_requests) !== ''): ?>
             <div class="hrb-bd-note hrb-bd-note-customer">
                 <div class="hrb-bd-note-header"><i class="bi bi-chat-square-quote-fill"></i> <?php _e('Special Requests', 'hourly-room-booking'); ?></div>
