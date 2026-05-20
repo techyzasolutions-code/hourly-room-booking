@@ -961,7 +961,7 @@ msgid "Add Room"
 msgstr "Raum hinzufügen"
 
 msgid "Add-ons & Extras"
-msgstr "Add-ons & Extras"
+msgstr "Zubehör & Extras"
 
 msgid "Add, edit, and manage your bookable rooms and meeting spaces."
 msgstr "Hinzufügen, bearbeiten und verwalten Sie Ihre buchbaren Räume und Besprechungsräume."
