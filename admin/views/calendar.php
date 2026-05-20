@@ -958,28 +958,34 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
 /* Extras row styling */
 .fc-event-extras {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9) !important;
     opacity: 0.9;
-    display: flex;
-    gap: 6px;
-    align-items: flex-start;
+    display: flex !important;
+    gap: 4px;
+    align-items: flex-start !important;
+    overflow: visible !important;
+    flex-wrap: wrap;
+    white-space: normal !important;
 }
 
 .fc-event-extras .fc-event-icon {
-    font-size: 11px;
+    font-size: 10px;
     flex-shrink: 0;
-    padding-top: 1px;
+    padding-top: 2px;
+    min-width: 10px;
 }
 
 .fc-event-extras-text {
-    flex: 1;
-    white-space: normal;
-    word-break: break-word;
-    line-height: 1.35;
-    overflow: visible;
-    word-spacing: 0;
+    flex: 1 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    min-width: 0 !important;
 }
 
 .fc-event-status-no_show {
