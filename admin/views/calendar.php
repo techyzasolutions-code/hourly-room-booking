@@ -856,6 +856,69 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
     color: white !important;
 }
 
+/* Combined time + price row styling */
+.fc-event-time-price {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff !important;
+    padding-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fc-event-time-part,
+.fc-event-price-part {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.fc-event-time-part span,
+.fc-event-price-part span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.fc-event-price-part {
+    font-weight: 700;
+}
+
+.fc-event-price-part .fc-event-icon {
+    font-size: 11px;
+}
+
+/* Extras row styling */
+.fc-event-extras {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9) !important;
+    opacity: 0.9;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.fc-event-extras .fc-event-icon {
+    font-size: 11px;
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+.fc-event-extras-text {
+    flex: 1;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.3;
+    overflow: visible;
+}
+
 .fc-event-status-no_show {
     background: linear-gradient(135deg, #8a8c8f, #6b7280) !important;
     color: white !important;
@@ -1249,12 +1312,28 @@ function initializeCalendar() {
                 ? '<div class="fc-event-row fc-event-ref"><i class="bi bi-hash fc-event-icon"></i><span>' + bookingRef + '</span></div>'
                 : '';
 
+            // Build combined time + price row
+            const totalAmount = arg.event.extendedProps.total_amount || '0.00';
+            let timeAndPriceRow = '<div class="fc-event-row fc-event-time-price">' +
+                                    '<div class="fc-event-time-part"><i class="bi bi-clock-fill fc-event-icon"></i><span>' + timeText + '</span></div>' +
+                                    '<div class="fc-event-price-part"><i class="bi bi-currency-euro fc-event-icon"></i><span>' + totalAmount + ' €</span></div>' +
+                                    '</div>';
+
+            // Build extras row (if any) - show all extras with wrapping
+            const extras = arg.event.extendedProps.extras || [];
+            let extrasRow = '';
+            if (extras.length > 0) {
+                const extrasText = extras.join(', ');
+                extrasRow = '<div class="fc-event-row fc-event-extras"><i class="bi bi-plus-circle-fill fc-event-icon"></i><span class="fc-event-extras-text">' + extrasText + '</span></div>';
+            }
+
             return {
                 html: '<div class="fc-event-content">' +
                       customerRow +
                       roomRow +
                       refRow +
-                      '<div class="fc-event-row fc-event-time"><i class="bi bi-clock-fill fc-event-icon"></i><span>' + timeText + '</span></div>' +
+                      timeAndPriceRow +
+                      extrasRow +
                       '<div class="fc-event-badges">' +
                           anonymousBadge +
                           statusBadge +

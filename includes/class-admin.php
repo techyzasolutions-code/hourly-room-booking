@@ -2155,14 +2155,29 @@ class HRB_Admin {
                     $customer_display = $event->first_name . ' ' . $event->last_name;
                     $customer_name = $event->first_name . ' ' . $event->last_name;
                 }
-                
+
                 // Get room color or default to blue
                 $room_color = !empty($event->room_color) ? $event->room_color : '#3498db';
-                
+
+                // Fetch extras for this booking
+                $extras = $wpdb->get_results($wpdb->prepare(
+                    "SELECT e.name, be.quantity, be.unit_price
+                     FROM {$wpdb->prefix}hrb_booking_extras be
+                     JOIN {$wpdb->prefix}hrb_extras e ON be.extra_id = e.id
+                     WHERE be.booking_id = %d
+                     ORDER BY e.name",
+                    $event->id
+                ));
+
+                $extras_list = array();
+                foreach ($extras as $extra) {
+                    $extras_list[] = $extra->name . ' x' . $extra->quantity;
+                }
+
                 // Create title with customer name, room name, and status
                 $status_text = ucfirst($event->status);
                 $title = $customer_display . ' - ' . $event->room_name . ' (' . $status_text . ')';
-                
+
                 $calendar_events[] = array(
                     'id' => $event->id,
                     'title' => $title,
@@ -2179,7 +2194,8 @@ class HRB_Admin {
                         'room_color' => $room_color,
                         'status' => $event->status,
                         'payment_status' => $event->payment_status,
-                        'total_amount' => number_format($event->total_amount, 2)
+                        'total_amount' => number_format($event->total_amount, 2),
+                        'extras' => $extras_list
                     )
                 );
             }
