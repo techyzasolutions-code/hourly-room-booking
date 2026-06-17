@@ -3011,14 +3011,16 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                     <?php
                                     $start = new DateTime($booking['start_time']);
                                     $end = new DateTime($booking['end_time']);
+                                    if ($end <= $start) {
+                                        $end->modify('+1 day');
+                                    }
                                     $interval = $start->diff($end);
                                     echo $interval->format('%h') . __(' Stunden', 'hourly-room-booking');
                                     if ($interval->format('%i') > 0) {
                                         echo ' ' . $interval->format('%i') . __('m', 'hourly-room-booking');
                                     }
                                     ?>
-                                </td>
-                                <td class="column-status">
+                                </td>                               <td class="column-status">
                                     <?php echo $admin->get_status_badge($booking['status']); ?>
                                 </td>
                                 <td class="column-payment">

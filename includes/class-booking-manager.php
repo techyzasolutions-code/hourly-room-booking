@@ -1555,6 +1555,18 @@ class HRB_Booking_Manager {
         $where_values[] = $limit;
         $where_values[] = $offset;
 
+        // Display rule for the payment-status column (see the two CASE expressions below).
+        // A booking is shown as completed in the list ONLY when it is actually fully paid.
+        // The latest payment row (MAX id) can be a completed PayPal capture while a
+        // later-added extra still leaves a pending balance; that previously made the list
+        // show completed even though money was still owed, while the calendar and detail
+        // views correctly showed pending. The CASE expressions downgrade such a completed
+        // status back to pending ONLY when there are completed payments that do not cover
+        // the booking total (a genuine balance-due / partial-payment case). Bookings an
+        // admin manually marked completed with no completed payment record
+        // (completed_paid = 0) are intentionally left untouched.
+        // NOTE: keep this comment OUTSIDE the double-quoted SQL string below -- a double
+        // quote inside that string would terminate it and cause a PHP parse error.
         $query = "
             SELECT
                 b.id,
@@ -1567,8 +1579,22 @@ class HRB_Booking_Manager {
                 b.status,
                 b.is_anonymous,
                 b.payment_method,
-                COALESCE(p.status, b.payment_status) as payment_status,
-                p.status as actual_payment_status,
+                CASE
+                    WHEN COALESCE(p.status, b.payment_status) IN ('completed', 'paid')
+                         AND b.total_amount > 0
+                         AND COALESCE(pay.completed_paid, 0) > 0
+                         AND COALESCE(pay.completed_paid, 0) + 0.01 < b.total_amount
+                    THEN 'pending'
+                    ELSE COALESCE(p.status, b.payment_status)
+                END as payment_status,
+                CASE
+                    WHEN COALESCE(p.status, b.payment_status) IN ('completed', 'paid')
+                         AND b.total_amount > 0
+                         AND COALESCE(pay.completed_paid, 0) > 0
+                         AND COALESCE(pay.completed_paid, 0) + 0.01 < b.total_amount
+                    THEN 'pending'
+                    ELSE p.status
+                END as actual_payment_status,
                 p.transaction_id,
                 p.processed_at,
                 b.total_amount,
@@ -1596,6 +1622,12 @@ class HRB_Booking_Manager {
                     GROUP BY booking_id
                 )
             ) p ON b.id = p.booking_id
+            LEFT JOIN (
+                SELECT booking_id, COALESCE(SUM(amount), 0) AS completed_paid
+                FROM {$wpdb->prefix}hrb_payments
+                WHERE status IN ('completed', 'paid')
+                GROUP BY booking_id
+            ) pay ON b.id = pay.booking_id
             {$where_clause}
             GROUP BY b.id
             ORDER BY {$order_by}

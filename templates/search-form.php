@@ -1348,24 +1348,31 @@ jQuery(document).ready(function($) {
         // Show overlay loading
         showOverlayLoading();
 
-        // Calculate start and end times from time and duration
-        let startTime = formData.time || '09:00';
-        
-        // Default to 2 hours if no duration specified (minimum booking requirement)
-        const duration = formData.duration || '2';
-        
-        // Ensure time format includes seconds for database compatibility
-        if (startTime && !startTime.includes(':')) {
-            startTime = startTime + ':00';
-        } else if (startTime && startTime.split(':').length === 2) {
-            startTime = startTime + ':00';
+        // Build the availability query.
+        // Only request a SPECIFIC time slot when the user actually selected BOTH a real
+        // time AND a real duration. For "Any time" and/or "Any duration" we deliberately
+        // send empty start_time/end_time so the server checks whole-day availability
+        // (a room is bookable if it has ANY free slot that day) instead of forcing a single
+        // default slot like 09:00-11:00 — which previously hid rooms that were taken at
+        // 09:00 but free later in the day.
+        let startTime = '';
+        let endTime = '';
+
+        if (formData.time && formData.duration) {
+            startTime = formData.time;
+
+            // Ensure time format includes seconds for database compatibility
+            if (!startTime.includes(':')) {
+                startTime = startTime + ':00:00';
+            } else if (startTime.split(':').length === 2) {
+                startTime = startTime + ':00';
+            }
+
+            // Calculate end time by adding the selected duration to the start time
+            const startTimestamp = new Date('1970-01-01T' + startTime + 'Z').getTime();
+            const endTimestamp = startTimestamp + (parseInt(formData.duration, 10) * 60 * 60 * 1000);
+            endTime = new Date(endTimestamp).toISOString().substr(11, 8);
         }
-        
-        // Calculate end time by adding duration to start time
-        const startTimestamp = new Date('1970-01-01T' + startTime + 'Z').getTime();
-        const endTimestamp = startTimestamp + (parseInt(duration) * 60 * 60 * 1000);
-        const endTime = new Date(endTimestamp).toISOString().substr(11, 8);
-        
 
         // Make AJAX call to filter rooms based on availability
         $.ajax({
@@ -1441,12 +1448,12 @@ jQuery(document).ready(function($) {
                     if (response.data.length > 0) {
                         const availableCount = response.data.filter(room => room.is_available !== false).length;
                         if (availableCount === 0) {
-                            $('.hrb-results-title').text('Available Rooms (0 of ' + response.data.length + ')');
+                            $('.hrb-results-title').text('Verfügbare Räume (0 von ' + response.data.length + ')');
                         } else {
-                            $('.hrb-results-title').text('Available Rooms (' + availableCount + ' of ' + response.data.length + ')');
+                            $('.hrb-results-title').text('Verfügbare Räume (' + availableCount + ' von ' + response.data.length + ')');
                         }
                     } else {
-                        $('.hrb-results-title').text('Available Rooms (0)');
+                        $('.hrb-results-title').text('Verfügbare Räume (0)');
                     }
                     
                     // Update prices based on current duration selection
@@ -1471,7 +1478,7 @@ jQuery(document).ready(function($) {
     function showAllRooms() {
         const allRooms = $('.hrb-room-card');
         allRooms.show();
-        $('.hrb-results-title').text('Available Rooms (' + allRooms.length + ')');
+        $('.hrb-results-title').text('Verfügbare Räume (' + allRooms.length + ')');
         
         // Update prices based on current duration selection
         updateRoomPrices();
