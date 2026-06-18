@@ -75,8 +75,8 @@ $currency_symbol = hrb_get_currency_symbol();
         </div>
         <div class="hrb-stat-card">
             <div class="hrb-stat-content">
-            <div class="hrb-stat-number"><?php echo $currency_symbol . number_format($payment_stats['pending_refunds'] ?? 0, 2); ?></div>
-            <div class="hrb-stat-label"><?php _e('Pending Refunds', 'hourly-room-booking'); ?></div>
+            <div class="hrb-stat-number"><?php echo $currency_symbol . number_format($payment_stats['pending_amount'] ?? 0, 2); ?></div>
+            <div class="hrb-stat-label"><?php _e('Pending', 'hourly-room-booking'); ?></div>
             </div>
         </div>
     </div>
@@ -92,9 +92,8 @@ $currency_symbol = hrb_get_currency_symbol();
                     <option value=""><?php _e('All Statuses', 'hourly-room-booking'); ?></option>
                     <option value="completed" <?php selected($filters['status'], 'completed'); ?>><?php _e('Completed', 'hourly-room-booking'); ?></option>
                     <option value="pending" <?php selected($filters['status'], 'pending'); ?>><?php _e('Pending', 'hourly-room-booking'); ?></option>
+                    <option value="cancelled" <?php selected($filters['status'], 'cancelled'); ?>><?php _e('Cancelled', 'hourly-room-booking'); ?></option>
                     <option value="failed" <?php selected($filters['status'], 'failed'); ?>><?php _e('Failed', 'hourly-room-booking'); ?></option>
-                    <option value="refunded" <?php selected($filters['status'], 'refunded'); ?>><?php _e('Refunded', 'hourly-room-booking'); ?></option>
-                    <option value="partially_refunded" <?php selected($filters['status'], 'partially_refunded'); ?>><?php _e('Partially Refunded', 'hourly-room-booking'); ?></option>
                 </select>
             </div>
 
