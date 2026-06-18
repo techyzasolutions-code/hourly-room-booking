@@ -11,6 +11,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "Cancellation Fee"
+msgstr "Stornogebühr"
+
+msgid "Cancellation Fee · %s"
+msgstr "Stornogebühr · %s"
+
+msgid "Cancel fee: %s"
+msgstr "Stornogebühr: %s"
+
+msgid "payable on-site"
+msgstr "vor Ort zu zahlen"
+
+msgid "Cancellation fee payable on-site"
+msgstr "Stornogebühr vor Ort zu zahlen"
+
+msgid "A cancellation fee of %s applies and is payable on-site."
+msgstr "Es fällt eine Stornogebühr von %s an, die vor Ort zu zahlen ist."
+
+msgid "Cancellation fee marked as paid"
+msgstr "Stornogebühr als bezahlt markiert"
+
+msgid "Mark as Completed"
+msgstr "Als abgeschlossen markieren"
+
 msgid "%d Hours"
 msgstr "%d Stunden"
 
