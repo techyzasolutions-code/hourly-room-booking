@@ -777,22 +777,27 @@ class HRB_Payment_Handler {
                 
                 // Update booking table's total_amount and paypal_fee from payment records (source of truth)
                 // This ensures consistency when additional services are added later
+                // Exclude the standalone cancellation-fee charge (CANCELFEE_*) from
+                // these sums — it is a separate penalty, not part of the booking total.
                 $completed_payments_total = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
-                    WHERE booking_id = %d AND status IN ('completed', 'paid')",
+                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments
+                    WHERE booking_id = %d AND status IN ('completed', 'paid')
+                    AND (transaction_id NOT LIKE 'CANCELFEE%' OR transaction_id IS NULL)",
                     $booking_id
                 ));
                 $pending_payments_total = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments 
-                    WHERE booking_id = %d AND status = 'pending'",
+                    "SELECT COALESCE(SUM(amount), 0) FROM {$wpdb->prefix}hrb_payments
+                    WHERE booking_id = %d AND status = 'pending'
+                    AND (transaction_id NOT LIKE 'CANCELFEE%' OR transaction_id IS NULL)",
                     $booking_id
                 ));
                 $total_amount_from_payments = $completed_payments_total + $pending_payments_total;
-                
-                // PayPal fee is sum of all fees in payment records
+
+                // PayPal fee is sum of all fees in payment records (excluding the cancellation fee)
                 $total_fees_from_payments = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COALESCE(SUM(fees), 0) FROM {$wpdb->prefix}hrb_payments 
-                    WHERE booking_id = %d",
+                    "SELECT COALESCE(SUM(fees), 0) FROM {$wpdb->prefix}hrb_payments
+                    WHERE booking_id = %d
+                    AND (transaction_id NOT LIKE 'CANCELFEE%' OR transaction_id IS NULL)",
                     $booking_id
                 ));
                 
