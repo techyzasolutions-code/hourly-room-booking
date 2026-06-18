@@ -1219,7 +1219,21 @@ class HRB_Payment_Handler {
         if (!$payment) {
             wp_send_json_error(['message' => __('Payment not found', 'hourly-room-booking')]);
         }
-        
+
+        // Cancellation-fee charges are standalone: mark only this payment row as
+        // collected. Do NOT touch the booking — it must stay cancelled — and do
+        // not sync the booking payment status, re-confirm it, generate an
+        // invoice, or send a payment-confirmation email.
+        if (strpos((string) $payment->transaction_id, 'CANCELFEE_') === 0) {
+            $result = $payment_manager->update_payment_status($payment_id, 'completed');
+            if ($result) {
+                wp_send_json_success(['message' => __('Cancellation fee marked as paid', 'hourly-room-booking')]);
+            } else {
+                wp_send_json_error(['message' => __('Failed to update payment status', 'hourly-room-booking')]);
+            }
+            return;
+        }
+
         $booking_id = $payment->booking_id;
         $old_payment_status = $payment->status;
         

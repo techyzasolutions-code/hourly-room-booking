@@ -622,17 +622,18 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                         $post_booking_id
                     ));
                     
-                    // If booking is being cancelled, auto-cancel payment status
+                    // If booking is being cancelled, auto-cancel payment status.
+                    // Never cancel the standalone cancellation-fee charge (CANCELFEE_*):
+                    // it stays pending until marked collected on-site.
                     if ($new_booking_status === 'cancelled') {
                         if ($payment_exists) {
-                        $update_result = $wpdb->update(
-                            $wpdb->prefix . 'hrb_payments',
-                            array('status' => 'cancelled'),
-                            array('booking_id' => $post_booking_id),
-                            array('%s'),
-                            array('%d')
-                        );
-                        
+                        $update_result = $wpdb->query($wpdb->prepare(
+                            "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
+                             WHERE booking_id = %d AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
+                            $post_booking_id,
+                            $wpdb->esc_like('CANCELFEE_') . '%'
+                        ));
+
                         if ($update_result === false) {
                         }
                         }

@@ -161,7 +161,9 @@ $currency_symbol = hrb_get_currency_symbol();
                                 </strong>
                                 <?php if (strpos((string) $payment->transaction_id, 'CANCELFEE_') === 0): ?>
                                     <div class="cancellation-fee-label">
-                                        <span class="hrb-cancellation-fee-tag"><?php _e('Cancellation Fee', 'hourly-room-booking'); ?></span>
+                                        <span class="hrb-cancellation-fee-tag">
+                                            <?php printf(__('Cancellation Fee · %s', 'hourly-room-booking'), $currency_symbol . number_format($payment->amount, 2)); ?>
+                                        </span>
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($payment->gateway_transaction_id): ?>
