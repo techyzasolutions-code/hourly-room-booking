@@ -1051,6 +1051,8 @@ class HRB_Booking_Manager {
      * Rules:
      *  - Only cash/onsite bookings are charged (PayPal/online are excluded:
      *    no refund, no fee).
+     *  - Not charged when the booking was already fully paid: the kept amount
+     *    (no refund) is the penalty, so the flat fee would be double-charging.
      *  - Only when the cancellation happens within the cancellation window
      *    (hrb_cancellation_hours, default 24h) before the booking start.
      *  - Idempotent: never charges twice for the same booking.
@@ -1072,6 +1074,12 @@ class HRB_Booking_Manager {
         // Only cash/onsite payment methods (exclude PayPal/online).
         $method = strtolower(trim($booking->payment_method ?? ''));
         if (!in_array($method, ['onsite', 'cash'], true)) {
+            return false;
+        }
+
+        // No fee when the booking was already fully paid — the kept amount is the
+        // penalty (no refund); adding the flat fee on top would double-charge.
+        if (in_array(strtolower(trim($booking->payment_status ?? '')), ['completed', 'paid'], true)) {
             return false;
         }
 
