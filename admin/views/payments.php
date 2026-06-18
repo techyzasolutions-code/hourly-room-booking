@@ -159,6 +159,11 @@ $currency_symbol = hrb_get_currency_symbol();
                                         <?php echo esc_html($payment->transaction_id ?: '#' . $payment->id); ?>
                                     </a>
                                 </strong>
+                                <?php if (strpos((string) $payment->transaction_id, 'CANCELFEE_') === 0): ?>
+                                    <div class="cancellation-fee-label">
+                                        <span class="hrb-cancellation-fee-tag"><?php _e('Cancellation Fee', 'hourly-room-booking'); ?></span>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if ($payment->gateway_transaction_id): ?>
                                     <div class="gateway-id">
                                         <small><?php echo esc_html($payment->gateway_transaction_id); ?></small>
@@ -740,6 +745,20 @@ $currency_symbol = hrb_get_currency_symbol();
     .status-cancelled {
         background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
         color: #374151;
+    }
+
+    .cancellation-fee-label {
+        margin-top: 4px;
+    }
+
+    .hrb-cancellation-fee-tag {
+        display: inline-block;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        background: #b32d2e;
+        border-radius: 3px;
     }
 
     .row-actions {

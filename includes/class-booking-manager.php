@@ -9,7 +9,14 @@ if (!defined('ABSPATH')) {
 }
 
 class HRB_Booking_Manager {
-    
+
+    /**
+     * Flat cancellation fee (in the store currency) charged when a cash/onsite
+     * booking is cancelled within the cancellation window. PayPal/online
+     * bookings are never charged this fee (and are not refunded).
+     */
+    const CANCELLATION_FEE = 15.00;
+
     private static $instance = null;
     
     public static function getInstance() {
@@ -904,7 +911,14 @@ class HRB_Booking_Manager {
                 array('%d')
             );
         }
-        
+
+        // Apply the cancellation fee on a transition into 'cancelled'
+        // (cash/onsite, within window). Idempotent. Runs after the payment
+        // auto-cancel above so the fee row is not cancelled with the rest.
+        if (isset($data['status']) && $data['status'] === 'cancelled' && $booking->status !== 'cancelled') {
+            $this->maybe_apply_cancellation_fee($booking_id);
+        }
+
         // Send notification if booking was modified and notifications are enabled (but not for new bookings)
         if ($send_notification && !$is_new_booking) {
             // Check if any significant booking data changed (not just status)
@@ -1022,12 +1036,91 @@ class HRB_Booking_Manager {
             
         }
         
+        // Apply the cancellation fee (cash/onsite, within window) BEFORE the
+        // notification so the email can reflect it.
+        $this->maybe_apply_cancellation_fee($booking_id);
+
         // Send notification
         $this->send_booking_notification($booking_id, 'booking_cancelled');
-        
+
         return true;
     }
-    
+
+    /**
+     * Apply the flat cancellation fee when applicable.
+     *
+     * Rules:
+     *  - Only cash/onsite bookings are charged (PayPal/online are excluded:
+     *    no refund, no fee).
+     *  - Only when the cancellation happens within the cancellation window
+     *    (hrb_cancellation_hours, default 24h) before the booking start.
+     *  - Idempotent: never charges twice for the same booking.
+     *
+     * The fee is stored on the booking (cancellation_fee) and recorded as a
+     * pending, labelled row in the payments table (payable on-site).
+     *
+     * @param int $booking_id
+     * @return bool True when a fee was applied, false otherwise.
+     */
+    private function maybe_apply_cancellation_fee($booking_id) {
+        global $wpdb;
+
+        $booking = $this->get_booking($booking_id);
+        if (!$booking) {
+            return false;
+        }
+
+        // Only cash/onsite payment methods (exclude PayPal/online).
+        $method = strtolower(trim($booking->payment_method ?? ''));
+        if (!in_array($method, ['onsite', 'cash'], true)) {
+            return false;
+        }
+
+        // Idempotency: do not charge twice.
+        if (isset($booking->cancellation_fee) && floatval($booking->cancellation_fee) > 0) {
+            return false;
+        }
+
+        // Only within the cancellation window before the booking start.
+        $hours = intval(get_option('hrb_cancellation_hours', 24));
+        $booking_datetime = strtotime($booking->booking_date . ' ' . $booking->start_time);
+        if ($booking_datetime && time() < ($booking_datetime - $hours * 3600)) {
+            // Cancelled early enough — no fee.
+            return false;
+        }
+
+        $fee = self::CANCELLATION_FEE;
+
+        // Record the fee on the booking.
+        $wpdb->update(
+            $wpdb->prefix . 'hrb_bookings',
+            array('cancellation_fee' => $fee),
+            array('id' => $booking_id),
+            array('%f'),
+            array('%d')
+        );
+
+        // Record a labelled, pending payment row (payable on-site). The
+        // CANCELFEE_ transaction prefix lets the payments view label it.
+        $wpdb->insert(
+            $wpdb->prefix . 'hrb_payments',
+            array(
+                'booking_id'           => $booking_id,
+                'transaction_id'       => 'CANCELFEE_' . $booking->booking_reference,
+                'payment_method'       => $booking->payment_method,
+                'amount'               => $fee,
+                'currency'             => 'EUR',
+                'status'               => 'pending',
+                'is_additional_payment'=> 1,
+                'gateway_response'     => 'Cancellation Fee',
+                'created_at'           => current_time('mysql'),
+            ),
+            array('%d', '%s', '%s', '%f', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        return true;
+    }
+
     /**
      * Delete booking
      */
@@ -1598,6 +1691,7 @@ class HRB_Booking_Manager {
                 p.transaction_id,
                 p.processed_at,
                 b.total_amount,
+                b.cancellation_fee,
                 b.extra_people,
                 b.created_at,
                 CASE 
@@ -1753,8 +1847,11 @@ class HRB_Booking_Manager {
                         array('%d')
                     );
                 }
+
+                // Apply the cancellation fee (cash/onsite, within window). Idempotent.
+                $this->maybe_apply_cancellation_fee($booking_id);
             }
-            
+
             // Send notification based on status change
             $notification_types = [
                 'confirmed' => 'booking_confirmation',

@@ -98,6 +98,7 @@ class HRB_Database {
             tax_amount decimal(10,2) NOT NULL DEFAULT 0.00,
             paypal_fee decimal(10,2) NOT NULL DEFAULT 0.00,
             total_amount decimal(10,2) NOT NULL,
+            cancellation_fee decimal(10,2) NOT NULL DEFAULT 0.00,
             status varchar(20) NOT NULL DEFAULT 'pending',
             payment_status varchar(20) NOT NULL DEFAULT 'pending',
             payment_method varchar(50) NULL,
@@ -694,6 +695,14 @@ class HRB_Database {
             /* removed error_log - avoid noisy logs in production */
         }
 
+        // Bookings table: add cancellation_fee column if missing
+        $bookings_table = $wpdb->prefix . 'hrb_bookings';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$bookings_table}'")) {
+            $booking_columns = array_column($wpdb->get_results("SHOW COLUMNS FROM {$bookings_table}"), 'Field');
+            if (!in_array('cancellation_fee', $booking_columns)) {
+                $wpdb->query("ALTER TABLE {$bookings_table} ADD COLUMN cancellation_fee decimal(10,2) NOT NULL DEFAULT 0.00 AFTER total_amount");
+            }
+        }
 
         return true;
     }
