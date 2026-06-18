@@ -432,10 +432,14 @@ class HRB_Payment_Manager {
     public function get_payment_by_booking($booking_id) {
         global $wpdb;
 
+        // Exclude the standalone cancellation-fee charge (CANCELFEE_*): it is a
+        // separate charge, not the booking's own payment, so it must not drive
+        // the booking's payment status.
         $query = "
             SELECT p.*
             FROM {$wpdb->prefix}hrb_payments p
             WHERE p.booking_id = %d
+            AND (p.transaction_id NOT LIKE 'CANCELFEE%' OR p.transaction_id IS NULL)
             ORDER BY p.created_at DESC
             LIMIT 1
         ";

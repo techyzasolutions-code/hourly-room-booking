@@ -1718,8 +1718,9 @@ class HRB_Booking_Manager {
                 SELECT booking_id, status, transaction_id, processed_at
                 FROM {$wpdb->prefix}hrb_payments
                 WHERE id IN (
-                    SELECT MAX(id) 
-                    FROM {$wpdb->prefix}hrb_payments 
+                    SELECT MAX(id)
+                    FROM {$wpdb->prefix}hrb_payments
+                    WHERE (transaction_id NOT LIKE 'CANCELFEE%' OR transaction_id IS NULL)
                     GROUP BY booking_id
                 )
             ) p ON b.id = p.booking_id
@@ -1727,6 +1728,7 @@ class HRB_Booking_Manager {
                 SELECT booking_id, COALESCE(SUM(amount), 0) AS completed_paid
                 FROM {$wpdb->prefix}hrb_payments
                 WHERE status IN ('completed', 'paid')
+                AND (transaction_id NOT LIKE 'CANCELFEE%' OR transaction_id IS NULL)
                 GROUP BY booking_id
             ) pay ON b.id = pay.booking_id
             {$where_clause}
