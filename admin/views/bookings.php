@@ -622,14 +622,16 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                         $post_booking_id
                     ));
                     
-                    // If booking is being cancelled, auto-cancel payment status.
-                    // Never cancel the standalone cancellation-fee charge (CANCELFEE_*):
-                    // it stays pending until marked collected on-site.
+                    // If booking is being cancelled, only cancel payments that were
+                    // never collected (pending). Completed payments represent money
+                    // kept (no refunds) and must stay completed. Never touch the
+                    // cancellation-fee charge (CANCELFEE_*).
                     if ($new_booking_status === 'cancelled') {
                         if ($payment_exists) {
                         $update_result = $wpdb->query($wpdb->prepare(
                             "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
-                             WHERE booking_id = %d AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
+                             WHERE booking_id = %d AND status = 'pending'
+                             AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
                             $post_booking_id,
                             $wpdb->esc_like('CANCELFEE_') . '%'
                         ));
@@ -637,8 +639,11 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                         if ($update_result === false) {
                         }
                         }
-                        // Sync to booking table
-                        $update_data['payment_status'] = 'cancelled';
+                        // Keep a completed/paid payment status; only mark the booking's
+                        // payment cancelled when nothing was collected.
+                        if (!in_array(strtolower((string) $old_payment_status), ['completed', 'paid'], true)) {
+                            $update_data['payment_status'] = 'cancelled';
+                        }
                     } else {
                         // Update or create payment status in payments table FIRST (this is source of truth)
                         if ($payment_exists) {

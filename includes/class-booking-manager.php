@@ -901,13 +901,14 @@ class HRB_Booking_Manager {
             $wpdb->query('COMMIT');
         }
 
-        // Auto-cancel payment status for all payment methods when booking is cancelled.
-        // Never cancel the standalone cancellation-fee charge (CANCELFEE_*): it
-        // stays pending until the admin marks it collected on-site.
+        // When a booking is cancelled, only cancel payments that were never
+        // collected (pending). Completed payments are kept (no refunds). Never
+        // touch the cancellation-fee charge (CANCELFEE_*).
         if (isset($data['status']) && $data['status'] === 'cancelled' && $booking->payment_status === 'pending') {
             $wpdb->query($wpdb->prepare(
                 "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
-                 WHERE booking_id = %d AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
+                 WHERE booking_id = %d AND status = 'pending'
+                 AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
                 $booking_id,
                 $wpdb->esc_like('CANCELFEE_') . '%'
             ));
@@ -1019,23 +1020,20 @@ class HRB_Booking_Manager {
             ['%d']
         );
         
-        // Handle refunds if payment was made
-        if ($booking->payment_status === 'completed') {
-            // Process refund logic here
-            $this->process_refund($booking_id);
-        }
+        // No-refund policy: a payment that was already collected (completed)
+        // stays completed when the booking is cancelled — the money is kept and
+        // is NOT refunded. (A manual refund is still available per-payment in the
+        // Payments screen for the rare case it's needed.)
 
-        // Auto-cancel payment status for all payment methods when booking is cancelled.
-        // Never cancel the standalone cancellation-fee charge (CANCELFEE_*).
-        if ($booking->payment_status === 'pending') {
-            $update_result = $wpdb->query($wpdb->prepare(
-                "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
-                 WHERE booking_id = %d AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
-                $booking_id,
-                $wpdb->esc_like('CANCELFEE_') . '%'
-            ));
-
-        }
+        // Only cancel payments that were never collected (pending). Never touch a
+        // completed payment, and never touch the cancellation-fee charge.
+        $update_result = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
+             WHERE booking_id = %d AND status = 'pending'
+             AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
+            $booking_id,
+            $wpdb->esc_like('CANCELFEE_') . '%'
+        ));
         
         // Apply the cancellation fee (cash/onsite, within window) BEFORE the
         // notification so the email can reflect it.
@@ -1836,14 +1834,16 @@ class HRB_Booking_Manager {
         );
 
         if ($result !== false) {
-            // Auto-cancel payment status for all payment methods when booking is cancelled.
-            // Never cancel the standalone cancellation-fee charge (CANCELFEE_*).
+            // When a booking is cancelled, only cancel payments that were never
+            // collected (pending). Completed payments are kept (no refunds). Never
+            // touch the cancellation-fee charge (CANCELFEE_*).
             if ($status === 'cancelled') {
                 $booking = $this->get_booking($booking_id);
                 if ($booking && $booking->payment_status === 'pending') {
                     $wpdb->query($wpdb->prepare(
                         "UPDATE {$wpdb->prefix}hrb_payments SET status = 'cancelled'
-                         WHERE booking_id = %d AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
+                         WHERE booking_id = %d AND status = 'pending'
+                         AND (transaction_id NOT LIKE %s OR transaction_id IS NULL)",
                         $booking_id,
                         $wpdb->esc_like('CANCELFEE_') . '%'
                     ));
