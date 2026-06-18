@@ -571,8 +571,39 @@ class HRB_Notification_Manager {
         }
         
         // Note: {heading} and {message} are handled separately to avoid circular references
-        
-        return str_replace(array_keys($replacements), array_values($replacements), $content);
+
+        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+        // Cancellation-fee tokens — resolved centrally from the booking so every
+        // template path (user/admin/fallback) renders them consistently.
+        // {cancellation_fee}        -> formatted amount (empty when no fee)
+        // {cancellation_fee_notice} -> a full sentence (empty when no fee)
+        $cancellation_fee = isset($booking->cancellation_fee) ? floatval($booking->cancellation_fee) : 0;
+        $cancellation_fee_notice = '';
+        $cancellation_fee_notice_html = '';
+        if ($cancellation_fee > 0) {
+            $cancellation_fee_notice = sprintf(
+                /* translators: %s: formatted cancellation fee amount */
+                __('A cancellation fee of %s applies and is payable on-site.', 'hourly-room-booking'),
+                hrb_format_amount($cancellation_fee)
+            );
+            // Styled block for HTML email templates (only rendered when a fee applies).
+            $cancellation_fee_notice_html =
+                '<div style="margin:20px 0;padding:14px 16px;background:#fdecea;border-left:4px solid #981b1e;">'
+                . '<strong style="color:#981b1e;">' . esc_html($cancellation_fee_notice) . '</strong>'
+                . '</div>';
+        }
+        $content = str_replace(
+            array('{cancellation_fee}', '{cancellation_fee_notice}', '{cancellation_fee_notice_html}'),
+            array(
+                $cancellation_fee > 0 ? hrb_format_amount($cancellation_fee) : '',
+                $cancellation_fee_notice,
+                $cancellation_fee_notice_html,
+            ),
+            $content
+        );
+
+        return $content;
     }
     
     /**

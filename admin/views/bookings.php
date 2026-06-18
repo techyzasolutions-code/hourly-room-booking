@@ -1329,6 +1329,13 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                             <th><?php _e('Total', 'hourly-room-booking'); ?></th>
                             <td><strong><?php echo hrb_format_amount($booking->total_amount); ?></strong></td>
                         </tr>
+
+                        <?php if (isset($booking->cancellation_fee) && floatval($booking->cancellation_fee) > 0): ?>
+                        <tr>
+                            <th style="color:#b32d2e;"><?php _e('Cancellation Fee', 'hourly-room-booking'); ?></th>
+                            <td style="color:#b32d2e;"><strong><?php echo hrb_format_amount($booking->cancellation_fee); ?></strong> <span style="font-weight:normal;">(<?php _e('payable on-site', 'hourly-room-booking'); ?>)</span></td>
+                        </tr>
+                        <?php endif; ?>
                     </table>
                 </div>
 
@@ -3022,6 +3029,12 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                     ?>
                                 </td>                               <td class="column-status">
                                     <?php echo $admin->get_status_badge($booking['status']); ?>
+                                    <?php if (isset($booking['cancellation_fee']) && floatval($booking['cancellation_fee']) > 0): ?>
+                                        <br>
+                                        <span class="hrb-cancellation-fee-badge" title="<?php esc_attr_e('Cancellation fee payable on-site', 'hourly-room-booking'); ?>">
+                                            <?php printf(__('Cancel fee: %s', 'hourly-room-booking'), hrb_format_amount($booking['cancellation_fee'])); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="column-payment">
                                     <div class="hrb-payment-info">
@@ -3401,6 +3414,18 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
 
     .column-status {
         width: 110px;
+    }
+
+    .hrb-cancellation-fee-badge {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        background: #b32d2e;
+        border-radius: 3px;
+        white-space: nowrap;
     }
 
     .column-payment {
