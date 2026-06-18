@@ -55,35 +55,32 @@ foreach ($rooms as $room) {
     if ($filter_date) {
         // Check if there are any available time slots for this room on this date
         // This respects the booking hours configured in settings and checks for master locks
+        // Route through generate_available_time_slots() (the single lock-aware
+        // source of truth: master locks, room locks, bookings, cooldown,
+        // booking window and past-time slots). Mirrors the AJAX search_rooms()
+        // logic so the initial render and live re-search always agree.
         $ajax_handler = HRB_Ajax_Handler::getInstance();
         $check_duration = $filter_duration ?: 2; // Use filter duration or default to 2 hours
         $all_slots = $ajax_handler->generate_available_time_slots($room->id, $filter_date, $check_duration, 0);
-        
-        // Check if there's at least one available slot
-        $has_available_slot = false;
-        foreach ($all_slots as $slot) {
-            if (!empty($slot['available'])) {
-                $has_available_slot = true;
-                break;
-            }
-        }
-        
-        // If no time slots are available (due to master lock or other reasons), mark as unavailable
-        if (!$has_available_slot) {
+
+        if ($filter_time) {
+            // Specific arrival time selected -> that exact slot must be free.
+            $selected_start = substr($filter_time, 0, 5);
             $is_available = false;
+            foreach ($all_slots as $slot) {
+                if (substr($slot['start_time'], 0, 5) === $selected_start) {
+                    $is_available = !empty($slot['available']);
+                    break;
+                }
+            }
         } else {
-            // If time filters are provided, check specific time slot
-            if ($filter_time || $filter_duration) {
-                // Get booking time range from settings
-                $booking_start_time = get_option('hrb_booking_start_time', '08:00');
-                $booking_end_time = get_option('hrb_booking_end_time', '20:00');
-                
-                // Use filter time as start time, or default to booking start time
-                $start_time = $filter_time ? $filter_time . ':00' : $booking_start_time . ':00';
-                // Calculate end time by adding duration to start time
-                $end_time = date('H:i:s', strtotime($start_time . ' +' . ($filter_duration ?: 2) . ' hours'));
-                
-                $is_available = $room_manager->is_room_available($room->id, $filter_date, $start_time, $end_time);
+            // No specific time -> any free slot of the (filter or default) duration.
+            $is_available = false;
+            foreach ($all_slots as $slot) {
+                if (!empty($slot['available'])) {
+                    $is_available = true;
+                    break;
+                }
             }
         }
     }
@@ -1173,7 +1170,7 @@ jQuery(document).ready(function($) {
     function showOverlayLoading() {
         // Remove any existing overlay
         hideOverlayLoading();
-        
+
         // Create overlay
         const overlay = $(`
             <div class="hrb-loading-overlay">
@@ -1182,8 +1179,26 @@ jQuery(document).ready(function($) {
                 </div>
             </div>
         `);
-        
-        $('body').append(overlay);
+
+        // Scope the loader to the search/results section instead of the whole
+        // viewport. Append it to the results section (made position:relative so
+        // the absolutely-positioned overlay covers just that area). Inline
+        // position:absolute overrides the global fixed full-screen rule.
+        let $target = $('.hrb-search-results');
+        if (!$target.length) {
+            $target = $('.hrb-search-container');
+        }
+
+        if ($target.length) {
+            if ($target.css('position') === 'static') {
+                $target.css('position', 'relative');
+            }
+            overlay.css({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: 'auto', height: 'auto' });
+            $target.append(overlay);
+        } else {
+            // Fallback: full-screen overlay if the section isn't present.
+            $('body').append(overlay);
+        }
     }
     
     function hideOverlayLoading() {
@@ -1349,16 +1364,15 @@ jQuery(document).ready(function($) {
         showOverlayLoading();
 
         // Build the availability query.
-        // Only request a SPECIFIC time slot when the user actually selected BOTH a real
-        // time AND a real duration. For "Any time" and/or "Any duration" we deliberately
-        // send empty start_time/end_time so the server checks whole-day availability
-        // (a room is bookable if it has ANY free slot that day) instead of forcing a single
-        // default slot like 09:00-11:00 — which previously hid rooms that were taken at
-        // 09:00 but free later in the day.
+        // Whenever the user selects a specific TIME we send it as start_time so the
+        // server checks that exact slot (lock-aware), using the selected duration or a
+        // 2h default. For "Any time" we send an empty start_time and the server checks
+        // whole-day availability (a room is bookable if it has ANY free slot of the
+        // requested/default duration that day).
         let startTime = '';
         let endTime = '';
 
-        if (formData.time && formData.duration) {
+        if (formData.time) {
             startTime = formData.time;
 
             // Ensure time format includes seconds for database compatibility
@@ -1368,9 +1382,11 @@ jQuery(document).ready(function($) {
                 startTime = startTime + ':00';
             }
 
-            // Calculate end time by adding the selected duration to the start time
+            // Calculate end time using the selected duration (default 2h) — informational;
+            // the server derives availability from start_time + duration.
+            const durHours = parseInt(formData.duration, 10) || 2;
             const startTimestamp = new Date('1970-01-01T' + startTime + 'Z').getTime();
-            const endTimestamp = startTimestamp + (parseInt(formData.duration, 10) * 60 * 60 * 1000);
+            const endTimestamp = startTimestamp + (durHours * 60 * 60 * 1000);
             endTime = new Date(endTimestamp).toISOString().substr(11, 8);
         }
 

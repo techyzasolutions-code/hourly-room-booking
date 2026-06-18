@@ -158,6 +158,7 @@ class HRB_Ajax_Handler {
             'end_time' => sanitize_text_field($_POST['end_time']),
             'min_capacity' => intval($_POST['min_capacity']),
             'max_price' => floatval($_POST['max_price']),
+            'duration' => isset($_POST['duration']) ? sanitize_text_field($_POST['duration']) : '',
             'amenities' => isset($_POST['amenities']) ? array_map('sanitize_text_field', $_POST['amenities']) : array()
         );
         
@@ -176,30 +177,43 @@ class HRB_Ajax_Handler {
         foreach ($rooms as $room) {
             $amenities = $room_manager->get_room_amenities($room->id);
             
-            // Check availability if date/time filters are provided
+            // Check availability if date/time filters are provided.
+            //
+            // We route every decision through generate_available_time_slots()
+            // which is the single lock-aware source of truth: it already
+            // accounts for master locks, room-specific locks, existing
+            // bookings, cooldown periods, the configured booking window and
+            // past-time slots. The previous code used is_room_available() for
+            // the specific-time case, which only checks bookings and silently
+            // ignored locks.
             $is_available = true;
             if (!empty($filters['date'])) {
-                // Check if there are any available time slots for this room on this date
-                // Use default duration of 2 hours to check availability
-                $check_duration = 2;
+                // Duration to evaluate slots against (selected duration, else 2h default).
+                $check_duration = !empty($filters['duration']) ? floatval($filters['duration']) : 2;
                 $all_slots = $this->generate_available_time_slots($room->id, $filters['date'], $check_duration, 0);
-                
-                // Check if there's at least one available slot
-                $has_available_slot = false;
-                foreach ($all_slots as $slot) {
-                    if (!empty($slot['available'])) {
-                        $has_available_slot = true;
-                        break;
-                    }
-                }
-                
-                // If no time slots are available (due to master lock or other reasons), mark as unavailable
-                if (!$has_available_slot) {
+
+                if (!empty($filters['start_time'])) {
+                    // A specific arrival time was selected: that exact slot (for
+                    // the chosen/default duration) must be free. If no slot
+                    // matches the selected time (e.g. it falls outside the
+                    // booking window for this duration) the room is not bookable.
+                    $selected_start = substr($filters['start_time'], 0, 5);
                     $is_available = false;
+                    foreach ($all_slots as $slot) {
+                        if (substr($slot['start_time'], 0, 5) === $selected_start) {
+                            $is_available = !empty($slot['available']);
+                            break;
+                        }
+                    }
                 } else {
-                    // If time filters are provided, check specific time slot
-                    if (!empty($filters['start_time']) && !empty($filters['end_time'])) {
-                        $is_available = $room_manager->is_room_available($room->id, $filters['date'], $filters['start_time'], $filters['end_time']);
+                    // No specific time: bookable if ANY slot of the requested
+                    // (or default) duration is free that day.
+                    $is_available = false;
+                    foreach ($all_slots as $slot) {
+                        if (!empty($slot['available'])) {
+                            $is_available = true;
+                            break;
+                        }
                     }
                 }
             }
