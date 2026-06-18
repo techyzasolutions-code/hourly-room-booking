@@ -189,20 +189,24 @@ class HRB_Payment_Manager {
             $total_transactions = $wpdb->get_var($total_transactions_query);
         }
 
-        // Pending refunds
-        $pending_refunds_query = "
-            SELECT COALESCE(SUM(amount - refunded_amount), 0)
+        // Pending amount (sum of payments still awaiting collection/completion)
+        $pending_amount_query = "
+            SELECT COALESCE(SUM(amount), 0)
             FROM {$wpdb->prefix}hrb_payments
-            WHERE status IN ('refunded', 'partially_refunded')
-            AND refunded_amount < amount
+            WHERE status = 'pending' AND {$where_clause}
         ";
-        $pending_refunds = $wpdb->get_var($pending_refunds_query);
+
+        if (!empty($where_values)) {
+            $pending_amount = $wpdb->get_var($wpdb->prepare($pending_amount_query, $where_values));
+        } else {
+            $pending_amount = $wpdb->get_var($pending_amount_query);
+        }
 
         return [
             'total_revenue' => floatval($total_revenue),
             'monthly_revenue' => floatval($monthly_revenue),
             'total_transactions' => intval($total_transactions),
-            'pending_refunds' => floatval($pending_refunds)
+            'pending_amount' => floatval($pending_amount)
         ];
     }
 
