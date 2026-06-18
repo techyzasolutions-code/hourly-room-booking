@@ -473,6 +473,7 @@ class HRB_Database {
         self::add_room_color_column();
         self::add_payment_token_column();
         self::update_email_templates_with_status();
+        self::seed_branded_email_templates();
 
         // Clean output buffer to prevent unexpected output
         if (ob_get_level()) {
@@ -1716,10 +1717,95 @@ class HRB_Database {
                 $reference
             ));
         } while ($exists > 0);
-        
+
         return $reference;
     }
-    
+
+    /**
+     * Sync the branded email templates into the database.
+     *
+     * The email templates live in the wp_hrb_email_templates table (not in code),
+     * so a plain plugin-file update would not refresh them. This one-time,
+     * option-gated routine loads the bundled branded templates from
+     * includes/email-templates-data.php and writes them into the table:
+     * existing templates (matched by key + type) are updated, missing ones are
+     * inserted. It runs once per design version (see $design_version), so any
+     * later manual edits in the admin Email Templates editor are preserved.
+     *
+     * Hooked on admin_init and also called from create_tables(), so it applies
+     * automatically the first time the new plugin code is loaded — no
+     * reactivation required.
+     */
+    public static function seed_branded_email_templates() {
+        global $wpdb;
+
+        // Bump this when the bundled templates change to re-sync on the next load.
+        $design_version = '2026-06-18';
+        if (get_option('hrb_email_design_version') === $design_version) {
+            return;
+        }
+
+        $file = HRB_PLUGIN_DIR . 'includes/email-templates-data.php';
+        if (!file_exists($file)) {
+            return;
+        }
+
+        $templates = include $file;
+        if (!is_array($templates) || empty($templates)) {
+            return;
+        }
+
+        $table = $wpdb->prefix . 'hrb_email_templates';
+        if (!$wpdb->get_var("SHOW TABLES LIKE '{$table}'")) {
+            return;
+        }
+
+        foreach ($templates as $tpl) {
+            if (empty($tpl['template_key']) || empty($tpl['template_type'])) {
+                continue;
+            }
+
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$table} WHERE template_key = %s AND template_type = %s",
+                $tpl['template_key'],
+                $tpl['template_type']
+            ));
+
+            if ($existing_id) {
+                $wpdb->update(
+                    $table,
+                    array(
+                        'template_name' => $tpl['template_name'],
+                        'subject'       => $tpl['subject'],
+                        'heading'       => $tpl['heading'],
+                        'message'       => $tpl['message'],
+                        'html_content'  => $tpl['html_content'],
+                    ),
+                    array('id' => $existing_id),
+                    array('%s', '%s', '%s', '%s', '%s'),
+                    array('%d')
+                );
+            } else {
+                $wpdb->insert(
+                    $table,
+                    array(
+                        'template_key'  => $tpl['template_key'],
+                        'template_type' => $tpl['template_type'],
+                        'template_name' => $tpl['template_name'],
+                        'subject'       => $tpl['subject'],
+                        'heading'       => $tpl['heading'],
+                        'message'       => $tpl['message'],
+                        'html_content'  => $tpl['html_content'],
+                        'is_active'     => 1,
+                    ),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                );
+            }
+        }
+
+        update_option('hrb_email_design_version', $design_version);
+    }
+
     /**
      * Add template_type column to existing email_templates table
      */

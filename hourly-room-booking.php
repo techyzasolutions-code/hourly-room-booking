@@ -322,6 +322,11 @@ final class HourlyRoomBooking {
         // Activation and deactivation
         register_activation_hook(HRB_PLUGIN_FILE, [$this, 'activate']);
         register_deactivation_hook(HRB_PLUGIN_FILE, [$this, 'deactivate']);
+
+        // One-time sync of the bundled branded email templates after a plain
+        // plugin-file update (no reactivation needed). Option-gated, so it runs
+        // once per design version and preserves later manual edits.
+        add_action('admin_init', ['HRB_Database', 'seed_branded_email_templates']);
         
         // Admin notices
         add_action('admin_notices', [$this, 'display_admin_notices']);
