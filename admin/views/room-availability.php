@@ -199,7 +199,8 @@ function initializeCalendar() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'de',
-        dayHeaderFormat: { weekday: 'long' },
+        dayHeaderFormat: window.innerWidth <= 782 ? { weekday: 'short' } : { weekday: 'long' },
+        dayMaxEvents: window.innerWidth <= 782 ? 3 : false,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',

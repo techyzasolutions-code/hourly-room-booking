@@ -322,6 +322,10 @@ class HRB_Calendar {
         // Parse start and end times
         $start_hour = intval(substr($booking_start_time, 0, 2));
         $end_hour = intval(substr($booking_end_time, 0, 2));
+        // An end time of 00:00 means midnight / end of day (24:00), not start of day.
+        if ($end_hour === 0 && intval(substr($booking_end_time, 3, 2)) === 0) {
+            $end_hour = 24;
+        }
 
         for ($hour = $start_hour; $hour < $end_hour; $hour++) {
             $start_time = sprintf('%02d:00:00', $hour);

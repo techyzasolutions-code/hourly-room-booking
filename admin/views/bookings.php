@@ -56,7 +56,7 @@ $customer_manager = HRB_Customer_Manager::getInstance();
 $admin = HRB_Admin::getInstance();
 
 // Handle view and edit actions early
-if (in_array($action, ['view', 'edit']) && $booking_id) {
+if (in_array($action, ['view', 'edit', 'adjust']) && $booking_id) {
     $booking = $booking_manager->get_booking($booking_id);
     if (!$booking) {
         echo '<div class="notice notice-error"><p>' . __('Booking not found.', 'hourly-room-booking') . '</p></div>';
@@ -91,6 +91,126 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                 } else {
                     echo '<div class="notice notice-error"><p>' . __('Failed to cancel booking.', 'hourly-room-booking') . '</p></div>';
                 }
+            }
+            break;
+
+        case 'add_adjustment':
+            if ($post_booking_id) {
+                $adj_booking = $booking_manager->get_booking($post_booking_id);
+                if (!$adj_booking) {
+                    set_transient('hrb_admin_booking_error', __('Booking not found.', 'hourly-room-booking'), 30);
+                    ?><script>window.location.href='<?php echo admin_url('admin.php?page=hrb-bookings'); ?>';</script><?php
+                    break;
+                }
+
+                $add_hours  = max(0, floatval($_POST['adj_hours'] ?? 0));
+                $add_people = max(0, intval($_POST['adj_people'] ?? 0));
+                $add_people = min($add_people, max(0, 10 - intval($adj_booking->extra_people)));
+                $adj_extras = (isset($_POST['adj_extras']) && is_array($_POST['adj_extras'])) ? array_map('intval', $_POST['adj_extras']) : array();
+                $adj_method = in_array(($_POST['adj_payment_method'] ?? ''), array('onsite', 'cash', 'paypal'), true) ? sanitize_text_field($_POST['adj_payment_method']) : 'onsite';
+                $adj_manual = (isset($_POST['adj_manual_price']) && $_POST['adj_manual_price'] !== '') ? round(floatval($_POST['adj_manual_price']), 2) : null;
+
+                global $wpdb;
+                $adj_room  = $room_manager->get_room($adj_booking->room_id);
+                $old_hours = floatval($adj_booking->total_hours);
+                $new_hours = $old_hours + $add_hours;
+
+                // New end time for the (possibly) extended booking; the extended slot must be free.
+                $new_end_time = $adj_booking->end_time;
+                if ($add_hours > 0) {
+                    $new_end_time = date('H:i:s', strtotime($adj_booking->start_time) + (int) round($new_hours * 3600));
+                    if (HRB_Database::check_booking_conflict($adj_booking->room_id, $adj_booking->booking_date, $adj_booking->start_time, $new_end_time, $post_booking_id)
+                        || !$room_manager->is_time_within_availability($adj_room, $adj_booking->start_time, $new_end_time)) {
+                        set_transient('hrb_admin_booking_error', __('The extended time slot is not available.', 'hourly-room-booking'), 30);
+                        ?><script>window.location.href='<?php echo admin_url('admin.php?page=hrb-bookings&action=adjust&id=' . $post_booking_id); ?>';</script><?php
+                        break;
+                    }
+                }
+
+                // Room hours cost (tiered pricing delta).
+                $hours_cost = 0;
+                if ($add_hours > 0 && $adj_room) {
+                    $hours_cost = $booking_manager->calculate_base_price($adj_room, $new_hours) - $booking_manager->calculate_base_price($adj_room, $old_hours);
+                    if ($hours_cost < 0) { $hours_cost = 0; }
+                }
+                $people_cost = $add_people * 15.00;
+
+                // Only charge for extras that are actually AVAILABLE and not already on the booking.
+                $extras_mgr = HRB_Extras::getInstance();
+                $stock_mgr  = HRB_Extra_Stock_Manager::getInstance();
+                $already_ids = array();
+                foreach ($extras_mgr->get_booking_extras($post_booking_id) as $be) { $already_ids[] = (int) $be->id; }
+                $extras_cost = 0;
+                $valid_new_extras = array();
+                foreach ($adj_extras as $eid) {
+                    if (in_array($eid, $already_ids, true)) { continue; }
+                    $ex = $extras_mgr->get_extra($eid);
+                    if (!$ex) { continue; }
+                    $avail = $stock_mgr->check_availability($eid, $adj_booking->booking_date, $adj_booking->start_time, $new_end_time, 1, $post_booking_id, false);
+                    if (!empty($avail['available'])) {
+                        $extras_cost += floatval($ex->price);
+                        $valid_new_extras[] = $eid;
+                    }
+                }
+
+                $standard_amount   = round($hours_cost + $people_cost + $extras_cost, 2);
+                $adjustment_amount = ($adj_manual !== null) ? $adj_manual : $standard_amount;
+
+                if ($adjustment_amount <= 0) {
+                    set_transient('hrb_admin_booking_error', __('No price-relevant change was entered (or the selected extras are not available).', 'hourly-room-booking'), 30);
+                    ?><script>window.location.href='<?php echo admin_url('admin.php?page=hrb-bookings&action=adjust&id=' . $post_booking_id); ?>';</script><?php
+                    break;
+                }
+
+                // Update resources + total.
+                $is_manual  = ((int) ($adj_booking->price_override ?? 0) === 1);
+                $new_people = intval($adj_booking->extra_people) + $add_people;
+                $update = array(
+                    'total_hours'  => $new_hours,
+                    'end_time'     => $new_end_time,
+                    'extra_people' => $new_people,
+                    'total_amount' => round(floatval($adj_booking->total_amount) + $adjustment_amount, 2),
+                );
+                $formats = array('%f', '%s', '%d', '%f');
+                if (!$is_manual && $adj_room) {
+                    $update['base_price'] = round($booking_manager->calculate_base_price($adj_room, $new_hours), 2);
+                    $update['extra_people_price'] = round($new_people * 15.00, 2);
+                    $formats[] = '%f';
+                    $formats[] = '%f';
+                }
+                $wpdb->update($wpdb->prefix . 'hrb_bookings', $update, array('id' => $post_booking_id), $formats, array('%d'));
+
+                // Attach only the valid (available) new extras, keeping existing ones.
+                if (!empty($valid_new_extras)) {
+                    $all_extra_ids = array_values(array_unique(array_merge($already_ids, $valid_new_extras)));
+                    $booking_manager->save_booking_extras($post_booking_id, $all_extra_ids, $adj_booking->booking_date, $adj_booking->start_time, $new_end_time, true);
+                }
+
+                if ($add_hours > 0 || $add_people > 0) {
+                    hrb_track_booking_modifications(
+                        $booking_manager, $post_booking_id,
+                        $old_hours, $new_hours,
+                        intval($adj_booking->extra_people), $new_people,
+                        $hours_cost, $people_cost
+                    );
+                }
+
+                $adj_fee           = ($adj_method === 'paypal') ? round($adjustment_amount * 0.03, 2) : 0;
+                $adj_record_amount = round($adjustment_amount + $adj_fee, 2);
+                $payment_manager   = HRB_Payment_Manager::getInstance();
+                $adj_currency      = HRB_Currency_Manager::getInstance()->get_currency_code();
+                $payment_manager->create_payment(
+                    $post_booking_id, $adj_record_amount, $adj_method, $adj_currency,
+                    array(
+                        'status' => 'pending',
+                        'transaction_id' => 'ADD_' . time() . '_' . $post_booking_id,
+                        'is_additional_payment' => 1,
+                        'payment_token' => wp_generate_password(32, false),
+                        'fees' => $adj_fee,
+                    )
+                );
+
+                ?><script>window.location.href='<?php echo admin_url('admin.php?page=hrb-bookings&action=view&id=' . $post_booking_id . '&updated=1'); ?>';</script><?php
             }
             break;
 
@@ -305,6 +425,13 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                 break;
             }
             
+            // Manual final-price override (on-site/cash payment only)
+            $add_pm = sanitize_text_field($_POST['payment_method'] ?? 'onsite');
+            if (in_array($add_pm, ['onsite', 'cash'], true)
+                && isset($_POST['custom_price']) && $_POST['custom_price'] !== '') {
+                $booking_data['custom_price'] = round((float) $_POST['custom_price'], 2);
+            }
+
             // Create booking
             $result = $booking_manager->create_booking($booking_data);
             if (is_wp_error($result)) {
@@ -456,6 +583,16 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                     }
                 }
 
+                // Manual final-price override (admin, on-site/cash payment only).
+                // The flag is carried on the main update so update_booking() will
+                // not auto-recalculate; it is reset to 0 when no manual price is used.
+                $update_pm = sanitize_text_field($_POST['payment_method'] ?? '');
+                $override_active = in_array($update_pm, ['onsite', 'cash'], true)
+                    && isset($_POST['custom_price']) && $_POST['custom_price'] !== '';
+                $custom_price_val = $override_active ? round((float) $_POST['custom_price'], 2) : null;
+                $booking_has_override = ((int) ($booking->price_override ?? 0) === 1);
+                $update_data['price_override'] = ($override_active || $booking_has_override) ? 1 : 0;
+
                 // Remove extras from update_data since it's handled separately
                 $extras_data = $update_data['extras'];
                 unset($update_data['extras']);
@@ -511,6 +648,25 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
 
                     // Calculate prices
                     $pricing = $booking_manager->calculate_booking_price($pricing_data);
+
+                    // Manual price = the complete new total of the booking (all-inclusive).
+                    $booking_has_override = ((int) ($booking->price_override ?? 0) === 1);
+                    if ($override_active) {
+                        $pricing['base_price']        = $custom_price_val;
+                        $pricing['extra_people_cost'] = 0;
+                        $pricing['extras_cost']       = 0;
+                        $pricing['tax_amount']        = 0;
+                        $pricing['paypal_fee']        = 0;
+                        $pricing['total_amount']      = $custom_price_val;
+                    } elseif ($booking_has_override) {
+                        // Existing manual booking, no new price entered: keep the manual total frozen.
+                        $pricing['base_price']        = (float) $booking->total_amount;
+                        $pricing['extra_people_cost'] = 0;
+                        $pricing['extras_cost']       = 0;
+                        $pricing['tax_amount']        = 0;
+                        $pricing['paypal_fee']        = 0;
+                        $pricing['total_amount']      = (float) $booking->total_amount;
+                    }
                     
                     // Calculate duration manually
                     $start_timestamp = strtotime($pricing_data['start_time']);
@@ -569,7 +725,9 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                         // Pass the subtotal WITHOUT PayPal fee to avoid double-calculation
                         // The function will calculate the fee only on the outstanding amount
                         $subtotal_without_fee = $pricing['base_price'] + $pricing['extra_people_cost'] + $pricing['extras_cost'] + $pricing['tax_amount'];
-                        hrb_update_pending_additional_payment($post_booking_id, $subtotal_without_fee);
+                        $difference_method = sanitize_text_field($_POST['difference_payment_method'] ?? '');
+                        $difference_method = in_array($difference_method, array('onsite', 'cash', 'paypal'), true) ? $difference_method : null;
+                        hrb_update_pending_additional_payment($post_booking_id, $subtotal_without_fee, $difference_method);
                         
                         // NOTE: Email is NOT sent automatically - admin must click "Send Payment Link" button
                         
@@ -805,6 +963,41 @@ if ($_POST && check_admin_referer('hrb_admin_action', 'hrb_nonce')) {
                     }
                 }
 
+                // Keep the Payments screen in sync with the booking's current total.
+                // Collected (completed/paid) money is NEVER changed; only the pending
+                // remainder is adjusted. The cancellation-fee row (CANCELFEE_) is never touched.
+                $posted_booking_status = sanitize_text_field($_POST['booking_status'] ?? '');
+                if ($posted_booking_status !== 'cancelled') {
+                    global $wpdb;
+                    $synced_booking = $booking_manager->get_booking($post_booking_id);
+                    if ($synced_booking) {
+                        $target_total = round((float) $synced_booking->total_amount, 2);
+
+                        if (!$is_payment_completed) {
+                            // Nothing collected yet: the single pending original payment
+                            // record should simply equal the booking total.
+                            $original_rec = $wpdb->get_row($wpdb->prepare(
+                                "SELECT id, amount FROM {$wpdb->prefix}hrb_payments
+                                 WHERE booking_id = %d
+                                 AND (transaction_id IS NULL OR (transaction_id NOT LIKE %s AND transaction_id NOT LIKE %s))
+                                 ORDER BY id ASC LIMIT 1",
+                                $post_booking_id,
+                                $wpdb->esc_like('ADD_') . '%',
+                                $wpdb->esc_like('CANCELFEE_') . '%'
+                            ));
+                            if ($original_rec && abs((float) $original_rec->amount - $target_total) > 0.001) {
+                                $wpdb->update(
+                                    $wpdb->prefix . 'hrb_payments',
+                                    array('amount' => $target_total),
+                                    array('id' => $original_rec->id),
+                                    array('%f'),
+                                    array('%d')
+                                );
+                            }
+                        }
+                    }
+                }
+
                 // Customer data is already updated above (for non-anonymous bookings)
                 // No need to update again here
                 $customer_result = true; // Default to success
@@ -970,7 +1163,7 @@ function hrb_booking_has_completed_payment($booking_id) {
  * @param float $current_booking_total Current booking total amount
  * @return bool True on success, false on failure
  */
-function hrb_update_pending_additional_payment($booking_id, $current_booking_total) {
+function hrb_update_pending_additional_payment($booking_id, $current_booking_total, $forced_method = null) {
     global $wpdb;
     $payment_manager = HRB_Payment_Manager::getInstance();
     $currency = HRB_Currency_Manager::getInstance()->get_currency_code();
@@ -982,6 +1175,10 @@ function hrb_update_pending_additional_payment($booking_id, $current_booking_tot
     ));
     
     $payment_method = $booking ? strtolower(trim($booking->payment_method)) : 'onsite';
+    // Admin edit can force how the difference is collected (cash on-site vs PayPal link).
+    if (!empty($forced_method) && in_array(strtolower(trim($forced_method)), array('onsite', 'cash', 'paypal'), true)) {
+        $payment_method = strtolower(trim($forced_method));
+    }
     
     // Calculate total amount that should be pending
     // Note: $current_booking_total is now passed as subtotal WITHOUT fees
@@ -1249,6 +1446,16 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                 $status_class = 'hrb-payment-' . esc_attr($payment_status);
                                 ?>
                                 <?php echo $admin->get_payment_status_badge($payment_status); ?>
+                                <?php
+                                global $wpdb;
+                                $hrb_pending_remainder = (float) $wpdb->get_var($wpdb->prepare(
+                                    "SELECT COALESCE(SUM(amount),0) FROM {$wpdb->prefix}hrb_payments WHERE booking_id = %d AND status = 'pending' AND (transaction_id IS NULL OR transaction_id NOT LIKE %s)",
+                                    $booking->id,
+                                    $wpdb->esc_like('CANCELFEE_') . '%'
+                                ));
+                                if (hrb_booking_has_completed_payment($booking->id) && $hrb_pending_remainder > 0.01): ?>
+                                    <span class="hrb-status" style="display:inline-block;background:#dba617;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;vertical-align:middle;"><?php _e('Partially paid', 'hourly-room-booking'); ?></span>
+                                <?php endif; ?>
                                 <?php if ($booking->actual_payment_status && $booking->processed_at): ?>
                                     <br><small><?php printf(__('Processed: %s', 'hourly-room-booking'), date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($booking->processed_at))); ?></small>
                                 <?php endif; ?>
@@ -1281,7 +1488,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                             <th><?php _e('Base Price', 'hourly-room-booking'); ?></th>
                             <td><?php echo hrb_format_amount($booking->base_price); ?></td>
                         </tr>
-                        <?php if ($booking->extra_people > 0): ?>
+                        <?php if ($booking->extra_people > 0 && empty($booking->price_override)): ?>
                         <tr>
                             <th><?php _e('Extra People', 'hourly-room-booking'); ?></th>
                             <td>
@@ -1332,7 +1539,12 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                         <?php endif; ?>
                         
                         <tr style="border-top: 2px solid #333; font-weight: bold; font-size: 1.1em;">
-                            <th><?php _e('Total', 'hourly-room-booking'); ?></th>
+                            <th>
+                                <?php _e('Total', 'hourly-room-booking'); ?>
+                                <?php if (!empty($booking->price_override)): ?>
+                                    <span style="display:inline-block; margin-left:8px; padding:2px 8px; font-size:11px; font-weight:600; color:#fff; background:#2271b1; border-radius:10px; vertical-align:middle;"><?php _e('Manual price', 'hourly-room-booking'); ?></span>
+                                <?php endif; ?>
+                            </th>
                             <td><strong><?php echo hrb_format_amount($booking->total_amount); ?></strong></td>
                         </tr>
 
@@ -1494,7 +1706,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                             <span><?php echo hrb_format_amount($booking->base_price); ?></span>
                         </div>
                         
-                        <?php if ($booking->extra_people > 0): ?>
+                        <?php if ($booking->extra_people > 0 && empty($booking->price_override)): ?>
                         <div class="hrb-summary-item <?php echo esc_attr($extra_people_highlight['class']); ?>" <?php echo $extra_people_highlight['style'] ? 'style="' . esc_attr($extra_people_highlight['style']) . '"' : ''; ?>>
                             <span>
                                 <?php _e('Extra People', 'hourly-room-booking'); ?> (<?php echo esc_html($booking->extra_people); ?>)
@@ -1512,7 +1724,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                         </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($booking_extras)): ?>
+                        <?php if (!empty($booking_extras) && empty($booking->price_override)): ?>
                         <div class="hrb-summary-section">
                             <strong><?php _e('Extras', 'hourly-room-booking'); ?></strong>
                         </div>
@@ -1658,6 +1870,10 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                 <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=edit&id=' . $booking->id); ?>" class="button button-primary">
                     <?php _e('Edit Booking', 'hourly-room-booking'); ?>
                 </a>
+                <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=adjust&id=' . $booking->id); ?>" class="button button-secondary">
+                    <span class="dashicons dashicons-plus-alt" style="vertical-align: middle; margin-right: 5px;"></span>
+                    <?php _e('Adjust booking', 'hourly-room-booking'); ?>
+                </a>
                 <?php endif; ?>
 
                 <?php if (current_user_can('hrb_manage_bookings')): ?>
@@ -1694,6 +1910,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                 $has_pending_additional_payment = false;
                     $pending_amount = 0;
                 $pending_additional_amount = 0;
+                $additional_pending_method = '';
                 
                     foreach ($all_payments_view as $payment) {
                     if ($payment->status === 'pending') {
@@ -1704,22 +1921,23 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                         if (!empty($payment->transaction_id) && strpos((string) $payment->transaction_id, 'ADD_') === 0) {
                             $has_pending_additional_payment = true;
                             $pending_additional_amount += floatval($payment->amount);
+                            $additional_pending_method = strtolower(trim($payment->payment_method ?? ''));
                         }
                         }
                     }
                     
+                $additional_is_paypal = ($additional_pending_method === 'paypal');
                 if ($has_pending_payment && current_user_can('hrb_manage_bookings')):
-                    if (!$is_onsite_payment && $has_pending_additional_payment): 
-                        // For PayPal and other online payments - show "Send Payment Link" button
-                        // Only for additional payments (original PayPal payments are handled during booking creation)
+                    if ($has_pending_additional_payment && $additional_is_paypal): 
+                        // Difference to be paid via PayPal link - show "Send Payment Link" button
                         ?>
                         <button type="button" id="hrb-send-payment-link-btn" class="button button-secondary" data-booking-id="<?php echo esc_attr($booking->id); ?>">
                             <span class="dashicons dashicons-email-alt" style="vertical-align: middle; margin-right: 5px;"></span>
                             <?php _e('Send Payment Link', 'hourly-room-booking'); ?>
                         </button>
                         <span id="hrb-send-payment-link-message" style="margin-left: 10px; display: none;"></span>
-                    <?php elseif ($is_onsite_payment): 
-                        // For onsite/cash payments - show "Mark Payment as Complete" button for ALL pending payments
+                    <?php elseif ($is_onsite_payment || ($has_pending_additional_payment && !$additional_is_paypal)): 
+                        // Cash difference (or original on-site pending) - show "Mark Payment as Complete" button
                         ?>
                         <button type="button" id="hrb-mark-additional-payment-complete-btn" class="button button-primary" data-booking-id="<?php echo esc_attr($booking->id); ?>" data-amount="<?php echo esc_attr($pending_amount); ?>">
                             <span class="dashicons dashicons-yes-alt" style="vertical-align: middle; margin-right: 5px;"></span>
@@ -1778,6 +1996,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
             <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
             <input type="hidden" name="action" value="update_booking">
             <input type="hidden" name="id" value="<?php echo $booking->id; ?>">
+            <div class="notice notice-info inline" style="margin:10px 0;"><p><?php _e('Here you change customer data, status and the manual total price. To add hours, people or extras (which increase the price), use "Adjust booking".', 'hourly-room-booking'); ?></p></div>
 
             <div class="hrb-edit-grid">
                 <div class="hrb-edit-section">
@@ -1816,7 +2035,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                             <td>
                                 <select name="duration" id="duration" class="regular-text">
                                     <option value=""><?php _e('Select duration', 'hourly-room-booking'); ?></option>
-                                    <?php for ($hours = 2; $hours <= 12; $hours++): ?>
+                                    <?php for ($hours = 2; $hours <= 24; $hours++): ?>
                                         <option value="<?php echo $hours; ?>" data-hours="<?php echo $hours; ?>" <?php selected(intval($booking->total_hours), $hours); ?>>
                                             <?php echo sprintf(__('%d Hours', 'hourly-room-booking'), $hours); ?>
                                         </option>
@@ -1840,6 +2059,18 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                 </select>
                             </td>
                         </tr>
+                        <?php if (hrb_booking_has_completed_payment($booking->id)): ?>
+                        <tr id="hrb-difference-payment-row">
+                            <th><label for="difference_payment_method"><?php _e('Pay difference via', 'hourly-room-booking'); ?></label></th>
+                            <td>
+                                <select name="difference_payment_method" id="difference_payment_method" class="regular-text">
+                                    <option value="onsite"><?php _e('Cash on-site', 'hourly-room-booking'); ?></option>
+                                    <option value="paypal"><?php _e('PayPal link', 'hourly-room-booking'); ?></option>
+                                </select>
+                                <p class="description"><?php _e('Relevant only if this change increases the amount: choose how the customer pays the additional difference. Cash keeps the booking partially paid until you mark it collected; PayPal lets you send a payment link.', 'hourly-room-booking'); ?></p>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <tr>
                             <th><label for="room_id"><?php _e('Room', 'hourly-room-booking'); ?></label></th>
                             <td>
@@ -1903,6 +2134,22 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                 </div>
                             </td>
                         </tr>
+                        <tr id="hrb-custom-price-row">
+                            <th><label for="custom_price"><?php _e('Manual price', 'hourly-room-booking'); ?></label></th>
+                            <td>
+                                <?php
+                                $hrb_has_manual = (isset($booking->price_override) && (int) $booking->price_override === 1);
+                                ?>
+                                <button type="button" class="button" id="hrb-manual-price-toggle" aria-expanded="<?php echo $hrb_has_manual ? 'true' : 'false'; ?>"><?php _e('Set price manually', 'hourly-room-booking'); ?></button>
+                                <div id="hrb-manual-price-wrap" style="margin-top:10px;<?php echo $hrb_has_manual ? '' : 'display:none;'; ?>">
+                                    <?php if ($hrb_has_manual): ?>
+                                        <p class="description" style="margin-top:0;"><?php printf(__('Current total: %s. Enter a new total to change it, or leave empty to keep it.', 'hourly-room-booking'), hrb_format_amount((float) $booking->total_amount)); ?></p>
+                                    <?php endif; ?>
+                                    <input type="number" name="custom_price" id="custom_price" step="0.01" min="0" class="regular-text" value="" placeholder="<?php esc_attr_e('Enter the total price', 'hourly-room-booking'); ?>">
+                                    <p class="description"><?php _e('Only for on-site payment. Enter the complete total price of the booking (all-inclusive; extras are included). Already collected payments are kept; the difference to this total is the amount still owed.', 'hourly-room-booking'); ?></p>
+                                </div>
+                            </td>
+                        </tr>
                     </table>
                 </div>
 
@@ -1956,6 +2203,37 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
            
         </form>
     </div>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Manual price: show the block only for on-site/cash payment (edit form).
+            function hrbToggleManualPriceEdit() {
+                var pm = $('#payment_method').val();
+                if (pm === 'onsite' || pm === 'cash') {
+                    $('#hrb-custom-price-row').show();
+                } else {
+                    $('#hrb-custom-price-row').hide();
+                    $('#hrb-manual-price-wrap').hide();
+                    $('#hrb-manual-price-toggle').attr('aria-expanded', 'false');
+                    $('#custom_price').val('');
+                }
+            }
+            $('#payment_method').on('change', hrbToggleManualPriceEdit);
+            hrbToggleManualPriceEdit();
+            $('#hrb-manual-price-toggle').on('click', function() {
+                var $wrap = $('#hrb-manual-price-wrap');
+                if ($wrap.is(':visible')) {
+                    $wrap.hide();
+                    $('#custom_price').val('');
+                    $(this).attr('aria-expanded', 'false');
+                } else if (window.confirm('<?php echo esc_js(__('Set the price for this booking manually?', 'hourly-room-booking')); ?>')) {
+                    $wrap.show();
+                    $(this).attr('aria-expanded', 'true');
+                    $('#custom_price').trigger('focus');
+                }
+            });
+        });
+        </script>
 
 <?php elseif ($action === 'add'): ?>
     <!-- ADD BOOKING -->
@@ -2053,7 +2331,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                             <td>
                                 <select name="duration" id="duration" class="regular-text">
                                     <option value=""><?php _e('Select duration', 'hourly-room-booking'); ?></option>
-                                    <?php for ($hours = 2; $hours <= 12; $hours++): ?>
+                                    <?php for ($hours = 2; $hours <= 24; $hours++): ?>
                                         <option value="<?php echo $hours; ?>" data-hours="<?php echo $hours; ?>">
                                             <?php echo sprintf(__('%d Hours', 'hourly-room-booking'), $hours); ?>
                                         </option>
@@ -2109,6 +2387,16 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                            <div class="hrb-loading-message">
                                                <div class="hrb-loading-text"><?php _e('Please select room, date, duration and time slot to see pricing', 'hourly-room-booking'); ?></div>
                                            </div>
+                                       </div>
+                                   </td>
+                               </tr>
+                               <tr id="hrb-custom-price-row">
+                                   <th><label for="custom_price"><?php _e('Manual price', 'hourly-room-booking'); ?></label></th>
+                                   <td>
+                                       <button type="button" class="button" id="hrb-manual-price-toggle" aria-expanded="false"><?php _e('Set price manually', 'hourly-room-booking'); ?></button>
+                                       <div id="hrb-manual-price-wrap" style="margin-top:10px;display:none;">
+                                           <input type="number" name="custom_price" id="custom_price" step="0.01" min="0" class="regular-text" placeholder="<?php esc_attr_e('Enter the total price', 'hourly-room-booking'); ?>">
+                                           <p class="description"><?php _e('Only for on-site payment. Enter the complete total price of the booking (all-inclusive; extras are included). Already collected payments are kept; the difference to this total is the amount still owed.', 'hourly-room-booking'); ?></p>
                                        </div>
                                    </td>
                                </tr>
@@ -2190,6 +2478,35 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         
         <script>
         jQuery(document).ready(function($) {
+
+            // Manual price: the whole row is only relevant for on-site/cash payment.
+            function hrbToggleCustomPriceRow() {
+                var pm = $('#payment_method').val();
+                if (pm === 'onsite' || pm === 'cash') {
+                    $('#hrb-custom-price-row').show();
+                } else {
+                    $('#hrb-custom-price-row').hide();
+                    $('#hrb-manual-price-wrap').hide();
+                    $('#hrb-manual-price-toggle').attr('aria-expanded', 'false');
+                    $('#custom_price').val('');
+                }
+            }
+            $('#payment_method').on('change', hrbToggleCustomPriceRow);
+            hrbToggleCustomPriceRow();
+
+            // Button + confirmation reveals the manual price input.
+            $('#hrb-manual-price-toggle').on('click', function() {
+                var $wrap = $('#hrb-manual-price-wrap');
+                if ($wrap.is(':visible')) {
+                    $wrap.hide();
+                    $('#custom_price').val('');
+                    $(this).attr('aria-expanded', 'false');
+                } else if (window.confirm('<?php echo esc_js(__('Set the price for this booking manually?', 'hourly-room-booking')); ?>')) {
+                    $wrap.show();
+                    $(this).attr('aria-expanded', 'true');
+                    $('#custom_price').trigger('focus');
+                }
+            });
             // Restore form data from session if available
             <?php if (isset($_SESSION['hrb_admin_booking_form_data'])): ?>
             var formData = <?php echo json_encode($_SESSION['hrb_admin_booking_form_data']); ?>;
@@ -2865,6 +3182,178 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
         </style>
     </div>
 
+<?php elseif ($action === 'adjust' && isset($booking)): ?>
+    <div class="wrap hrb-admin-booking-adjust hrb-admin-bookings">
+        <div class="hrb-page-header">
+            <h1 class="wp-heading-inline"><?php printf(__('Adjust booking - #%s', 'hourly-room-booking'), esc_html($booking->booking_reference)); ?></h1>
+            <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=view&id=' . $booking->id); ?>" class="page-title-action"><?php _e('Back to booking', 'hourly-room-booking'); ?></a>
+        </div>
+        <hr class="wp-header-end">
+        <?php
+        $adj_err = get_transient('hrb_admin_booking_error');
+        if (!empty($adj_err)) { echo '<div class="notice notice-error"><p>' . esc_html($adj_err) . '</p></div>'; delete_transient('hrb_admin_booking_error'); }
+        $adj_room_obj = $room_manager->get_room($booking->room_id);
+        // Extras actually available for this booking's slot (respects stock + locks), excluding this booking.
+        $adj_available_extras = HRB_Extra_Stock_Manager::getInstance()->get_available_extras($booking->booking_date, $booking->start_time, $booking->end_time, true, (int) $booking->id, false);
+        // Extras already on this booking (shown as already booked, not selectable to add again).
+        $adj_booked_ids = array();
+        foreach (HRB_Extras::getInstance()->get_booking_extras($booking->id) as $be) { $adj_booked_ids[] = (int) $be->id; }
+        // Maximum additional hours that are actually free (bookings + cooldown), keeping total <= 24h.
+        $adj_max_add_hours = 0;
+        $adj_cap = max(0, 24 - (int) floor((float) $booking->total_hours));
+        for ($h = 1; $h <= $adj_cap; $h++) {
+            $test_end = date('H:i:s', strtotime($booking->start_time) + (int) round(((float) $booking->total_hours + $h) * 3600));
+            if (HRB_Database::check_booking_conflict($booking->room_id, $booking->booking_date, $booking->start_time, $test_end, (int) $booking->id)) { break; }
+            if (!$room_manager->is_time_within_availability($adj_room_obj, $booking->start_time, $test_end)) { break; }
+            $adj_max_add_hours = $h;
+        }
+        // Precompute the exact hours cost (tiered room pricing) for each possible additional-hours value.
+        $adj_hours_cost_map = array();
+        for ($h = 0; $h <= $adj_max_add_hours; $h++) {
+            $c = $adj_room_obj ? ($booking_manager->calculate_base_price($adj_room_obj, (float) $booking->total_hours + $h) - $booking_manager->calculate_base_price($adj_room_obj, (float) $booking->total_hours)) : 0;
+            $adj_hours_cost_map[$h] = round(max(0, $c), 2);
+        }
+        $adj_extra_prices = array();
+        foreach ($adj_available_extras as $ae) { $adj_extra_prices[(int) $ae['id']] = round((float) $ae['price'], 2); }
+        $adj_currency_symbol = function_exists('hrb_get_currency_symbol') ? hrb_get_currency_symbol() : '€';
+        $adj_people_max = max(0, 10 - (int) $booking->extra_people);
+        ?>
+        <div class="hrb-edit-section" style="max-width:720px; background:#fff; border:1px solid #e1e5e9; border-radius:8px; padding:20px; margin-top:15px;">
+            <p class="description">
+                <?php printf(__('Current booking: %1$s, %2$s hours, total %3$s. Add below what the customer wants on top; it becomes a separate additional charge.', 'hourly-room-booking'),
+                    esc_html($adj_room_obj ? $adj_room_obj->name : ''), esc_html($booking->total_hours), hrb_format_amount((float) $booking->total_amount)); ?>
+            </p>
+            <form method="POST" action="<?php echo admin_url('admin.php?page=hrb-bookings&action=adjust&id=' . $booking->id); ?>">
+                <?php wp_nonce_field('hrb_admin_action', 'hrb_nonce'); ?>
+                <input type="hidden" name="action" value="add_adjustment">
+                <input type="hidden" name="id" value="<?php echo esc_attr($booking->id); ?>">
+                <table class="form-table">
+                    <tr>
+                        <th><label for="adj_hours"><?php _e('Additional hours', 'hourly-room-booking'); ?></label></th>
+                        <td>
+                            <input type="number" name="adj_hours" id="adj_hours" min="0" max="<?php echo esc_attr($adj_max_add_hours); ?>" step="1" value="0" class="small-text">
+                            <p class="description">
+                                <?php if ($adj_max_add_hours > 0): ?>
+                                    <?php printf(__('Up to %d more hours are available for this room.', 'hourly-room-booking'), $adj_max_add_hours); ?>
+                                <?php else: ?>
+                                    <?php _e('No further hours are available (room is booked afterwards).', 'hourly-room-booking'); ?>
+                                <?php endif; ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="adj_people"><?php _e('Additional people', 'hourly-room-booking'); ?></label></th>
+                        <td><input type="number" name="adj_people" id="adj_people" min="0" max="<?php echo esc_attr($adj_people_max); ?>" step="1" value="0" class="small-text">
+                            <p class="description">
+                                <?php printf(__('%s per additional person.', 'hourly-room-booking'), hrb_format_amount(15)); ?>
+                                <?php printf(__('Max. %d more (10 extra people per booking).', 'hourly-room-booking'), $adj_people_max); ?>
+                            </p></td>
+                    </tr>
+                    <tr>
+                        <th><label><?php _e('Add extras', 'hourly-room-booking'); ?></label></th>
+                        <td>
+                            <?php
+                            $adj_shown = false;
+                            foreach ($adj_booked_ids as $bid):
+                                $bex = HRB_Extras::getInstance()->get_extra($bid);
+                                if (!$bex) { continue; }
+                                $adj_shown = true; ?>
+                                <label style="display:block; margin-bottom:6px; color:#777;">
+                                    <input type="checkbox" checked disabled>
+                                    <?php echo esc_html($bex->name); ?> <em>(<?php _e('already booked', 'hourly-room-booking'); ?>)</em>
+                                </label>
+                            <?php endforeach; ?>
+                            <?php foreach ($adj_available_extras as $ae):
+                                if (in_array((int) $ae['id'], $adj_booked_ids, true)) { continue; }
+                                $adj_shown = true; ?>
+                                <label style="display:block; margin-bottom:6px;">
+                                    <input type="checkbox" name="adj_extras[]" value="<?php echo esc_attr($ae['id']); ?>">
+                                    <?php echo esc_html($ae['name']); ?> (+<?php echo hrb_format_amount((float) $ae['price']); ?>)
+                                    <?php if (!empty($ae['track_stock'])): ?>
+                                        <small style="color:#777;">&mdash; <?php printf(__('%d available', 'hourly-room-booking'), (int) $ae['available_quantity']); ?></small>
+                                    <?php endif; ?>
+                                </label>
+                            <?php endforeach; ?>
+                            <?php if (!$adj_shown): ?>
+                                <p class="description"><?php _e('No extras available for this time slot.', 'hourly-room-booking'); ?></p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="adj_manual_price"><?php _e('Manual price for this adjustment (optional)', 'hourly-room-booking'); ?></label></th>
+                        <td>
+                            <input type="number" name="adj_manual_price" id="adj_manual_price" min="0" step="0.01" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use the calculated amount', 'hourly-room-booking'); ?>">
+                            <p class="description"><?php _e('If set, this exact amount is charged for the adjustment instead of the calculated sum.', 'hourly-room-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="adj_payment_method"><?php _e('Pay adjustment via', 'hourly-room-booking'); ?></label></th>
+                        <td>
+                            <select name="adj_payment_method" id="adj_payment_method" class="regular-text">
+                                <option value="onsite"><?php _e('Cash on-site', 'hourly-room-booking'); ?></option>
+                                <option value="paypal"><?php _e('PayPal link', 'hourly-room-booking'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('Adjustment total', 'hourly-room-booking'); ?></th>
+                        <td>
+                            <div id="adj-summary" style="background:#f6f7f7; border:1px solid #e1e5e9; border-radius:6px; padding:12px; max-width:420px;">
+                                <div id="adj-summary-lines" style="font-size:13px; color:#555;"></div>
+                                <div style="border-top:1px solid #ddd; margin-top:8px; padding-top:8px; font-weight:600; font-size:15px;">
+                                    <?php _e('Additional booking total', 'hourly-room-booking'); ?>: <span id="adj-summary-total">&mdash;</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <p><input type="submit" class="button button-primary" value="<?php esc_attr_e('Add adjustment', 'hourly-room-booking'); ?>"></p>
+            </form>
+            <script>
+            (function(){
+                var hoursCost = <?php echo wp_json_encode($adj_hours_cost_map); ?>;
+                var extraPrices = <?php echo wp_json_encode($adj_extra_prices); ?>;
+                var sym = <?php echo wp_json_encode($adj_currency_symbol); ?>;
+                var perPerson = 15;
+                var peopleMax = <?php echo (int) $adj_people_max; ?>;
+                function money(n){ return sym + ' ' + (Math.round(n*100)/100).toFixed(2); }
+                function el(id){ return document.getElementById(id); }
+                function recalc(){
+                    var h = parseInt((el('adj_hours')||{}).value||'0',10)||0;
+                    var p = parseInt((el('adj_people')||{}).value||'0',10)||0;
+                    if (p > peopleMax) p = peopleMax;
+                    var hc = hoursCost[h] != null ? hoursCost[h] : 0;
+                    var pc = p * perPerson;
+                    var ec = 0;
+                    var boxes = document.querySelectorAll('input[name="adj_extras[]"]:checked');
+                    for (var i=0;i<boxes.length;i++){ var v = boxes[i].value; ec += (extraPrices[v] != null ? extraPrices[v] : 0); }
+                    var std = hc + pc + ec;
+                    var manualRaw = (el('adj_manual_price')||{}).value || '';
+                    var manual = (manualRaw !== '') ? parseFloat(manualRaw) : null;
+                    var base = (manual != null && !isNaN(manual)) ? manual : std;
+                    var method = (el('adj_payment_method')||{}).value || 'onsite';
+                    var fee = (method === 'paypal') ? (base * 0.03) : 0;
+                    var grand = base + fee;
+                    var lines = [];
+                    if (h>0) lines.push('<?php echo esc_js(__('Hours', 'hourly-room-booking')); ?> (+'+h+'): '+money(hc));
+                    if (p>0) lines.push('<?php echo esc_js(__('Extra people', 'hourly-room-booking')); ?> (+'+p+'): '+money(pc));
+                    if (ec>0) lines.push('<?php echo esc_js(__('Extras', 'hourly-room-booking')); ?>: '+money(ec));
+                    if (manual != null && !isNaN(manual)) lines.push('<?php echo esc_js(__('Manual price', 'hourly-room-booking')); ?>: '+money(manual));
+                    if (fee>0) lines.push('PayPal 3%: '+money(fee));
+                    el('adj-summary-lines').innerHTML = lines.length ? lines.join('<br>') : '<?php echo esc_js(__('Nothing added yet.', 'hourly-room-booking')); ?>';
+                    el('adj-summary-total').textContent = money(grand);
+                }
+                var wrap = document.querySelector('.hrb-admin-booking-adjust');
+                if (wrap){
+                    wrap.addEventListener('change', recalc);
+                    wrap.addEventListener('input', recalc);
+                }
+                recalc();
+            })();
+            </script>
+        </div>
+    </div>
+
 <?php else: ?>
     <!-- LIST BOOKINGS -->
     <div class="wrap hrb-admin-bookings">
@@ -3001,26 +3490,26 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                     <tbody>
                         <?php foreach ($bookings as $booking): ?>
                             <tr>
-                                <td class="column-booking-id">
+                                <td class="column-booking-id" data-label="<?php esc_attr_e('Booking', 'hourly-room-booking'); ?>">
                                     <strong><a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=view&id=' . $booking['id']); ?>">
                                             #<?php echo esc_html($booking['booking_reference']); ?>
                                         </a></strong>
                                 </td>
-                                <td class="column-customer">
+                                <td class="column-customer" data-label="<?php esc_attr_e('Customer', 'hourly-room-booking'); ?>">
                                     <div class="hrb-customer-info">
                                         <?php echo hrb_display_customer_info($booking, 'full'); ?>
                                     </div>
                                 </td>
-                                <td class="column-room">
+                                <td class="column-room" data-label="<?php esc_attr_e('Room', 'hourly-room-booking'); ?>">
                                     <strong><?php echo esc_html($booking['room_name']); ?></strong>
                                 </td>
-                                <td class="column-datetime">
+                                <td class="column-datetime" data-label="<?php esc_attr_e('Date & Time', 'hourly-room-booking'); ?>">
                                     <div class="hrb-datetime">
                                         <strong><?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($booking['booking_date'])); ?></strong><br>
                                         <small><?php echo date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking['start_time'])) . ' - ' . date_i18n(get_option('hrb_time_format', 'H:i'), strtotime($booking['end_time'])); ?></small>
                                     </div>
                                 </td>
-                                <td class="column-duration">
+                                <td class="column-duration" data-label="<?php esc_attr_e('Duration', 'hourly-room-booking'); ?>">
                                     <?php
                                     $start = new DateTime($booking['start_time']);
                                     $end = new DateTime($booking['end_time']);
@@ -3033,7 +3522,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                         echo ' ' . $interval->format('%i') . __('m', 'hourly-room-booking');
                                     }
                                     ?>
-                                </td>                               <td class="column-status">
+                                </td>                               <td class="column-status" data-label="<?php esc_attr_e('Status', 'hourly-room-booking'); ?>">
                                     <?php echo $admin->get_status_badge($booking['status']); ?>
                                     <?php if (isset($booking['cancellation_fee']) && floatval($booking['cancellation_fee']) > 0): ?>
                                         <br>
@@ -3042,7 +3531,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="column-payment">
+                                <td class="column-payment" data-label="<?php esc_attr_e('Payment', 'hourly-room-booking'); ?>">
                                     <div class="hrb-payment-info">
                                         <?php $actual_payment_status = $booking['actual_payment_status'] ?: $booking['payment_status']; ?>
                                         <span class="hrb-payment-status hrb-payment-<?php echo esc_attr($actual_payment_status); ?>">
@@ -3056,7 +3545,7 @@ function hrb_track_booking_modifications($booking_manager, $booking_id, $origina
                                         </small>
                                     </div>
                                 </td>
-                                <td class="column-amount">
+                                <td class="column-amount" data-label="<?php esc_attr_e('Amount', 'hourly-room-booking'); ?>">
                                     <strong><?php echo hrb_format_amount($booking['total_amount']); ?></strong>
                                     <?php if ($booking['extra_people'] > 0): ?>
                                         <br><small><?php printf(__('%d extra people', 'hourly-room-booking'), $booking['extra_people']); ?></small>

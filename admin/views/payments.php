@@ -152,7 +152,7 @@ $currency_symbol = hrb_get_currency_symbol();
                             <th scope="row" class="check-column">
                                 <input type="checkbox" name="payment[]" value="<?php echo $payment->id; ?>">
                             </th>
-                            <td class="column-transaction">
+                            <td class="column-transaction" data-label="<?php esc_attr_e('Transaction', 'hourly-room-booking'); ?>">
                                 <strong>
                                     <a href="#" onclick="viewPaymentDetails(<?php echo $payment->id; ?>)">
                                         <?php echo esc_html($payment->transaction_id ?: '#' . $payment->id); ?>
@@ -171,7 +171,7 @@ $currency_symbol = hrb_get_currency_symbol();
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td class="column-booking">
+                            <td class="column-booking" data-label="<?php esc_attr_e('Booking', 'hourly-room-booking'); ?>">
                                 <a href="<?php echo admin_url('admin.php?page=hrb-bookings&action=edit&booking_id=' . $payment->booking_id); ?>">
                                     #<?php echo $payment->booking_id; ?>
                                 </a>
@@ -180,10 +180,10 @@ $currency_symbol = hrb_get_currency_symbol();
                                     <small><?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($payment->booking_date ?? 'now')); ?></small>
                                 </div>
                             </td>
-                            <td class="column-customer">
+                            <td class="column-customer" data-label="<?php esc_attr_e('Customer', 'hourly-room-booking'); ?>">
                                 <?php echo hrb_display_customer_info($payment, 'name_email'); ?>
                             </td>
-                            <td class="column-amount">
+                            <td class="column-amount" data-label="<?php esc_attr_e('Amount', 'hourly-room-booking'); ?>">
                                 <strong><?php echo $currency_symbol . number_format($payment->amount, 2); ?></strong>
                                 <?php if ($payment->fees > 0): ?>
                                     <div class="fees">
@@ -196,17 +196,17 @@ $currency_symbol = hrb_get_currency_symbol();
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td class="column-method">
+                            <td class="column-method" data-label="<?php esc_attr_e('Method', 'hourly-room-booking'); ?>">
                                 <span class="payment-method payment-method-<?php echo $payment->payment_method; ?>">
                                     <?php echo esc_html(hrb_get_payment_method_label($payment->payment_method)); ?>
                                 </span>
                             </td>
-                            <td class="column-status">
+                            <td class="column-status" data-label="<?php esc_attr_e('Status', 'hourly-room-booking'); ?>">
                                 <span class="hrb-status status-<?php echo $payment->status; ?>">
                                     <?php echo esc_html(hrb_get_payment_status_label($payment->status)); ?>
                                 </span>
                             </td>
-                            <td class="column-date">
+                            <td class="column-date" data-label="<?php esc_attr_e('Date', 'hourly-room-booking'); ?>">
                                 <?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y') . ' ' . get_option('hrb_time_format', 'H:i'), strtotime($payment->created_at)); ?>
                             </td>
                             <td class="column-actions">

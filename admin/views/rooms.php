@@ -94,6 +94,7 @@ if ($filter_status !== 'all') {
                     <th scope="col" class="column-id"><?php _e('Room ID', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-capacity"><?php _e('Capacity', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-price"><?php _e('Hourly Price', 'hourly-room-booking'); ?></th>
+                    <th scope="col" class="column-availability"><?php _e('Availability', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-amenities"><?php _e('Amenities', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-color"><?php _e('Color', 'hourly-room-booking'); ?></th>
                     <th scope="col" class="column-status"><?php _e('Status', 'hourly-room-booking'); ?></th>
@@ -117,7 +118,7 @@ if ($filter_status !== 'all') {
                 <?php else: ?>
                     <?php foreach ($rooms as $room): ?>
                         <tr data-room-id="<?php echo esc_attr($room->id); ?>" class="<?php echo esc_attr($room->is_active ? 'active' : 'inactive'); ?>">
-                            <td class="column-image">
+                            <td class="column-image" data-label="<?php esc_attr_e('Image', 'hourly-room-booking'); ?>">
                                 <?php
                                 $images = !empty($room->images) ? json_decode($room->images, true) : [];
                                 if (empty($images) && !empty($room->images) && strpos($room->images, ',') !== false) {
@@ -138,30 +139,43 @@ if ($filter_status !== 'all') {
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td class="column-name">
+                            <td class="column-name" data-label="<?php esc_attr_e('Room Name', 'hourly-room-booking'); ?>">
                                 <strong><?php echo esc_html($room->name); ?></strong>
                                 <?php if (!empty($room->description)): ?>
                                     <div class="room-description"><?php echo wp_trim_words(esc_html($room->description), 10); ?></div>
                                 <?php endif; ?>
                             </td>
-                            <td class="column-id">
+                            <td class="column-id" data-label="<?php esc_attr_e('Room ID', 'hourly-room-booking'); ?>">
                                 <div class="hrb-room-id-display">
                                     <span class="hrb-room-id-value" onclick="copyRoomIdToClipboard('<?php echo $room->id; ?>')" title="<?php _e('Click to copy', 'hourly-room-booking'); ?>">
                                         <?php echo $room->id; ?>
                                     </span>
                                 </div>
                             </td>
-                            <td class="column-capacity">
+                            <td class="column-capacity" data-label="<?php esc_attr_e('Capacity', 'hourly-room-booking'); ?>">
                                 <span class="capacity-badge"><?php echo esc_html($room->capacity); ?> <?php _e('people', 'hourly-room-booking'); ?></span>
                             </td>
-                            <td class="column-price">
+                            <td class="column-price" data-label="<?php esc_attr_e('Hourly Price', 'hourly-room-booking'); ?>">
                                 <?php 
                                 $room_manager = HRB_Room_Manager::getInstance();
                                 $price_range = $room_manager->get_room_price_range($room);
                                 ?>
                                 <strong><?php echo $price_range['formatted']; ?></strong>
                             </td>
-                            <td class="column-amenities">
+                            <td class="column-availability" data-label="<?php esc_attr_e('Availability', 'hourly-room-booking'); ?>">
+                                <?php
+                                $av_from_raw = $room->available_from ?? '00:00:00';
+                                $av_to_raw   = $room->available_to ?? '00:00:00';
+                                if ($av_from_raw === '00:00:00' && $av_to_raw === '00:00:00') {
+                                    echo '<span style="color:#2e7d32;">' . esc_html__('Around the clock', 'hourly-room-booking') . '</span>';
+                                } else {
+                                    $av_from = substr($av_from_raw, 0, 5);
+                                    $av_to   = ($av_to_raw === '00:00:00') ? '24:00' : substr($av_to_raw, 0, 5);
+                                    echo '<strong>' . esc_html($av_from) . '</strong> &ndash; <strong>' . esc_html($av_to) . '</strong>';
+                                }
+                                ?>
+                            </td>
+                            <td class="column-amenities" data-label="<?php esc_attr_e('Amenities', 'hourly-room-booking'); ?>">
                                 <?php
                                 $amenities = !empty($room->amenities) ? json_decode($room->amenities, true) : [];
                                 if (!empty($amenities)) {
@@ -179,13 +193,13 @@ if ($filter_status !== 'all') {
                                 }
                                 ?>
                             </td>
-                            <td class="column-color">
+                            <td class="column-color" data-label="<?php esc_attr_e('Color', 'hourly-room-booking'); ?>">
                                 <div class="room-color-display">
                                     <span class="color-preview" style="background-color: <?php echo esc_attr($room->color ?? '#3498db'); ?>; width: 20px; height: 20px; border-radius: 50%; display: inline-block; border: 2px solid #ddd;"></span>
                                     <span class="color-code"><?php echo esc_html($room->color ?? '#3498db'); ?></span>
                                 </div>
                             </td>
-                            <td class="column-status">
+                            <td class="column-status" data-label="<?php esc_attr_e('Status', 'hourly-room-booking'); ?>">
                                 <span class="hrb-status hrb-status-<?php echo $room->is_active ? 'active' : 'inactive'; ?>">
                                     <?php echo $room->is_active ? __('Active', 'hourly-room-booking') : __('Inactive', 'hourly-room-booking'); ?>
                                 </span>
@@ -300,6 +314,17 @@ if ($filter_status !== 'all') {
                         <td>
                             <input type="number" name="room_price_extra_hour" id="room_price_extra_hour" min="0" step="0.01" class="regular-text">
                             <p class="description"><?php _e('Optional extra hour rate. Leave 0 to use global default.', 'hourly-room-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="room_available_from"><?php _e('Bookable hours', 'hourly-room-booking'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="room_available_from" id="room_available_from" value="00:00" placeholder="00:00" maxlength="5" inputmode="numeric" style="max-width:110px; text-align:center;">
+                            <span style="margin:0 8px;"><?php _e('to', 'hourly-room-booking'); ?></span>
+                            <input type="text" name="room_available_to" id="room_available_to" value="24:00" placeholder="24:00" maxlength="5" inputmode="numeric" style="max-width:110px; text-align:center;">
+                            <p class="description"><?php _e('General bookable window for this room, in 24-hour format (0–24). 00:00 to 24:00 means bookable around the clock. Example: 09:00 to 23:00. Cleaning time after the end is not included.', 'hourly-room-booking'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -817,6 +842,11 @@ if ($filter_status !== 'all') {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+/* Keep the Rooms page's own button colours on hover (not the shared blue) */
+.hrb-actions .button-small:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+.hrb-actions .hrb-toggle-active:hover { background: linear-gradient(135deg, #059669, #047857); }
+.hrb-actions .hrb-toggle-inactive:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+.hrb-actions .hrb-delete-btn:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); }
 
 .hrb-actions .button-small {
     background: linear-gradient(135deg, #b91c1c, #dc2626);
@@ -1204,6 +1234,8 @@ function editRoom(roomId) {
                 const colorPreview = document.getElementById('color-preview');
                 const roomExternalLink = document.getElementById('room_external_link');
                 const roomIsActive = document.getElementById('room_is_active');
+                const roomAvailableFrom = document.getElementById('room_available_from');
+                const roomAvailableTo = document.getElementById('room_available_to');
                 const roomModal = document.getElementById('room-modal');
 
                 if (roomName) roomName.value = room.name || '';
@@ -1219,6 +1251,8 @@ function editRoom(roomId) {
                 if (colorPreview) colorPreview.style.backgroundColor = room.color || '#3498db';
                 if (roomExternalLink) roomExternalLink.value = room.external_link || '';
                 if (roomIsActive) roomIsActive.checked = parseInt(room.is_active) === 1;
+                if (roomAvailableFrom) roomAvailableFrom.value = (room.available_from || '00:00:00').substring(0,5);
+                if (roomAvailableTo) { var _atv = (room.available_to || '00:00:00').substring(0,5); roomAvailableTo.value = (_atv === '00:00') ? '24:00' : _atv; }
                 
                 // Load existing images
                 loadRoomImages(room.images);

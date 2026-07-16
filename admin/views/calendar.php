@@ -32,6 +32,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
         <?php endif; ?>
     </div>
 
+    <div class="hrb-calendar-stage">
     <!-- Calendar Controls -->
     <div class="hrb-calendar-controls">
         <div class="hrb-room-filter">
@@ -59,6 +60,10 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
             <button type="button" class="button calendar-view-btn" data-view="listWeek">
                 <?php _e('List', 'hourly-room-booking'); ?>
             </button>
+            <button type="button" class="button" id="hrb-cal-fullscreen-btn">
+                <span class="dashicons dashicons-fullscreen-alt" style="vertical-align:middle;"></span>
+                <span class="hrb-fs-label"><?php _e('Fullscreen', 'hourly-room-booking'); ?></span>
+            </button>
         </div>
 
         <div class="hrb-calendar-legend">
@@ -83,6 +88,7 @@ $selected_room = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 
     <!-- Calendar Container -->
     <div id="hrb-calendar" class="hrb-calendar-container"></div>
+    </div><!-- .hrb-calendar-stage -->
 
     <!-- Quick Stats below calendar -->
     <div class="hrb-calendar-stats">
@@ -1247,11 +1253,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeCalendar() {
     const calendarEl = document.getElementById('hrb-calendar');
+    var hrbCalMobile = window.innerWidth <= 782;
 
     calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+        initialView: hrbCalMobile ? 'listWeek' : 'dayGridMonth',
         locale: 'de',
-        dayHeaderFormat: { weekday: 'long' },
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        dayHeaderFormat: hrbCalMobile ? { weekday: 'short' } : { weekday: 'long' },
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -1261,6 +1270,7 @@ function initializeCalendar() {
             today: '<?php _e('Today', 'hourly-room-booking'); ?>'
         },
         height: 'auto',
+        dayMaxEvents: window.innerWidth <= 782 ? 3 : false,
         events: function(info, successCallback, failureCallback) {
             fetchCalendarEvents(info.start, info.end, successCallback, failureCallback);
         },
@@ -1304,7 +1314,15 @@ function initializeCalendar() {
                           '</div>'
                 };
             }
-            
+
+            // On phones, grid views (month/week/day) show a compact pill; tap opens details.
+            var _vt = arg.view.type;
+            if (window.innerWidth <= 782 && _vt.indexOf('list') !== 0) {
+                var _cn = (arg.event.extendedProps.customer_name || arg.event.title.replace(/\s*\([^)]+\)$/, '')) || '<?php echo esc_js(__('Booking', 'hourly-room-booking')); ?>';
+                var _ct = (arg.timeText || '').replace(' - ', '-');
+                return { html: '<div class="fc-event-compact">' + (_ct ? '<b>' + _ct + '</b> ' : '') + _cn + '</div>' };
+            }
+
             // Handle booking events
             // Extract status from title (format: "Customer - Room (Status)")
             let title = arg.event.title;
@@ -1325,9 +1343,7 @@ function initializeCalendar() {
             if (timeText.includes(' - ')) {
                 timeText = timeText.replace(' - ', '-');
             }
-            // Convert time format from "8a" to "8 AM"
-            timeText = timeText.replace(/(\d+)a/g, '$1 AM');
-            timeText = timeText.replace(/(\d+)p/g, '$1 PM');
+            // 24-hour format (German) - no AM/PM conversion
             
             // Create status badge with appropriate color class
             let statusBadge = '';
@@ -1413,6 +1429,22 @@ function initializeCalendar() {
     });
 
     calendar.render();
+    if (window.innerWidth <= 782) {
+        document.querySelectorAll('.calendar-view-btn').forEach(function(b){
+            b.classList.toggle('active', b.getAttribute('data-view') === 'listWeek');
+        });
+    }
+    var hrbFsBtn = document.getElementById('hrb-cal-fullscreen-btn');
+    var hrbStage = document.querySelector('.hrb-calendar-stage');
+    if (hrbFsBtn && hrbStage) {
+        hrbFsBtn.addEventListener('click', function() {
+            var on = hrbStage.classList.toggle('hrb-fs');
+            document.body.classList.toggle('hrb-cal-fs-open', on);
+            var lbl = hrbFsBtn.querySelector('.hrb-fs-label');
+            if (lbl) { lbl.textContent = on ? '<?php echo esc_js(__('Exit', 'hourly-room-booking')); ?>' : '<?php echo esc_js(__('Fullscreen', 'hourly-room-booking')); ?>'; }
+            setTimeout(function(){ if (typeof calendar !== 'undefined' && calendar) { calendar.updateSize(); } }, 60);
+        });
+    }
 }
 
 function fetchCalendarEvents(start, end, successCallback, failureCallback) {

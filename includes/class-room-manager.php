@@ -650,5 +650,26 @@ class HRB_Room_Manager {
         // Check for conflicts
         return !HRB_Database::check_booking_conflict($room_id, $date, $start_time, $end_time);
     }
+
+    /**
+     * Whether a booking [start,end] falls inside the room's general bookable window.
+     * available_from/available_to of '00:00:00'/'00:00:00' means fully bookable (24h).
+     * An end time of 00:00 counts as midnight (end of day). Cross-midnight bookings are
+     * only allowed when the room is fully bookable.
+     */
+    public function is_time_within_availability($room, $start_time, $end_time) {
+        $from = (is_object($room) && isset($room->available_from)) ? $room->available_from : '00:00:00';
+        $to   = (is_object($room) && isset($room->available_to)) ? $room->available_to : '00:00:00';
+        $from_min = (intval(substr($from, 0, 2)) * 60) + intval(substr($from, 3, 2));
+        $to_min   = ($to === '00:00:00' || $to === '00:00') ? 1440 : ((intval(substr($to, 0, 2)) * 60) + intval(substr($to, 3, 2)));
+        if ($from_min <= 0 && $to_min >= 1440) {
+            return true; // fully bookable
+        }
+        $s = (intval(substr($start_time, 0, 2)) * 60) + intval(substr($start_time, 3, 2));
+        $e = (intval(substr($end_time, 0, 2)) * 60) + intval(substr($end_time, 3, 2));
+        if ($e === 0) { $e = 1440; }
+        if ($e <= $s) { return false; } // cross-midnight not allowed within a restricted window
+        return ($s >= $from_min && $e <= $to_min);
+    }
 }
 ?>

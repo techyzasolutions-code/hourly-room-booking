@@ -22,6 +22,8 @@ class HRB_Admin {
     private function __construct() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'admin_init'));
+        add_action('admin_head', array($this, 'output_pwa_meta'));
+        add_filter('admin_body_class', array($this, 'add_admin_body_class'));
         add_action('wp_ajax_hrb_admin_action', array($this, 'handle_admin_ajax'));
         add_action('wp_ajax_hrb_get_booking_chart_data', array($this, 'ajax_get_booking_chart_data'));
         add_action('wp_ajax_hrb_get_room_details', array($this, 'ajax_get_room_details'));
@@ -237,6 +239,48 @@ class HRB_Admin {
         register_setting('hrb_settings', 'hrb_booking_advance_days');
         register_setting('hrb_settings', 'hrb_cancellation_hours');
         register_setting('hrb_settings', 'hrb_cooldown_minutes');
+    }
+
+    /**
+     * Output "add to home screen" metadata (manifest + Apple meta) on the plugin's
+     * admin pages, so the backend can be pinned to a phone home screen and opens
+     * full-screen like an app.
+     */
+    public function add_admin_body_class($classes) {
+        if (isset($_GET['page']) && strpos((string) $_GET['page'], 'hrb') === 0) {
+            $classes .= ' hrb-admin-page';
+        }
+        return $classes;
+    }
+
+    public function output_pwa_meta() {
+        if (!isset($_GET['page']) || strpos((string) $_GET['page'], 'hrb') !== 0) {
+            return;
+        }
+        $icon180 = HRB_PLUGIN_URL . 'assets/images/app-icon-180.png';
+        $icon192 = HRB_PLUGIN_URL . 'assets/images/app-icon-192.png';
+        $icon512 = HRB_PLUGIN_URL . 'assets/images/app-icon-512.png';
+        $manifest = array(
+            'name'             => __('Room bookings', 'hourly-room-booking'),
+            'short_name'       => __('Bookings', 'hourly-room-booking'),
+            'start_url'        => admin_url('admin.php?page=hrb-bookings'),
+            'scope'            => admin_url(),
+            'display'          => 'standalone',
+            'background_color' => '#f0f0f1',
+            'theme_color'      => '#c52d45',
+            'icons'            => array(
+                array('src' => $icon192, 'sizes' => '192x192', 'type' => 'image/png'),
+                array('src' => $icon512, 'sizes' => '512x512', 'type' => 'image/png'),
+            ),
+        );
+        $manifest_href = 'data:application/manifest+json,' . rawurlencode(wp_json_encode($manifest));
+        echo "\n<!-- Hourly Room Booking: add to home screen -->\n";
+        echo '<link rel="manifest" href="' . esc_attr($manifest_href) . '">' . "\n";
+        echo '<link rel="apple-touch-icon" href="' . esc_url($icon180) . '">' . "\n";
+        echo '<meta name="apple-mobile-web-app-capable" content="yes">' . "\n";
+        echo '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n";
+        echo '<meta name="apple-mobile-web-app-title" content="' . esc_attr__('Room bookings', 'hourly-room-booking') . '">' . "\n";
+        echo '<meta name="theme-color" content="#c52d45">' . "\n";
     }
     
     /**
@@ -715,6 +759,19 @@ class HRB_Admin {
                 if (is_wp_error($result)) {
                     echo '<div class="notice notice-error"><p>' . $result->get_error_message() . '</p></div>';
                 } else {
+                    $hrb_norm_time = function ($raw) {
+                        if (!preg_match('/^\s*(\d{1,2}):(\d{2})/', (string) $raw, $m)) { return '00:00:00'; }
+                        $h = (int) $m[1]; $mi = (int) $m[2];
+                        if ($h >= 24) { return '00:00:00'; }
+                        if ($h < 0) { $h = 0; }
+                        if ($mi > 59) { $mi = 0; }
+                        return sprintf('%02d:%02d:00', $h, $mi);
+                    };
+                    $hrb_af = $hrb_norm_time(sanitize_text_field($_POST['room_available_from'] ?? ''));
+                    $hrb_at = $hrb_norm_time(sanitize_text_field($_POST['room_available_to'] ?? ''));
+                    if ($hrb_af !== '00:00:00' || $hrb_at !== '00:00:00') {
+                        $room_manager->update_room((int) $result, array('available_from' => $hrb_af, 'available_to' => $hrb_at));
+                    }
                     echo '<div class="notice notice-success"><p>' . __('Room created successfully!', 'hourly-room-booking') . '</p></div>';
                 }
                 break;
@@ -735,6 +792,17 @@ class HRB_Admin {
                     $images_json = json_encode($images_array);
                 }
 
+                $hrb_norm_time = function ($raw) {
+                    if (!preg_match('/^\s*(\d{1,2}):(\d{2})/', (string) $raw, $m)) { return '00:00:00'; }
+                    $h = (int) $m[1]; $mi = (int) $m[2];
+                    if ($h >= 24) { return '00:00:00'; } // 24:00 = end of day, stored canonically as 00:00:00
+                    if ($h < 0) { $h = 0; }
+                    if ($mi > 59) { $mi = 0; }
+                    return sprintf('%02d:%02d:00', $h, $mi);
+                };
+                $hrb_af = $hrb_norm_time(sanitize_text_field($_POST['room_available_from'] ?? ''));
+                $hrb_at = $hrb_norm_time(sanitize_text_field($_POST['room_available_to'] ?? ''));
+
                 $room_data = array(
                     'name' => sanitize_text_field($_POST['room_name']),
                     'description' => sanitize_textarea_field($_POST['room_description']),
@@ -743,6 +811,8 @@ class HRB_Admin {
                     'price_3_hours' => floatval($_POST['room_price_3_hours'] ?? 0),
                     'price_4_hours' => floatval($_POST['room_price_4_hours'] ?? 0),
                     'price_extra_hour' => floatval($_POST['room_price_extra_hour'] ?? 0),
+                    'available_from' => $hrb_af,
+                    'available_to' => $hrb_at,
                     'amenities' => $amenities_json,
                     'images' => $images_json,
                     'color' => sanitize_hex_color($_POST['room_color'] ?? '#3498db'),
@@ -2101,6 +2171,8 @@ class HRB_Admin {
             'images' => $room->images, // Add images field
             'color' => $room->color ?? '#3498db', // Add color field
             'external_link' => $room->external_link ?? '',
+            'available_from' => $room->available_from ?? '00:00:00',
+            'available_to' => $room->available_to ?? '00:00:00',
             'is_active' => $room->is_active,
             'created_at' => $room->created_at,
             'updated_at' => $room->updated_at

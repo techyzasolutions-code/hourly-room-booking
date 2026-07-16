@@ -1388,3 +1388,447 @@ span.stockInfo
         gap: 10px;
     }
 }
+/* ==========================================================================
+   HRB — Mobile / responsive optimisation (added)
+   Backend usable and tidy on phones. Breakpoint 782px = WP admin mobile.
+   ========================================================================== */
+@media (max-width: 782px) {
+
+    /* --- Page headers & action rows stack full width --- */
+    .hrb-page-header {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .hrb-page-header h1,
+    .hrb-page-header .wp-heading-inline { font-size: 20px; line-height: 1.3; }
+    .hrb-page-header .page-title-action,
+    .hrb-page-header .button {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        min-height: 44px;
+        line-height: 30px;
+    }
+
+    .hrb-booking-actions,
+    .hrb-section-header,
+    .hrb-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .hrb-booking-actions .button,
+    .hrb-booking-actions a.button,
+    .hrb-booking-actions input[type="submit"],
+    .hrb-actions .button,
+    .hrb-actions a.button {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        min-height: 44px;
+        line-height: 30px;
+        margin: 0;
+    }
+
+    /* --- Two-column edit grids collapse to one column --- */
+    .hrb-edit-grid { display: block !important; }
+    .hrb-edit-section { margin-bottom: 18px; }
+
+    /* --- Forms: label above field, full-width inputs, comfy touch targets --- */
+    .form-table,
+    .form-table > tbody,
+    .form-table tr,
+    .form-table th,
+    .form-table td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    .form-table th {
+        padding: 12px 0 4px !important;
+        font-weight: 600;
+    }
+    .form-table td { padding: 0 0 14px !important; }
+    .form-table input[type="text"],
+    .form-table input[type="email"],
+    .form-table input[type="tel"],
+    .form-table input[type="url"],
+    .form-table input[type="number"],
+    .form-table input[type="date"],
+    .form-table input[type="time"],
+    .form-table input[type="password"],
+    .form-table select,
+    .form-table textarea,
+    .hrb-form-row input,
+    .hrb-form-row select,
+    .hrb-form-row textarea,
+    input.regular-text,
+    input.large-text,
+    select.regular-text,
+    textarea.large-text {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        min-height: 44px;
+        font-size: 16px; /* stops iOS from zooming on focus */
+    }
+    .form-table textarea,
+    textarea.large-text { min-height: 96px; }
+    /* keep the small numeric inputs (hours / people) reasonable */
+    .form-table input.small-text { width: 45% !important; max-width: 120px !important; display: inline-block; }
+
+    /* --- List tables become stacked cards --- */
+    .wp-list-table.widefat,
+    table.widefat {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .wp-list-table.widefat thead,
+    table.widefat thead { display: none; }
+    .wp-list-table.widefat tbody tr,
+    table.widefat tbody tr {
+        display: block;
+        margin: 0 0 12px;
+        padding: 10px 14px;
+        background: #fff;
+        border: 1px solid #e1e5e9;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .wp-list-table.widefat tbody td,
+    table.widefat tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        width: auto !important;
+        padding: 8px 0;
+        border: 0;
+        border-bottom: 1px solid #f0f0f1;
+        text-align: right;
+        white-space: normal;
+    }
+    .wp-list-table.widefat tbody td:last-child,
+    table.widefat tbody td:last-child { border-bottom: 0; }
+    .wp-list-table.widefat tbody td::before,
+    table.widefat tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #50575e;
+        text-align: left;
+        flex: 0 0 42%;
+        margin-right: 10px;
+    }
+    /* Actions cell: a tidy row of equal icon buttons (not full-width bars) */
+    .wp-list-table.widefat tbody td.column-actions,
+    table.widefat tbody td.column-actions {
+        display: block;
+        text-align: left;
+        padding-top: 10px;
+    }
+    td.column-actions::before { content: "" !important; margin: 0; }
+    td.column-actions .hrb-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+    }
+    td.column-actions .hrb-actions > a,
+    td.column-actions .hrb-actions > form,
+    td.column-actions .hrb-actions > button { margin: 0; flex: 0 0 auto; }
+    td.column-actions .hrb-actions .button {
+        width: 48px;
+        height: 44px;
+        padding: 0;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    td.column-actions .hrb-actions .button .dashicons {
+        margin: 0;
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+        line-height: 20px;
+    }
+
+    /* Horizontal-scroll fallback for any other wide table */
+    .hrb-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* --- Stats / dashboard grids single column --- */
+    .hrb-stats-grid,
+    .hrb-stats,
+    .hrb-dashboard-grid { grid-template-columns: 1fr !important; display: grid; gap: 12px; }
+
+    /* --- Modals full width --- */
+    .hrb-modal .hrb-modal-content { width: 94% !important; max-width: 94% !important; margin: 12px auto !important; }
+
+    /* --- FullCalendar: make it readable on phones --- */
+    .fc .fc-toolbar.fc-header-toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    .fc .fc-toolbar-title { font-size: 16px !important; text-align: center; }
+    .fc .fc-button { padding: 6px 8px; font-size: 13px; }
+    .fc .fc-daygrid-event { white-space: normal; font-size: 11px; line-height: 1.25; }
+    .fc .fc-view-harness { min-height: 60vh; }
+    /* Let the calendar scroll horizontally rather than crushing columns */
+    .hrb-calendar-wrapper, .fc { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Finer tweaks for very small phones */
+@media (max-width: 480px) {
+    .wrap.hrb-admin-bookings,
+    .wrap.hrb-admin-booking-edit,
+    .wrap.hrb-admin-booking-add,
+    .wrap.hrb-admin-booking-adjust { margin: 6px; }
+    .hrb-page-header h1 { font-size: 18px; }
+    .wp-list-table.widefat tbody td::before { flex-basis: 46%; }
+}
+
+/* HRB — declutter plugin admin pages on phones (reduced menu feel) */
+@media (max-width: 782px) {
+    body.hrb-admin-page #wpfooter { display: none; }
+    body.hrb-admin-page #wpcontent,
+    body.hrb-admin-page #wpbody-content { padding-left: 0; }
+    body.hrb-admin-page .wrap { margin-right: 10px; margin-left: 10px; }
+    /* Compact in-plugin section nav if present */
+    body.hrb-admin-page .hrb-nav,
+    body.hrb-admin-page .hrb-subnav {
+        display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px;
+        -webkit-overflow-scrolling: touch; padding-bottom: 6px;
+    }
+    body.hrb-admin-page .hrb-nav a,
+    body.hrb-admin-page .hrb-subnav a { white-space: nowrap; flex: 0 0 auto; }
+}
+
+
+/* HRB — calendar on phones: defaults to list view (JS); month view scrolls sideways */
+@media (max-width: 782px) {
+    #hrb-calendar,
+    .hrb-calendar-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .fc-dayGridMonth-view .fc-scrollgrid { min-width: 0; }
+    .fc .fc-col-header-cell-cushion { font-size: 12px; padding: 4px 2px; }
+    /* List view = the mobile default: readable full-width rows */
+    .fc .fc-list-table { font-size: 14px; }
+    .fc .fc-list-event-title,
+    .fc .fc-list-event-title .fc-event-content,
+    .fc .fc-list-event-title .fc-event-row { white-space: normal; display: block; }
+    .fc .fc-list-event-title .fc-event-row span { white-space: normal; }
+    /* Calendar controls / legend stack nicely */
+    .hrb-calendar-controls { flex-direction: column; align-items: stretch; gap: 10px; }
+    .hrb-calendar-views { display: flex; flex-wrap: wrap; gap: 6px; }
+    .hrb-calendar-views .calendar-view-btn { flex: 1 1 auto; min-height: 40px; }
+    .hrb-calendar-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+}
+
+/* ==========================================================================
+   HRB — calendar final polish (Apple/Outlook-style month) + overflow fixes
+   ========================================================================== */
+@media (max-width: 782px) {
+    /* Compact event pills in month/week/day so the month fits the screen */
+    .fc .fc-daygrid-event,
+    .fc .fc-timegrid-event { padding: 1px 4px; border-radius: 5px; }
+    .fc-event-compact {
+        font-size: 11px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .fc-event-compact b { font-weight: 600; }
+    .fc .fc-daygrid-day-frame { min-height: 44px; }
+    .fc .fc-daygrid-day-number { font-size: 12px; padding: 2px 5px; }
+    .fc .fc-daygrid-more-link,
+    .fc .fc-more-link { font-size: 11px; font-weight: 600; }
+    /* Month fits — no sideways scrolling */
+    #hrb-calendar,
+    .hrb-calendar-container { overflow-x: hidden; }
+    .fc-dayGridMonth-view .fc-scrollgrid { min-width: 0 !important; }
+    .fc .fc-col-header-cell-cushion { font-size: 11px; padding: 4px 1px; }
+
+    /* Long values / IDs wrap inside cards instead of running off-screen */
+    .wp-list-table.widefat tbody td,
+    table.widefat tbody td { word-break: break-word; flex-wrap: wrap; }
+    .widefat tbody td > .button,
+    .widefat tbody td > a.button,
+    .hrb-details-section .button {
+        flex: 1 1 100%;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+        text-align: center;
+        justify-content: center;
+    }
+    /* But action-column icon buttons stay small squares (handled elsewhere) */
+    td.column-actions .hrb-actions .button { flex: 0 0 auto; width: 48px; margin-top: 0; }
+
+    /* Back / secondary buttons legible on the red page header */
+    .hrb-page-header .page-title-action,
+    .hrb-page-header a.button,
+    .hrb-page-header .button-secondary {
+        background: #ffffff !important;
+        color: #b32d2e !important;
+        border: 1px solid #ffffff !important;
+        font-weight: 600;
+    }
+}
+
+/* Calendar fullscreen stage (works on any screen size) */
+.hrb-calendar-stage.hrb-fs {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: #fff;
+    margin: 0;
+    padding: 10px 12px 16px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.hrb-calendar-stage.hrb-fs .hrb-calendar-controls {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+    padding: 6px 0;
+    margin: 0 0 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+body.hrb-cal-fs-open { overflow: hidden; }
+#hrb-cal-fullscreen-btn .dashicons { margin-right: 4px; }
+
+/* ==========================================================================
+   HRB — final polish: reduced menu, wider calendar, icon contrast
+   ========================================================================== */
+/* Action-button icons white on the coloured buttons (clear contrast) */
+.hrb-actions .button .dashicons { color: #ffffff !important; }
+
+/* Calendar fullscreen: truly edge-to-edge, more room for events */
+.hrb-calendar-stage.hrb-fs { padding: 4px 4px 10px !important; }
+.hrb-calendar-stage.hrb-fs .fc { font-size: 14px; }
+.hrb-calendar-stage.hrb-fs .fc .fc-daygrid-day-frame { min-height: 70px; }
+.hrb-calendar-stage.hrb-fs .fc-event-compact { white-space: normal; }
+
+@media (max-width: 782px) {
+    /* Thin out the WordPress sidebar on plugin pages: only "Room bookings" + its submenu */
+    body.hrb-admin-page #adminmenu > li.menu-top:not(#toplevel_page_hrb-dashboard) { display: none !important; }
+
+    /* Calendar uses more width; all view buttons (incl. Fullscreen) fill the row evenly */
+    body.hrb-admin-page .wrap { margin-left: 4px; margin-right: 4px; }
+    .hrb-calendar-controls,
+    .hrb-calendar-container { margin-left: 0 !important; margin-right: 0 !important; }
+    .hrb-calendar-views .button { flex: 1 1 auto; min-height: 40px; }
+    .fc { font-size: 13px; }
+    .fc .fc-daygrid-day-frame { padding: 1px; }
+}
+
+/* ==========================================================================
+   HRB — page headers on phones (fix clipping / decorative-circle overlap)
+   High specificity to override each view's own inline .hrb-page-header rules.
+   ========================================================================== */
+@media (max-width: 782px) {
+    body.hrb-admin-page .hrb-page-header {
+        display: block !important;
+        padding: 18px 16px !important;
+        overflow: hidden;
+        text-align: left;
+    }
+    /* drop the big decorative circle on mobile so it never overlaps the text */
+    body.hrb-admin-page .hrb-page-header::before,
+    body.hrb-admin-page .hrb-page-header::after { display: none !important; }
+
+    body.hrb-admin-page .hrb-page-header .hrb-page-title,
+    body.hrb-admin-page .hrb-page-header .hrb-page-actions {
+        width: 100% !important;
+        max-width: 100% !important;
+        float: none !important;
+    }
+    body.hrb-admin-page .hrb-page-header h1,
+    body.hrb-admin-page .hrb-page-header .wp-heading-inline {
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+        word-break: break-word;
+        margin: 0 0 6px !important;
+    }
+    body.hrb-admin-page .hrb-page-header p,
+    body.hrb-admin-page .hrb-page-header .description {
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        word-break: break-word;
+        max-width: 100% !important;
+        opacity: 0.96;
+    }
+    body.hrb-admin-page .hrb-page-actions {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-top: 14px !important;
+    }
+    body.hrb-admin-page .hrb-page-actions .button,
+    body.hrb-admin-page .hrb-page-actions a.button,
+    body.hrb-admin-page .hrb-page-header .page-title-action {
+        width: 100% !important;
+        box-sizing: border-box;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+/* ==========================================================================
+   HRB — page padding + action-button contrast (all HRB list pages)
+   ========================================================================== */
+/* Content wrapper: flush-left on desktop so the red header aligns edge-to-edge */
+body.hrb-admin-page .hrb-admin-page { padding-left: 0 !important; }
+@media (max-width: 768px) {
+    body.hrb-admin-page .hrb-admin-page { padding: 16px !important; margin: -10px !important; }
+}
+
+/* Action buttons: solid, visible backgrounds with white icons + darker hover.
+   (The Rooms page defines its own button colours inline and keeps them.) */
+.hrb-actions .button-small {
+    background: #3858e0;
+    border-color: #3858e0;
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.hrb-actions .button-small:hover,
+.hrb-actions .button-small:focus {
+    background: #2740b0;
+    border-color: #2740b0;
+    color: #fff;
+}
+.hrb-actions .button-secondary {
+    background: #475569;
+    border-color: #475569;
+    color: #fff;
+}
+.hrb-actions .button-secondary:hover,
+.hrb-actions .button-secondary:focus {
+    background: #334155;
+    border-color: #334155;
+    color: #fff;
+}
+.hrb-actions .hrb-delete-btn {
+    background: #e02424;
+    border-color: #e02424;
+    color: #fff;
+}
+.hrb-actions .hrb-delete-btn:hover,
+.hrb-actions .hrb-delete-btn:focus {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #fff;
+}
+/* Icons always white on the coloured action buttons (visible in every state) */
+.hrb-actions .button .dashicons,
+.hrb-actions .button:hover .dashicons,
+.hrb-actions .button:focus .dashicons { color: #ffffff !important; }

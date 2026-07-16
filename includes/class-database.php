@@ -47,6 +47,8 @@ class HRB_Database {
             price_3_hours decimal(10,2) NOT NULL DEFAULT 0.00,
             price_4_hours decimal(10,2) NOT NULL DEFAULT 0.00,
             price_extra_hour decimal(10,2) NOT NULL DEFAULT 0.00,
+            available_from time NOT NULL DEFAULT '00:00:00',
+            available_to time NOT NULL DEFAULT '00:00:00',
             images text,
             amenities text,
             color varchar(7) NOT NULL DEFAULT '#3498db',
@@ -99,6 +101,7 @@ class HRB_Database {
             paypal_fee decimal(10,2) NOT NULL DEFAULT 0.00,
             total_amount decimal(10,2) NOT NULL,
             cancellation_fee decimal(10,2) NOT NULL DEFAULT 0.00,
+            price_override tinyint(1) NOT NULL DEFAULT 0,
             status varchar(20) NOT NULL DEFAULT 'pending',
             payment_status varchar(20) NOT NULL DEFAULT 'pending',
             payment_method varchar(50) NULL,
@@ -692,6 +695,12 @@ class HRB_Database {
             if (!in_array('external_link', $column_names)) {
                 $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN external_link varchar(500) NULL AFTER amenities");
             }
+            if (!in_array('available_from', $column_names)) {
+                $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN available_from time NOT NULL DEFAULT '00:00:00' AFTER price_extra_hour");
+            }
+            if (!in_array('available_to', $column_names)) {
+                $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN available_to time NOT NULL DEFAULT '00:00:00' AFTER available_from");
+            }
 
             /* removed error_log - avoid noisy logs in production */
         }
@@ -702,6 +711,10 @@ class HRB_Database {
             $booking_columns = array_column($wpdb->get_results("SHOW COLUMNS FROM {$bookings_table}"), 'Field');
             if (!in_array('cancellation_fee', $booking_columns)) {
                 $wpdb->query("ALTER TABLE {$bookings_table} ADD COLUMN cancellation_fee decimal(10,2) NOT NULL DEFAULT 0.00 AFTER total_amount");
+            }
+            // Manual price override flag (admin-set final price for on-site bookings)
+            if (!in_array('price_override', $booking_columns)) {
+                $wpdb->query("ALTER TABLE {$bookings_table} ADD COLUMN price_override tinyint(1) NOT NULL DEFAULT 0 AFTER total_amount");
             }
         }
 
@@ -1623,6 +1636,35 @@ class HRB_Database {
      *        immediately, which provides no protection — so write-paths must
      *        wrap this call in a transaction.
      */
+    /**
+     * Whether the given slot overlaps a maintenance lock (master or room-specific).
+     * Maintenance locks always block bookings and take precedence over availability windows.
+     */
+    public static function is_slot_locked($room_id, $booking_date, $start_time, $end_time) {
+        global $wpdb;
+        $start_time = date('H:i:s', strtotime($start_time));
+        $end_time   = date('H:i:s', strtotime($end_time));
+        $slot_start = $booking_date . ' ' . $start_time;
+        // End at/kbefore start (midnight or cross-midnight) ends on the next day.
+        $end_date = (strtotime($end_time) <= strtotime($start_time))
+            ? date('Y-m-d', strtotime($booking_date . ' +1 day'))
+            : $booking_date;
+        $slot_end = $end_date . ' ' . $end_time;
+
+        $master = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_master_locks WHERE start_datetime < %s AND end_datetime > %s",
+            $slot_end, $slot_start
+        ));
+        if ($master > 0) {
+            return true;
+        }
+        $room = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}hrb_room_locks WHERE room_id = %d AND start_datetime < %s AND end_datetime > %s",
+            $room_id, $slot_end, $slot_start
+        ));
+        return $room > 0;
+    }
+
     public static function check_booking_conflict($room_id, $booking_date, $start_time, $end_time, $exclude_booking_id = null, $acquire_room_lock = false) {
         global $wpdb;
 
@@ -1736,6 +1778,43 @@ class HRB_Database {
      * automatically the first time the new plugin code is loaded — no
      * reactivation required.
      */
+    public static function ensure_room_availability_columns() {
+        global $wpdb;
+        if (get_option('hrb_room_availability_migrated') === 'yes') {
+            return;
+        }
+        $rooms_table = $wpdb->prefix . 'hrb_rooms';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$rooms_table}'")) {
+            $cols = array_column($wpdb->get_results("SHOW COLUMNS FROM {$rooms_table}"), 'Field');
+            if (!in_array('available_from', $cols)) {
+                $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN available_from time NOT NULL DEFAULT '00:00:00' AFTER price_extra_hour");
+            }
+            if (!in_array('available_to', $cols)) {
+                $wpdb->query("ALTER TABLE {$rooms_table} ADD COLUMN available_to time NOT NULL DEFAULT '00:00:00' AFTER available_from");
+            }
+        }
+        update_option('hrb_room_availability_migrated', 'yes');
+    }
+
+    public static function ensure_price_override_column() {
+        global $wpdb;
+
+        // Cheap guard: only do the SHOW COLUMNS check once per install.
+        if (get_option('hrb_price_override_migrated') === 'yes') {
+            return;
+        }
+
+        $bookings_table = $wpdb->prefix . 'hrb_bookings';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$bookings_table}'")) {
+            $columns = array_column($wpdb->get_results("SHOW COLUMNS FROM {$bookings_table}"), 'Field');
+            if (!in_array('price_override', $columns)) {
+                $wpdb->query("ALTER TABLE {$bookings_table} ADD COLUMN price_override tinyint(1) NOT NULL DEFAULT 0 AFTER total_amount");
+            }
+        }
+
+        update_option('hrb_price_override_migrated', 'yes');
+    }
+
     public static function seed_branded_email_templates() {
         global $wpdb;
 

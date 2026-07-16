@@ -1118,13 +1118,17 @@ jQuery(document).ready(function($) {
     }
 
     .hrb-settings-tabs {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .hrb-tab-button {
-        flex: 1;
-        min-width: 120px;
-        padding: 16px 20px;
+        flex: 0 0 auto;
+        min-width: auto;
+        padding: 12px 14px;
+        font-size: 11px;
+        letter-spacing: 0;
     }
 
     .hrb-setting-field input,

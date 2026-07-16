@@ -1249,6 +1249,26 @@ class HRB_Ajax_Handler {
         $end_hour = intval(substr($booking_end_time, 0, 2));
         $end_minute = intval(substr($booking_end_time, 3, 2));
         $booking_end_minutes = $end_hour * 60 + $end_minute;
+
+        // An end time of 00:00 means midnight / end of day (24:00), not start of day.
+        if ($booking_end_minutes === 0) {
+            $booking_end_minutes = 1440;
+            $end_hour = 23;
+        }
+
+        // Per-room bookable window overrides the global window when the room has one set.
+        $hrb_slot_room = HRB_Room_Manager::getInstance()->get_room($room_id);
+        if ($hrb_slot_room && (!empty($hrb_slot_room->available_from) || !empty($hrb_slot_room->available_to))) {
+            $hrb_af = $hrb_slot_room->available_from ?: '00:00:00';
+            $hrb_at = $hrb_slot_room->available_to ?: '00:00:00';
+            $hrb_af_min = (intval(substr($hrb_af, 0, 2)) * 60) + intval(substr($hrb_af, 3, 2));
+            $hrb_at_min = ($hrb_at === '00:00:00' || $hrb_at === '00:00') ? 1440 : ((intval(substr($hrb_at, 0, 2)) * 60) + intval(substr($hrb_at, 3, 2)));
+            if (!($hrb_af_min <= 0 && $hrb_at_min >= 1440)) {
+                $start_hour = intdiv($hrb_af_min, 60);
+                $end_hour = min(23, intdiv($hrb_at_min, 60));
+                $booking_end_minutes = $hrb_at_min;
+            }
+        }
         
         // Get plugin timezone setting
         $plugin_timezone = get_option('hrb_timezone', 'Europe/Berlin');

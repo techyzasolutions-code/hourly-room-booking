@@ -327,6 +327,8 @@ final class HourlyRoomBooking {
         // plugin-file update (no reactivation needed). Option-gated, so it runs
         // once per design version and preserves later manual edits.
         add_action('admin_init', ['HRB_Database', 'seed_branded_email_templates']);
+        add_action('admin_init', ['HRB_Database', 'ensure_price_override_column']);
+        add_action('admin_init', ['HRB_Database', 'ensure_room_availability_columns']);
         
         // Admin notices
         add_action('admin_notices', [$this, 'display_admin_notices']);

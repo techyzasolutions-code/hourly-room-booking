@@ -212,6 +212,8 @@ function initializeExtrasLockCalendar() {
     extrasLockCalendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'de',
+        dayHeaderFormat: window.innerWidth <= 782 ? { weekday: 'short' } : { weekday: 'long' },
+        dayMaxEvents: window.innerWidth <= 782 ? 3 : false,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',

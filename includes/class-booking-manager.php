@@ -88,7 +88,26 @@ class HRB_Booking_Manager {
 
         // Calculate pricing
         $pricing = $this->calculate_booking_price($data);
-        
+
+        // Manual price override (admin only, on-site/cash payment): the amount the
+        // admin enters becomes the fixed BASE price (room + time). Selected extras
+        // and extra people are still added on top; no VAT/fees are auto-added.
+        $price_override = 0;
+        if (isset($data['custom_price']) && $data['custom_price'] !== '' && $data['custom_price'] !== null
+            && isset($data['payment_method']) && in_array($data['payment_method'], ['onsite', 'cash'], true)) {
+            $custom_total = round((float) $data['custom_price'], 2);
+            if ($custom_total >= 0) {
+                // Manual price = the complete total of the booking (all-inclusive).
+                $pricing['base_price']        = $custom_total;
+                $pricing['extra_people_cost'] = 0;
+                $pricing['extras_cost']       = 0;
+                $pricing['tax_amount']        = 0;
+                $pricing['paypal_fee']        = 0;
+                $pricing['total_amount']      = $custom_total;
+                $price_override = 1;
+            }
+        }
+
         // Prepare booking data
         $booking_data = array(
             'booking_reference' => HRB_Database::generate_booking_reference(),
@@ -114,7 +133,8 @@ class HRB_Booking_Manager {
             'cooldown_override' => isset($data['cooldown_override']) ? intval($data['cooldown_override']) : 0,
             'is_anonymous' => isset($data['is_anonymous']) ? intval($data['is_anonymous']) : 0,
             'first_name' => isset($data['first_name']) ? sanitize_text_field($data['first_name']) : null,
-            'last_name' => isset($data['last_name']) ? sanitize_text_field($data['last_name']) : null
+            'last_name' => isset($data['last_name']) ? sanitize_text_field($data['last_name']) : null,
+            'price_override' => $price_override
         );
         
         
@@ -141,7 +161,7 @@ class HRB_Booking_Manager {
             $result = $wpdb->insert(
                 $wpdb->prefix . 'hrb_bookings',
                 $booking_data,
-                array('%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s')
+                array('%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%f', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%d')
             );
             if ($result === false) {
                 $wpdb_error = $wpdb->last_error;
@@ -275,6 +295,18 @@ class HRB_Booking_Manager {
             return new WP_Error('invalid_room', __('Selected room is not available', 'hourly-room-booking'));
         }
         
+        // Admin-created/edited bookings (verified by capability) may bypass the
+        // public booking rules: past dates, the advance-days window, the 12h
+        // duration cap and the "4h+ must be PayPal" rule. The admin is with the
+        // customer on-site and decides the terms. Public bookings are unaffected.
+        $is_admin_context = (
+            isset($data['created_by_admin']) && intval($data['created_by_admin']) === 1
+            && (current_user_can('manage_options') || current_user_can('hrb_manage_bookings'))
+        );
+        if ($is_admin_context) {
+            $allow_past_dates = true;
+        }
+
         // Validate date (not in the past, within booking window)
         $booking_date = strtotime($data['booking_date']);
         $today = strtotime('today');
@@ -286,23 +318,37 @@ class HRB_Booking_Manager {
         $max_advance_days = get_option('hrb_booking_advance_days', 30);
         $max_booking_date = strtotime("+{$max_advance_days} days");
         
-        if ($booking_date > $max_booking_date) {
+        if (!$is_admin_context && $booking_date > $max_booking_date) {
             return new WP_Error('too_far_advance',
                 sprintf(__('Cannot book more than %d days in advance', 'hourly-room-booking'), $max_advance_days));
         }
 
-        // Validate booking duration (2-12 hours as per requirements)
+        // Validate booking duration (min 2 hours; public max 12h, admin up to 24h)
         $duration = $this->calculate_duration($data['start_time'], $data['end_time']);
         if ($duration < 2) {
             return new WP_Error('minimum_duration', __('Minimum booking duration is 2 hours', 'hourly-room-booking'));
         }
-        if ($duration > 12) {
-            return new WP_Error('maximum_duration', __('Maximum booking duration is 12 hours', 'hourly-room-booking'));
+        $max_duration = $is_admin_context ? 24 : 12;
+        if ($duration > $max_duration) {
+            return new WP_Error('maximum_duration', sprintf(__('Maximum booking duration is %d hours', 'hourly-room-booking'), $max_duration));
         }
 
-        // Validate payment method based on duration (4+ hours must use PayPal)
-        if ($duration >= 4 && isset($data['payment_method']) && $data['payment_method'] !== 'paypal') {
+        // Validate payment method based on duration (public: 4+ hours must use PayPal; admin exempt)
+        if (!$is_admin_context && $duration >= 4 && isset($data['payment_method']) && $data['payment_method'] !== 'paypal') {
             return new WP_Error('payment_method_required', __('Bookings of 4 hours or more require PayPal payment', 'hourly-room-booking'));
+        }
+
+        // Enforce the room's general bookable window (per-room availability hours).
+        if (!empty($data['start_time']) && !empty($data['end_time'])
+            && !HRB_Room_Manager::getInstance()->is_time_within_availability($room, $data['start_time'], $data['end_time'])) {
+            return new WP_Error('outside_availability', __('The room is not bookable at the selected time.', 'hourly-room-booking'));
+        }
+
+        // Maintenance locks (room / master) always take precedence and block public bookings.
+        // Admins may deliberately override locks (they created them).
+        if (!$is_admin_context && !empty($data['start_time']) && !empty($data['end_time'])
+            && HRB_Database::is_slot_locked($data['room_id'], $data['booking_date'], $data['start_time'], $data['end_time'])) {
+            return new WP_Error('room_locked', __('The room is locked for maintenance at the selected time.', 'hourly-room-booking'));
         }
 
         // Validate time slots (already calculated duration above)
@@ -831,7 +877,16 @@ class HRB_Booking_Manager {
                     break;
                 }
             }
-            
+
+            // Never auto-recalculate a booking whose price was set manually.
+            // The flag can come from this update ($data) or from the stored booking.
+            $has_price_override = isset($data['price_override'])
+                ? ((int) $data['price_override'] === 1)
+                : ((int) ($booking->price_override ?? 0) === 1);
+            if ($has_price_override) {
+                $should_recalculate = false;
+            }
+
             if ($should_recalculate) {
                 // Get current extras from booking_extras table
                 $current_extras = array();

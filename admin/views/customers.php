@@ -247,7 +247,7 @@ $stats = [
                 <?php else: ?>
                     <?php foreach ($customers as $customer): ?>
                         <tr data-customer-id="<?php echo $customer->id; ?>">
-                            <td class="column-customer">
+                            <td class="column-customer" data-label="<?php esc_attr_e('Customer', 'hourly-room-booking'); ?>">
                                 <div class="customer-info">
                                     <div class="customer-avatar">
                                         <?php echo strtoupper(substr($customer->first_name, 0, 1) . substr($customer->last_name, 0, 1)); ?>
@@ -286,7 +286,7 @@ $stats = [
                                     </div>
                                 </div>
                             </td>
-                            <td class="column-contact">
+                            <td class="column-contact" data-label="<?php esc_attr_e('Contact', 'hourly-room-booking'); ?>">
                                 <div class="contact-info">
                                     <div class="customer-email">
                                         <span class="dashicons dashicons-email"></span>
@@ -300,7 +300,7 @@ $stats = [
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td class="column-bookings">
+                            <td class="column-bookings" data-label="<?php esc_attr_e('Bookings', 'hourly-room-booking'); ?>">
                                 <div class="booking-stats">
                                     <strong><?php echo number_format($customer->booking_count); ?></strong>
                                     <?php if ($customer->last_booking_date): ?>
@@ -313,15 +313,15 @@ $stats = [
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td class="column-spent">
+                            <td class="column-spent" data-label="<?php esc_attr_e('Spent', 'hourly-room-booking'); ?>">
                                 <strong><?php echo hrb_format_amount($customer->total_spent ?: 0); ?></strong>
                             </td>
-                            <td class="column-status">
+                            <td class="column-status" data-label="<?php esc_attr_e('Status', 'hourly-room-booking'); ?>">
                                 <span class="hrb-status hrb-status-<?php echo $customer->is_verified ? 'verified' : 'unverified'; ?>">
                                     <?php echo $customer->is_verified ? __('Verified', 'hourly-room-booking') : __('Unverified', 'hourly-room-booking'); ?>
                                 </span>
                             </td>
-                            <td class="column-registered">
+                            <td class="column-registered" data-label="<?php esc_attr_e('Registered', 'hourly-room-booking'); ?>">
                                 <?php echo date_i18n(get_option('hrb_date_format', 'd.m.Y'), strtotime($customer->created_at)); ?>
                             </td>
                             <td class="column-actions">
