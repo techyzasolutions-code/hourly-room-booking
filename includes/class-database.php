@@ -1819,7 +1819,7 @@ class HRB_Database {
         global $wpdb;
 
         // Bump this when the bundled templates change to re-sync on the next load.
-        $design_version = '2026-06-18';
+        $design_version = '2026-07-16';
         if (get_option('hrb_email_design_version') === $design_version) {
             return;
         }
