@@ -15,7 +15,7 @@ return array (
     'subject' => 'Booking Confirmed - {booking_reference}',
     'heading' => 'Booking Confirmed!',
     'message' => 'Thank you for your booking. Here are your booking details:',
-    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Buchung bestätigt</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .success-box{background:#f0f9eb;padding:20px;margin:0 0 25px 0;border-left:4px solid #28a745;text-align:center;} .success-box h2{margin:0;color:#1e7e34;font-size:20px;} .update-box{background:#eaf4fc;padding:20px;margin:0 0 25px 0;border-left:4px solid #2c8bd6;text-align:center;} .update-box h2{margin:0;color:#1f6fb0;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header"><img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}"></div><div class="content"><p>Liebe/r {customer_name},</p><p>vielen Dank für Ihre Buchung. Wir freuen uns, Ihre Reservierung bestätigen zu können.</p><div class="success-box"><h2>Buchung bestätigt</h2></div><p>Nachfolgend finden Sie die Details Ihrer Reservierung:</p><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gesamtbetrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Buchung ansehen</a></div><p style="margin-top:30px;">Wir freuen uns auf Ihren Besuch. Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
+    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Buchung bestätigt</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .success-box{background:#f0f9eb;padding:20px;margin:0 0 25px 0;border-left:4px solid #28a745;text-align:center;} .success-box h2{margin:0;color:#1e7e34;font-size:20px;} .update-box{background:#eaf4fc;padding:20px;margin:0 0 25px 0;border-left:4px solid #2c8bd6;text-align:center;} .update-box h2{margin:0;color:#1f6fb0;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header">{company_logo_html}</div><div class="content"><p>Liebe/r {customer_name},</p><p>vielen Dank für Ihre Buchung. Wir freuen uns, Ihre Reservierung bestätigen zu können.</p><div class="success-box"><h2>Buchung bestätigt</h2></div><p>Nachfolgend finden Sie die Details Ihrer Reservierung:</p><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gesamtbetrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Buchung ansehen</a></div><p style="margin-top:30px;">Wir freuen uns auf Ihren Besuch. Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
   ),
   1 => 
   array (
@@ -25,7 +25,7 @@ return array (
     'subject' => 'Zahlung bestätigt - {booking_reference}',
     'heading' => 'Zahlung erhalten',
     'message' => 'Your payment has been successfully processed.',
-    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zahlung erhalten</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .success-box{background:#f0f9eb;padding:20px;margin:0 0 25px 0;border-left:4px solid #28a745;text-align:center;} .success-box h2{margin:0;color:#1e7e34;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header"><img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}"></div><div class="content"><p>Liebe/r {customer_name},</p><p>vielen Dank für Ihre Zahlung. Wir bestätigen hiermit den Eingang Ihrer Zahlung.</p><div class="success-box"><h2>Zahlung erhalten</h2></div><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gezahlter Betrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Buchung ansehen</a></div><p style="margin-top:30px;">Ihre Buchung ist nun vollständig bezahlt. Wir freuen uns auf Ihren Besuch.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
+    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zahlung erhalten</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .success-box{background:#f0f9eb;padding:20px;margin:0 0 25px 0;border-left:4px solid #28a745;text-align:center;} .success-box h2{margin:0;color:#1e7e34;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header">{company_logo_html}</div><div class="content"><p>Liebe/r {customer_name},</p><p>vielen Dank für Ihre Zahlung. Wir bestätigen hiermit den Eingang Ihrer Zahlung.</p><div class="success-box"><h2>Zahlung erhalten</h2></div><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gezahlter Betrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Buchung ansehen</a></div><p style="margin-top:30px;">Ihre Buchung ist nun vollständig bezahlt. Wir freuen uns auf Ihren Besuch.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
   ),
   2 => 
   array (
@@ -143,7 +143,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -322,7 +322,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -489,7 +489,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -627,7 +627,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -682,7 +682,7 @@ return array (
     'subject' => 'Ihre Buchung wurde geändert - {booking_reference}',
     'heading' => 'Buchungsänderung bestätigt',
     'message' => 'Your booking has been modified. Please review the updated details:',
-    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Buchung geändert</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .update-box{background:#eaf4fc;padding:20px;margin:0 0 25px 0;border-left:4px solid #2c8bd6;text-align:center;} .update-box h2{margin:0;color:#1f6fb0;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header"><img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}"></div><div class="content"><p>Liebe/r {customer_name},</p><p>Ihre Buchung wurde aktualisiert. Nachfolgend finden Sie die geänderten Details Ihrer Reservierung.</p><div class="update-box"><h2>Buchung geändert</h2></div><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gesamtbetrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Aktualisierte Buchung ansehen</a></div><p style="margin-top:30px;">Bei Fragen zu diesen Änderungen stehen wir Ihnen gerne zur Verfügung.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
+    'html_content' => '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Buchung geändert</title><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333333;margin:0;padding:0;background-color:#f7f7f7;} .container{max-width:600px;margin:20px auto;background:#ffffff;padding:30px;border:1px solid #e5e5e5;} .header{background-color:#ffffff;padding:20px 0;text-align:center;border-bottom:1px solid #e5e5e5;} .header img{max-width:250px;height:auto;} .content{padding:30px 0 10px 0;} .content p{margin:0 0 15px 0;} .booking-details{margin:25px 0;border:1px solid #e5e5e5;width:100%;border-collapse:collapse;} .booking-details th,.booking-details td{padding:12px 15px;text-align:left;border-bottom:1px solid #e5e5e5;vertical-align:top;} .booking-details th{background-color:#f7f7f7;width:140px;font-weight:600;color:#555;} .update-box{background:#eaf4fc;padding:20px;margin:0 0 25px 0;border-left:4px solid #2c8bd6;text-align:center;} .update-box h2{margin:0;color:#1f6fb0;font-size:20px;} .amount-row td{background-color:#fffcf5;color:#981b1e;font-weight:bold;font-size:16px;} .btn-container{text-align:center;margin:35px 0;} .btn{background-color:#981b1e;color:#ffffff !important;padding:15px 30px;text-decoration:none;font-weight:bold;border-radius:4px;display:inline-block;font-size:16px;} .footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#666666;text-align:center;}</style></head><body><div class="container"><div class="header">{company_logo_html}</div><div class="content"><p>Liebe/r {customer_name},</p><p>Ihre Buchung wurde aktualisiert. Nachfolgend finden Sie die geänderten Details Ihrer Reservierung.</p><div class="update-box"><h2>Buchung geändert</h2></div><table class="booking-details"><tr><th>Buchungsnummer</th><td><strong>{booking_reference}</strong></td></tr><tr><th>Raum</th><td>{room_name}</td></tr><tr><th>Datum / Zeit</th><td>{booking_date}<br><small>{start_time} – {end_time}</small></td></tr><tr><th>Dauer</th><td>{duration}</td></tr><tr><th>Zahlungsart</th><td>{payment_method}</td></tr><tr><th>Status</th><td>{booking_status}</td></tr><tr class="amount-row"><th>Gesamtbetrag</th><td>{total_amount}</td></tr></table><div class="btn-container"><a href="{booking_url}" class="btn">Aktualisierte Buchung ansehen</a></div><p style="margin-top:30px;">Bei Fragen zu diesen Änderungen stehen wir Ihnen gerne zur Verfügung.</p></div><div class="footer"><p><strong>{company_name}</strong><br>{company_phone} | {company_email}</p></div></div></body></html>',
   ),
   7 => 
   array (
@@ -781,7 +781,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -928,7 +928,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -1098,7 +1098,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -1269,7 +1269,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -1444,7 +1444,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">
@@ -1622,7 +1622,7 @@ return array (
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://wi-stundenzimmer.de/wp-content/uploads/2025/06/Logo-1-1.png" alt="{company_name}">
+            {company_logo_html}
         </div>
         
         <div class="content">

@@ -171,7 +171,8 @@ if (!defined('ABSPATH')) {
                         <code>{booking_reference}</code>, <code>{room_name}</code>, <code>{booking_date}</code>, 
                         <code>{start_time}</code>, <code>{end_time}</code>, <code>{duration}</code>, 
                         <code>{total_amount}</code>, <code>{payment_method}</code>, <code>{booking_status}</code>, 
-                        <code>{booking_url}</code>, <code>{company_email}</code>, <code>{company_phone}</code>
+                        <code>{booking_url}</code>, <code>{company_email}</code>, <code>{company_phone}</code>,
+                        <code>{company_logo_html}</code>, <code>{company_logo}</code>
                     </p>
                 </div>
                 

@@ -574,6 +574,22 @@ class HRB_Notification_Manager {
 
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
+        // Company-logo tokens — resolved centrally from the hrb_company_logo setting
+        // so no template hardcodes a site-specific image URL.
+        // {company_logo}      -> raw URL (empty when unset)
+        // {company_logo_html} -> ready <img> tag, collapses to nothing when unset
+        $company_logo = get_option('hrb_company_logo', '');
+        $company_logo_html = '';
+        if ($company_logo) {
+            $company_logo_html = '<img src="' . esc_url($company_logo) . '" alt="'
+                . esc_attr(get_option('hrb_company_name', get_bloginfo('name'))) . '">';
+        }
+        $content = str_replace(
+            array('{company_logo_html}', '{company_logo}'),
+            array($company_logo_html, esc_url($company_logo)),
+            $content
+        );
+
         // Cancellation-fee tokens — resolved centrally from the booking so every
         // template path (user/admin/fallback) renders them consistently.
         // {cancellation_fee}        -> formatted amount (empty when no fee)

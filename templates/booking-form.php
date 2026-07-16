@@ -1861,7 +1861,14 @@ $label_no_slots_message = $settings->get_label('hrb_label_no_slots_message');
             <p><?php _e('Das bedeutet:', 'hourly-room-booking'); ?></p>
             <ul>
                 <li><?php _e('Du erhältst keine Buchungsbestätigung, Erinnerungen oder Änderungsmöglichkeiten per E-Mail.', 'hourly-room-booking'); ?></li>
-                <li><?php _e('Du kannst deine Buchung nicht online bearbeiten oder stornieren. Solltest du nach einer Buchung diese wieder stornieren wollen, ist dies nur mit der Buchungs-ID telefonisch oder per E-Mail an: <a href=mailto:info@wi-stundenzimmer.de> info@wi-stundenzimmer.de </a> möglich.', 'hourly-room-booking'); ?></li>
+                <li><?php
+                $hrb_contact_email = get_option('hrb_company_email', get_option('admin_email'));
+                printf(
+                    /* translators: %s: contact email address, rendered as a mailto link */
+                    __('Du kannst deine Buchung nicht online bearbeiten oder stornieren. Solltest du nach einer Buchung diese wieder stornieren wollen, ist dies nur mit der Buchungs-ID telefonisch oder per E-Mail an: %s möglich.', 'hourly-room-booking'),
+                    '<a href="mailto:' . esc_attr($hrb_contact_email) . '">' . esc_html($hrb_contact_email) . '</a>'
+                );
+                ?></li>
                 <li><?php _e('Die einmalig angezeigte Buchungs-ID dient als einziger Nachweis deiner Buchung.', 'hourly-room-booking'); ?></li>
             </ul>
             <p><?php _e('Bitte notiere oder speichere diese ID nach Abschluss deiner Buchung, da sie nicht erneut angezeigt oder per E-Mail gesendet wird.', 'hourly-room-booking'); ?></p>
